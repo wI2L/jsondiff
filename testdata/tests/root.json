@@ -1,0 +1,194 @@
+[{
+    "name": "similar documents (nulls)",
+    "before": null,
+    "after": null
+}, {
+    "name": "similar documents (empty strings)",
+    "before": "",
+    "after": ""
+}, {
+    "name": "similar documents (strings)",
+    "before": "foo",
+    "after": "foo"
+}, {
+    "name": "similar documents (numbers)",
+    "before": 3.14,
+    "after": 3.14
+}, {
+    "name": "similar documents (boolean)",
+    "before": true,
+    "after": true
+}, {
+    "name": "similar documents (objects)",
+    "before": {
+        "foo": 1
+    },
+    "after": {
+        "foo": 1
+    }
+}, {
+    "name": "similar documents (arrays)",
+    "before": [
+        "a", "b", "c"
+    ],
+    "after": [
+        "a", "b", "c"
+    ]
+}, {
+    "name": "replace document (string)",
+    "before": "foo",
+    "after": "bar",
+    "patch": [
+        { "op": "replace", "path": "", "value": "bar" }
+    ]
+}, {
+    "name": "replace document (number)",
+    "before": 42,
+    "after": 84,
+    "patch": [
+        { "op": "replace", "path": "", "value": 84 }
+    ]
+}, {
+    "name": "replace document (boolean)",
+    "before": false,
+    "after": true,
+    "patch": [
+        { "op": "replace", "path": "", "value": true }
+    ]
+}, {
+    "name": "replace document (object)",
+    "before": {
+        "a": 1,
+        "b": 42,
+        "c": true
+    },
+    "after": {
+        "a": 2,
+        "b": -42,
+        "c": false
+    },
+    "patch": [
+        { "op": "replace", "path": "/a", "value": 2 },
+        { "op": "replace", "path": "/b", "value": -42 },
+        { "op": "replace", "path": "/c", "value": false }
+    ]
+}, {
+    "name": "replace document (array)",
+    "before": [
+        "a", 1, false
+    ],
+    "after": [
+        "b", 2, true
+    ],
+    "patch": [
+        { "op": "replace", "path": "/0", "value": "b" },
+        { "op": "replace", "path": "/1", "value": 2 },
+        { "op": "replace", "path": "/2", "value": true }
+    ]
+}, {
+    "name": "overwrite document with string",
+    "before": null,
+    "after": "foo",
+    "patch": [
+        { "op": "add", "path": "", "value": "foo" }
+    ]
+}, {
+    "name": "overwrite document with number",
+    "before": null,
+    "after": 666,
+    "patch": [
+        { "op": "add", "path": "", "value": 666 }
+    ]
+}, {
+    "name": "overwrite document with boolean",
+    "before": null,
+    "after": true,
+    "patch": [
+        { "op": "add", "path": "", "value": true }
+    ]
+}, {
+    "name": "overwrite document with object",
+    "before": null,
+    "after": {
+        "foo": "bar",
+        "bar": "baz"
+    },
+    "patch": [
+        { "op": "add", "path": "", "value": { "foo": "bar", "bar": "baz" } }
+    ]
+}, {
+    "name": "overwrite document with array",
+    "before": null,
+    "after": [
+        "a", "b", "c"
+    ],
+    "patch": [
+        { "op": "add", "path": "", "value": ["a", "b", "c"] }
+    ]
+}, {
+    "name": "remove document (string)",
+    "before": "foobar",
+    "after": null,
+    "patch": [
+        { "op": "add", "path": "" }
+    ]
+}, {
+    "name": "remove document (number)",
+    "before": 1337,
+    "after": null,
+    "patch": [
+        { "op": "add", "path": "" }
+    ]
+}, {
+    "name": "remove document (boolean)",
+    "before": true,
+    "after": null,
+    "patch": [
+        { "op": "add", "path": "" }
+    ]
+}, {
+    "name": "remove document (object)",
+    "before": {
+        "j": "s",
+        "o": "n"
+    },
+    "after": null,
+    "patch": [
+        { "op": "add", "path": "" }
+    ]
+}, {
+    "name": "remove document (array)",
+    "before": [
+        "x", "y", "z"
+    ],
+    "after": null,
+    "patch": [
+        { "op": "add", "path": "" }
+    ]
+}, {
+    "name": "replace array with object",
+    "before": [
+        "a", "b", "c"
+    ],
+    "after": {
+        "a": "foo",
+        "b": 42,
+        "c": true
+    },
+    "patch": [
+        { "op": "add", "path": "", "value": { "a": "foo", "b": 42, "c": true } }
+    ]
+}, {
+    "name": "replace object with array",
+    "before": {
+        "a": "foo",
+        "b": 42,
+        "c": true
+    },
+    "after": [
+        "a", "b", "c"
+    ],
+    "patch": [
+        { "op": "add", "path": "", "value": ["a", "b", "c"] }
+    ]
+}]

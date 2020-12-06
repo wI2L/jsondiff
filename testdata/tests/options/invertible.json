@@ -1,0 +1,18 @@
+[{
+    "name": "invertible remove and replace",
+    "before": {
+        "a": "1",
+        "b": "2"
+    },
+    "after": {
+        "a": "3",
+        "c": "4"
+    },
+    "patch": [
+        { "op": "test", "path": "/a", "value": "1" },
+        { "op": "replace", "path": "/a", "value": "3" },
+        { "op": "test", "path": "/b", "value": "2" },
+        { "op": "remove", "path": "/b" },
+        { "op": "add", "path": "/c", "value": "4" }
+    ]
+}]

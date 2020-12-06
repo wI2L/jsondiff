@@ -1,0 +1,63 @@
+[{
+    "name": "similar element is copied instead of added (object key)",
+    "before": {
+        "a": [1, 2, 3]
+    },
+    "after": {
+        "a": [1, 2, 3],
+        "d": [1, 2, 3]
+    },
+    "patch": [
+        { "op": "copy", "from": "/a", "path": "/d" }
+    ]
+}, {
+    "name": "similar element is copied instead of added (array index)",
+    "before": [
+        "foo", "bar"
+    ],
+    "after": [
+        "foo", "bar", "foo"
+    ],
+    "patch": [
+        { "op": "copy", "from": "/0", "path": "/-" }
+    ]
+}, {
+    "name": "similar element removed then added is moved instead",
+    "before": {
+        "a": "b"
+    },
+    "after": {
+        "c": "b"
+    },
+    "patch": [
+        { "op": "move", "from": "/a", "path": "/c" }
+    ]
+}, {
+    "name": "readme example",
+    "before": {
+        "a": [1, 2, 3],
+        "b": { "foo": "bar" }
+    },
+    "after": {
+        "a": [1, 2, 3],
+        "c": [1, 2, 3],
+        "d": { "foo": "bar" }
+    },
+    "patch": [
+        { "op": "copy", "from": "/a", "path": "/c" },
+        { "op": "move", "from": "/b", "path": "/d" }
+    ]
+}, {
+    "name": "single move on duplicated values",
+    "before": {
+        "a": 1
+    },
+    "after": {
+        "b": 1,
+        "c": 1
+    },
+    "patch": [
+        { "op": "move", "from": "/a", "path": "/b" },
+        { "op": "add", "path": "/c", "value": 1 }
+    ]
+}]

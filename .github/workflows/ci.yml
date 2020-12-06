@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "*"
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        go:
+          - "1.14.x"
+          - "1.15.x"
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Run tests
+        run: ./ci/test.sh
+      - name: Upload coverage
+        uses: codecov/codecov-action@v1
+        with:
+          file: coverage.txt
+
+  bench:
+    name: Benchmarks
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go:
+          - "1.15.x"
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install tools
+        run: go get golang.org/x/perf/cmd/benchstat
+        env:
+          GOPROXY: https://proxy.golang.org
+      - name: Run benchmarks
+        run: ./ci/bench.sh
+      - name: Upload statistics
+        uses: actions/upload-artifact@v2
+        with:
+          name: Benchstats-Go${{ matrix.go }}
+          path: benchstats

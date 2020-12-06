@@ -1,0 +1,91 @@
+[{
+    "name": "replaced obkect keys are sorted",
+    "before": {
+        "b": 2,
+        "c": 3,
+        "a": 1
+    },
+    "after": {
+        "b": 2,
+        "c": 1,
+        "a": 3
+    },
+    "patch": [
+        { "op": "replace", "path": "/a", "value": 3 },
+        { "op": "replace", "path": "/c", "value": 1 }
+    ]
+}, {
+    "name": "added obkect keys are sorted",
+    "before": {
+        "a": 1
+    },
+    "after": {
+        "a": 1,
+        "c": 2,
+        "b": 3,
+        "d": 4
+    },
+    "patch": [
+        { "op": "add", "path": "/b", "value": 3 },
+        { "op": "add", "path": "/c", "value": 2 },
+        { "op": "add", "path": "/d", "value": 4 }
+    ]
+}, {
+    "name": "replace single object key",
+    "before": {
+        "a": null
+    },
+    "after": {
+        "a": 6
+    },
+    "patch": [
+        { "op": "replace", "path": "/a", "value": 6 }
+    ]
+}, {
+    "name": "remove single object key",
+    "before": {
+        "a": "b",
+        "c": "d"
+    },
+    "after": {
+        "a": "b"
+    },
+    "patch": [
+        { "op": "remove", "path": "/c" }
+    ]
+}, {
+    "name": "embedded object keys added/replaced",
+    "before": {
+        "a": "b",
+        "c": {
+            "d": "e"
+        }
+    },
+    "after": {
+        "a": "b",
+        "c": {
+            "d": 1,
+            "e": "f"
+        }
+    },
+    "patch": [
+        { "op": "replace", "path": "/c/d", "value": 1 },
+        { "op": "add", "path": "/c/e", "value": "f" }
+    ]
+}, {
+    "name": "embedded object keys added/replaced (#2)",
+    "before": [
+        { "a": "b" },
+        "foo",
+        { "bar": null }
+    ],
+    "after": [
+        { "a": "b", "c": "d" },
+        "foo",
+        { "bar": "baz" }
+    ],
+    "patch": [
+        { "op": "add", "path": "/0/c", "value": "d" },
+        { "op": "replace", "path": "/2/bar", "value": "baz" }
+    ]
+}]

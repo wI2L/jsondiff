@@ -1,0 +1,30 @@
+[{
+        "name": "single move on duplicated values (rationalised and invertible)",
+        "before": {
+            "a": 1
+        },
+        "after": {
+            "b": 1,
+            "c": 1
+        },
+        "patch": [
+            { "op": "test", "path": "", "value": { "a": 1 } },
+            { "op": "replace", "path": "", "value": { "b": 1, "c": 1 } }
+        ]
+    },
+    {
+        "name": "invertible remove and replace (rationalised)",
+        "before": {
+            "a": "1",
+            "b": "2"
+        },
+        "after": {
+            "a": "3",
+            "c": "4"
+        },
+        "patch": [
+            { "op": "test", "path": "", "value": { "a": "1", "b": "2" } },
+            { "op": "replace", "path": "", "value": { "a": "3", "c": "4" } }
+        ]
+    }
+]

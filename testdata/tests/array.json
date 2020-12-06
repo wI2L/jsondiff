@@ -1,0 +1,142 @@
+[{
+    "name": "add array in array",
+    "before": [
+        "foo",
+        "sil",
+        "loreum",
+        "lol",
+        "blah"
+    ],
+    "after": [
+        "foo",
+        ["bar", "baz"],
+        "sil"
+    ],
+    "patch": [
+        { "op": "remove", "path": "/3" },
+        { "op": "remove", "path": "/3" },
+        { "op": "replace", "path": "/1", "value": ["bar", "baz"] },
+        { "op": "replace", "path": "/2", "value": "sil" }
+    ]
+}, {
+    "name": "replace array in array",
+    "before": [
+        "foo",
+        "sil"
+    ],
+    "after": [
+        "foo",
+        ["bar", "baz"]
+    ],
+    "patch": [
+        { "op": "replace", "path": "/1", "value": ["bar", "baz"] }
+    ]
+}, {
+    "name": "replace null element in array",
+    "before": [
+        "foo",
+        null
+    ],
+    "after": [
+        "foo",
+        "sil"
+    ],
+    "patch": [
+        { "op": "replace", "path": "/1", "value": "sil" }
+    ]
+}, {
+    "name": "appended array values",
+    "before": [
+        1, 2, 3
+    ],
+    "after": [
+        1, 2, 3, 4, 5
+    ],
+    "patch": [
+        { "op": "add", "path": "/-", "value": 4 },
+        { "op": "add", "path": "/-", "value": 5 }
+    ]
+}, {
+    "name": "removed array indexes",
+    "before": [
+        1, 2, 3
+    ],
+    "after": [
+        1
+    ],
+    "patch": [
+        { "op": "remove", "path": "/1" },
+        { "op": "remove", "path": "/1" }
+    ]
+}, {
+    "name": "embedded array indexes added/replaced",
+    "before": {
+        "a": [
+            1, 2, 3
+        ]
+    },
+    "after": {
+        "a": [
+            "b", 2, 3, 4
+        ]
+    },
+    "patch": [
+        { "op": "replace", "path": "/a/0", "value": "b" },
+        { "op": "add", "path": "/a/-", "value": 4 }
+    ]
+}, {
+    "name": "embedded array indexes added/replaced (#2)",
+    "before": [
+        1,
+        [2, 3],
+        4
+    ],
+    "after": [
+        "x",
+        [2, 3, "y"],
+        4
+    ],
+    "patch": [
+        { "op": "replace", "path": "/0", "value": "x" },
+        { "op": "add", "path": "/1/-", "value": "y" }
+    ]
+}, {
+    "name": "two levels depth sing-array in array",
+    "before": {
+        "a": {
+            "b": {
+                "c": [
+                    ["a"],
+                    ["b"],
+                    ["c"]
+                ]
+            }
+        }
+    },
+    "after": {
+        "a": {
+            "b": {
+                "c": [
+                    ["a"],
+                    ["b"],
+                    ["c"]
+                ]
+            }
+        }
+    },
+    "patch": []
+}, {
+    "name": "array reordering, no moves",
+    "before": [
+        1, 2, 3, 4, 5
+    ],
+    "after": [
+        6, 4, 3, 2
+    ],
+    "patch": [
+        { "op": "remove", "path": "/4" },
+        { "op": "replace", "path": "/0", "value": 6 },
+        { "op": "replace", "path": "/1", "value": 4 },
+        { "op": "replace", "path": "/3", "value": 2 }
+    ]
+}]
