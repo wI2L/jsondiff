@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+// JSON Patch operation types.
+// These are defined in RFC 6902 section 4.
 const (
 	OperationAdd     = "add"
 	OperationReplace = "replace"
