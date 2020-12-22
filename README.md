@@ -2,12 +2,13 @@
 <br>
 <p align="center"><strong>jsondiff</strong> is a Go package for computing the <i>diff</i> between two JSON documents as a series of <a href="https://tools.ietf.org/html/rfc6902">RFC6902</a> (JSON Patch) operations, which is particularly suitable to create the patch response of a Kubernetes Mutating Webhook for example.</p>
 <p align="center">
-    <a href="https://pkg.go.dev/github.com/wI2L/jsondiff?tab=doc"><img src="https://img.shields.io/static/v1?label=godev&message=reference&color=00add8"></a>
+    <a href="https://pkg.go.dev/github.com/wI2L/jsondiff"><img src="https://img.shields.io/static/v1?label=godev&message=reference&color=00add8&logo=go"></a>
     <a href="https://goreportcard.com/report/wI2L/jsondiff"><img src="https://goreportcard.com/badge/github.com/wI2L/fizz"></a>
     <a href="https://github.com/wI2L/jsondiff/actions"><img src="https://github.com/wI2L/jsondiff/workflows/CI/badge.svg"></a>
     <a href="https://codecov.io/gh/wI2L/jsondiff"><img src="https://codecov.io/gh/wI2L/jsondiff/branch/master/graph/badge.svg"/></a>
     <a href="https://github.com/wI2L/jsondiff/releases"><img src="https://img.shields.io/github/v/tag/wI2L/jsondiff?color=blueviolet&label=version&sort=semver"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
+    <a href="https://github.com/avelino/awesome-go"><img src="https://awesome.re/mentioned-badge.svg"></a>
 </p>
 
 ---
@@ -106,6 +107,33 @@ The output is similar to the following:
 ```
 
 The JSON patch can then be used in the response payload of you Kubernetes [webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#response).
+
+##### Optional fields gotcha
+
+Note that the above example is used for simplicity, but in a real-world admission controller, you should create the diff from the raw bytes of the `AdmissionReview.AdmissionRequest.Object.Raw` field. As pointed out by user [/u/terinjokes](https://www.reddit.com/user/terinjokes/) on Reddit, due to the nature of Go structs, the "hydrated" `corev1.Pod` object may contain "optional fields", resulting in a patch that state added/changed values that the Kubernetes API server doesn't know about. Below is a quote of the original comment:
+
+> Optional fields being ones that are a struct type, but are not pointers to those structs. These will exist when you unmarshal from JSON, because of how Go structs work, but are not in the original JSON. Comparing between the unmarshaled and copied versions can generate add and change patches below a path not in the original JSON, and the API server will reject your patch.
+
+A realistic usage would be similar to the following snippet:
+
+```go
+podBytes, err := json.Marshal(pod)
+if err != nil {
+    // handle error
+}
+// req is a k8s.io/api/admission/v1.AdmissionRequest object
+jsondiff.CompareJSON(req.AdmissionRequest.Object.Raw, podBytes)
+```
+
+Mutating the original pod object or a copy is up to you, as long as you use the raw bytes of the `AdmissionReview` object to generate the patch.
+
+You can find a detailed description of that problem and its resolution in this GitHub [issue](https://github.com/kubernetes-sigs/kubebuilder/issues/510).
+
+##### Outdated package version
+
+There's also one other downside to the above example. If your webhook does not have the latest version of the `client-go` package, or whatever package that contains the types for the resource your manipulating, all fields not known in that version will be deleted.
+
+For example, if your webhook mutate `Service` resources, a user could set the field `.spec.allocateLoadBalancerNodePort` in Kubernetes 1.20 to disable allocating a node port for services with `Type=LoadBalancer`. However, if the webhook is still using the v1.19.x version of the `k8s.io/api/core/v1` package that define the `Service` type, instead of simply ignoring this field, a `remove` operation will be generated for it.
 
 ### Diff options
 
