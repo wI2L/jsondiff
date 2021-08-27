@@ -298,18 +298,18 @@ The benchmark was run 10x (statistics computed with [benchstat](https://godoc.or
 OS : macOS Catalina (10.15.7)
 CPU: 1.4 GHz Intel Core i5
 Mem: 16GB 2133 MHz
-Go : go version go1.15.5 darwin/amd64
-Tag: v0.1.0
+Go : go version go1.17 darwin/amd64
+Tag: v0.1.1
 ```
 
 <details open><summary>Output</summary><br><pre>
 name                            time/op
-CompareJSONOpts/default-8       26.5µs ± 1%
-CompareJSONOpts/invertible-8    27.4µs ± 1%
-CompareJSONOpts/factorize-8     31.6µs ± 1%
-CompareJSONOpts/rationalize-8   90.3µs ± 0%
-CompareJSONOpts/factor+ratio-8  95.5µs ± 1%
-CompareJSONOpts/all-options-8    126µs ± 1%
+CompareJSONOpts/default-8       24.8µs ± 1%
+CompareJSONOpts/invertible-8    25.6µs ± 0%
+CompareJSONOpts/factorize-8     29.5µs ± 1%
+CompareJSONOpts/rationalize-8   76.6µs ± 1%
+CompareJSONOpts/factor+ratio-8  81.4µs ± 1%
+CompareJSONOpts/all-options-8    106µs ± 1%
 </pre></details>
 
 ## Credits

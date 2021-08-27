@@ -7,36 +7,73 @@ import (
 	"log"
 
 	"github.com/wI2L/jsondiff"
-	corev1 "k8s.io/api/core/v1"
+)
+
+type (
+	Pod struct {
+		Spec PodSpec `json:"spec,omitempty"`
+	}
+	PodSpec struct {
+		Containers []Container `json:"containers,omitempty"`
+		Volumes    []Volume    `json:"volumes,omitempty"`
+	}
+	Container struct {
+		Name         string        `json:"name"`
+		Image        string        `json:"image,omitempty"`
+		VolumeMounts []VolumeMount `json:"volumeMounts,omitempty"`
+	}
+	Volume struct {
+		Name         string `json:"name"`
+		VolumeSource `json:",inline"`
+	}
+	VolumeSource struct {
+		EmptyDir *EmptyDirVolumeSource `json:"emptyDir,omitempty"`
+	}
+	VolumeMount struct {
+		Name      string `json:"name"`
+		MountPath string `json:"mountPath"`
+	}
+	EmptyDirVolumeSource struct {
+		Medium StorageMedium `json:"medium,omitempty"`
+	}
+	StorageMedium string
+)
+
+const (
+	StorageMediumDefault StorageMedium = ""
+	StorageMediumMemory  StorageMedium = "Memory"
 )
 
 func ExampleCompare() {
-	pod := corev1.Pod{
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{{
-				Name:  "webserver",
-				Image: "nginx:latest",
-				VolumeMounts: []corev1.VolumeMount{{
-					Name:      "shared-data",
-					MountPath: "/usr/share/nginx/html",
+	createPod := func() Pod {
+		return Pod{
+			Spec: PodSpec{
+				Containers: []Container{{
+					Name:  "webserver",
+					Image: "nginx:latest",
+					VolumeMounts: []VolumeMount{{
+						Name:      "shared-data",
+						MountPath: "/usr/share/nginx/html",
+					}},
 				}},
-			}},
-			Volumes: []corev1.Volume{{
-				Name: "shared-data",
-				VolumeSource: corev1.VolumeSource{
-					EmptyDir: &corev1.EmptyDirVolumeSource{
-						Medium: corev1.StorageMediumMemory,
+				Volumes: []Volume{{
+					Name: "shared-data",
+					VolumeSource: VolumeSource{
+						EmptyDir: &EmptyDirVolumeSource{
+							Medium: StorageMediumMemory,
+						},
 					},
-				},
-			}},
-		},
+				}},
+			},
+		}
 	}
-	newPod := pod.DeepCopy()
+	oldPod := createPod()
+	newPod := createPod()
 
 	newPod.Spec.Containers[0].Image = "nginx:1.19.5-alpine"
-	newPod.Spec.Volumes[0].EmptyDir.Medium = corev1.StorageMediumDefault
+	newPod.Spec.Volumes[0].EmptyDir.Medium = StorageMediumDefault
 
-	patch, err := jsondiff.Compare(pod, newPod)
+	patch, err := jsondiff.Compare(oldPod, newPod)
 	if err != nil {
 		log.Fatal(err)
 	}
