@@ -52,3 +52,4 @@ Godeps/
 benchstats
 .benchruns
 coverage.txt
+dist/
