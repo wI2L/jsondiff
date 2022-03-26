@@ -56,5 +56,14 @@ func BenchmarkCompare(b *testing.B) {
 				_ = patch
 			}
 		})
+		b.Run("differ_diff/"+bb.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				d := differ{}
+				for _, opt := range bb.opts {
+					opt(&d)
+				}
+				d.diff(before, after)
+			}
+		})
 	}
 }
