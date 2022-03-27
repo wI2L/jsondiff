@@ -1,5 +1,5 @@
 [{
-    "name": "replaced obkect keys are sorted",
+    "name": "replaced object keys are sorted",
     "before": {
         "b": 2,
         "c": 3,
@@ -15,7 +15,7 @@
         { "op": "replace", "path": "/c", "value": 1 }
     ]
 }, {
-    "name": "added obkect keys are sorted",
+    "name": "added object keys are sorted",
     "before": {
         "a": 1
     },

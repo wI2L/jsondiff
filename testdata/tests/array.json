@@ -101,7 +101,7 @@
         { "op": "add", "path": "/1/-", "value": "y" }
     ]
 }, {
-    "name": "two levels depth sing-array in array",
+    "name": "two levels depth array in array",
     "before": {
         "a": {
             "b": {
@@ -126,7 +126,7 @@
     },
     "patch": []
 }, {
-    "name": "array reordering, no moves",
+    "name": "array content changes, no moves",
     "before": [
         1, 2, 3, 4, 5
     ],

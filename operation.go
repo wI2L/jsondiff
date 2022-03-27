@@ -3,10 +3,13 @@ package jsondiff
 import (
 	"encoding/json"
 	"strings"
+
+	"github.com/tidwall/gjson"
 )
 
 // JSON Patch operation types.
 // These are defined in RFC 6902 section 4.
+// https://datatracker.ietf.org/doc/html/rfc6902#section-4
 const (
 	OperationAdd     = "add"
 	OperationReplace = "replace"
@@ -14,6 +17,12 @@ const (
 	OperationMove    = "move"
 	OperationCopy    = "copy"
 	OperationTest    = "test"
+)
+
+const (
+	operationBase = `{"op":"","path":""}`
+	fromPrefix    = `,"from":""`
+	valuePrefix   = `,"value":`
 )
 
 // Operation represents a RFC6902 JSON Patch operation.
@@ -46,6 +55,27 @@ func (o Operation) MarshalJSON() ([]byte, error) {
 	return json.Marshal(op(o))
 }
 
+// jsonLength returns the length in bytes that the
+// operation would occupy when marshaled as JSON.
+func (o Operation) jsonLength(targetBytes []byte) int {
+	l := len(operationBase) + len(o.Type) + len(o.Path)
+
+	if o.Type != OperationCopy && o.Type != OperationMove {
+		var valueLen int
+		if o.Path.isRoot() {
+			valueLen = len(targetBytes)
+		} else {
+			r := gjson.GetBytes(targetBytes, o.Path.toJSONPath())
+			valueLen = len(r.Raw)
+		}
+		l += len(valuePrefix) + valueLen
+	}
+	if o.Type != OperationAdd && o.Type != OperationReplace && o.Type != OperationTest {
+		l += len(fromPrefix) + len(o.From)
+	}
+	return l
+}
+
 // Patch represents a series of JSON Patch operations.
 type Patch []Operation
 
@@ -74,4 +104,17 @@ func (p *Patch) append(typ string, from, path pointer, src, tgt interface{}) Pat
 		OldValue: src,
 		Value:    tgt,
 	})
+}
+
+func (p Patch) jsonLength(targetBytes []byte) int {
+	length := 0
+	for _, op := range p {
+		length += op.jsonLength(targetBytes)
+	}
+	// Count comma-separators if the patch
+	// has more than one operation.
+	if len(p) > 1 {
+		length += len(p) - 1
+	}
+	return length
 }

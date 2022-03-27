@@ -5,13 +5,20 @@ import (
 	"strings"
 )
 
-const separator = "/"
+const jsonPointerSep = "/"
 
-// rfc6901Replacer is a replacer used to escape JSON
-// pointer strings in compliance with the JavaScript
-// Object Notation Pointer syntax.
-// https://tools.ietf.org/html/rfc6901
-var rfc6901Replacer = strings.NewReplacer("~", "~0", "/", "~1")
+var (
+	// rfc6901Replacer is a replacer used to escape JSON
+	// pointer strings in compliance with the JavaScript
+	// Object Notation Pointer syntax.
+	// https://tools.ietf.org/html/rfc6901
+	rfc6901Replacer = strings.NewReplacer("~", "~0", "/", "~1")
+
+	// dotPathReplacer converts a RFC6901 JSON pointer to
+	// a JSON path, while also escaping any existing dot
+	// characters present in the original pointer.
+	dotPathReplacer = strings.NewReplacer(".", "\\.", "/", ".")
+)
 
 type jsonNode struct {
 	ptr pointer
@@ -28,12 +35,21 @@ func (p pointer) String() string {
 	return string(p)
 }
 
+func (p pointer) toJSONPath() string {
+	if len(p) > 0 {
+		return dotPathReplacer.Replace(string(p)[1:])
+	}
+	// @this is a special modifier that can
+	// be used to retrieve the root path.
+	return "@this"
+}
+
 func (p pointer) appendKey(key string) pointer {
-	return pointer(p.String() + separator + rfc6901Replacer.Replace(key))
+	return pointer(string(p) + jsonPointerSep + rfc6901Replacer.Replace(key))
 }
 
 func (p pointer) appendIndex(idx int) pointer {
-	return pointer(p.String() + separator + strconv.Itoa(idx))
+	return pointer(string(p) + jsonPointerSep + strconv.Itoa(idx))
 }
 
 func (p pointer) isRoot() bool {

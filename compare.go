@@ -10,14 +10,14 @@ type Option func(*differ)
 // given values and returns the differences relative
 // to the former as a list of JSON Patch operations.
 func Compare(source, target interface{}) (Patch, error) {
-	d := differ{}
+	var d differ
 	return compare(&d, source, target)
 }
 
 // CompareOpts is similar to Compare, but also accepts
 // a list of options to configure the diff behavior.
 func CompareOpts(source, target interface{}, opts ...Option) (Patch, error) {
-	d := differ{}
+	var d differ
 	d.applyOpts(opts...)
 
 	return compare(&d, source, target)
@@ -27,14 +27,14 @@ func CompareOpts(source, target interface{}, opts ...Option) (Patch, error) {
 // returns the differences relative to the former as
 // a list of JSON Patch operations.
 func CompareJSON(source, target []byte) (Patch, error) {
-	d := differ{}
+	var d differ
 	return compareJSON(&d, source, target)
 }
 
 // CompareJSONOpts is similar to CompareJSON, but also
 // accepts a list of options to configure the diff behavior.
 func CompareJSONOpts(source, target []byte, opts ...Option) (Patch, error) {
-	d := differ{}
+	var d differ
 	d.applyOpts(opts...)
 
 	return compareJSON(&d, source, target)
@@ -62,14 +62,15 @@ func Invertible() Option {
 }
 
 func compare(d *differ, src, tgt interface{}) (Patch, error) {
-	si, err := marshalUnmarshal(src)
+	si, _, err := marshalUnmarshal(src)
 	if err != nil {
 		return nil, err
 	}
-	ti, err := marshalUnmarshal(tgt)
+	ti, tb, err := marshalUnmarshal(tgt)
 	if err != nil {
 		return nil, err
 	}
+	d.targetBytes = tb
 	d.diff(si, ti)
 
 	return d.patch, nil
@@ -83,6 +84,7 @@ func compareJSON(d *differ, src, tgt []byte) (Patch, error) {
 	if err := json.Unmarshal(tgt, &ti); err != nil {
 		return nil, err
 	}
+	d.targetBytes = tgt
 	d.diff(si, ti)
 
 	return d.patch, nil
@@ -90,14 +92,14 @@ func compareJSON(d *differ, src, tgt []byte) (Patch, error) {
 
 // marshalUnmarshal returns the result of unmarshaling
 // the JSON representation of the given value.
-func marshalUnmarshal(i interface{}) (interface{}, error) {
+func marshalUnmarshal(i interface{}) (interface{}, []byte, error) {
 	b, err := json.Marshal(i)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var val interface{}
 	if err := json.Unmarshal(b, &val); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return val, nil
+	return val, b, nil
 }

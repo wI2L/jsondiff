@@ -1,4 +1,29 @@
 [{
+    "name": "null values",
+    "before": null,
+    "after": null,
+    "patch": []
+},{
+    "name": "comparable, unequal values",
+    "before": 42,
+    "after": "82",
+    "patch": [
+        { "op": "add", "path": "", "value": "82" }
+    ]
+},{
+    "name": "incomparable values, unequal values",
+    "before": [
+        "a",
+        "b"
+    ],
+    "after": {
+        "a": "AAA",
+        "b": "BBB"
+    },
+    "patch": [
+        { "op": "add", "path": "", "value": { "a": "AAA", "b": "BBB" } }
+    ]
+},{
     "name": "similar element is copied instead of added (object key)",
     "before": {
         "a": [1, 2, 3]
@@ -59,5 +84,18 @@
     "patch": [
         { "op": "move", "from": "/a", "path": "/b" },
         { "op": "add", "path": "/c", "value": 1 }
+    ]
+},{
+    "name": "impossible factorization",
+    "before": [
+        "foo",
+        "bar"
+    ],
+    "after": [
+        "foo",
+        "baz"
+    ],
+    "patch": [
+        { "op": "replace", "path": "/1", "value": "baz" }
     ]
 }]

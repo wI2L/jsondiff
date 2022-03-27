@@ -1,8 +1,6 @@
 package jsondiff
 
 import (
-	"encoding/json"
-	"reflect"
 	"sort"
 	"strings"
 )
@@ -10,10 +8,11 @@ import (
 type differ struct {
 	patch       Patch
 	hasher      hasher
-	hashmap     map[uint64]*jsonNode
+	hashmap     map[uint64]jsonNode
 	factorize   bool
 	rationalize bool
 	invertible  bool
+	targetBytes []byte
 }
 
 func (d *differ) diff(src, tgt interface{}) {
@@ -24,7 +23,7 @@ func (d *differ) diff(src, tgt interface{}) {
 }
 
 func (d *differ) compare(ptr pointer, src, tgt interface{}) {
-	if reflect.DeepEqual(src, tgt) {
+	if src == nil && tgt == nil {
 		return
 	}
 	if !areComparable(src, tgt) {
@@ -40,6 +39,9 @@ func (d *differ) compare(ptr pointer, src, tgt interface{}) {
 		}
 		return
 	}
+	if deepValueEqual(src, tgt, typeSwitchKind(src)) {
+		return
+	}
 	size := len(d.patch)
 
 	// Values are comparable, but are not
@@ -52,8 +54,10 @@ func (d *differ) compare(ptr pointer, src, tgt interface{}) {
 	default:
 		// Generate a replace operation for
 		// scalar types.
-		d.replace(ptr, src, tgt)
-		return
+		if !deepValueEqual(src, tgt, typeSwitchKind(src)) {
+			d.replace(ptr, src, tgt)
+			return
+		}
 	}
 	// Rationalize any new operations.
 	if d.rationalize && len(d.patch) > size {
@@ -67,29 +71,28 @@ func (d *differ) prepare(ptr pointer, src, tgt interface{}) {
 	}
 	// When both values are deeply equals, save
 	// the location indexed by the value hash.
-	if reflect.DeepEqual(src, tgt) {
+	if !areComparable(src, tgt) {
+		return
+	} else if deepValueEqual(src, tgt, typeSwitchKind(src)) {
 		k := d.hasher.digest(tgt)
 		if d.hashmap == nil {
-			d.hashmap = make(map[uint64]*jsonNode)
+			d.hashmap = make(map[uint64]jsonNode)
 		}
-		d.hashmap[k] = &jsonNode{ptr: ptr, val: tgt}
-		return
-	}
-	if !areComparable(src, tgt) {
+		d.hashmap[k] = jsonNode{ptr: ptr, val: tgt}
 		return
 	}
 	// At this point, the source and target values
 	// are non-nil and have comparable types.
-	switch src.(type) {
+	switch vsrc := src.(type) {
 	case []interface{}:
-		oarr := src.([]interface{})
+		oarr := vsrc
 		narr := tgt.([]interface{})
 
 		for i := 0; i < min(len(oarr), len(narr)); i++ {
 			d.prepare(ptr.appendIndex(i), oarr[i], narr[i])
 		}
 	case map[string]interface{}:
-		oobj := src.(map[string]interface{})
+		oobj := vsrc
 		nobj := tgt.(map[string]interface{})
 
 		for k, v1 := range oobj {
@@ -103,10 +106,10 @@ func (d *differ) prepare(ptr pointer, src, tgt interface{}) {
 }
 
 func (d *differ) rationalizeLastOps(ptr pointer, src, tgt interface{}, lastOpIdx int) {
-	ops := make(Patch, 0, 2)
+	newOps := make(Patch, 0, 2)
 
 	if d.invertible {
-		ops = ops.append(OperationTest, emptyPtr, ptr, nil, src)
+		newOps = newOps.append(OperationTest, emptyPtr, ptr, nil, src)
 	}
 	// replaceOp represents a single operation that
 	// replace the source document with the target.
@@ -115,17 +118,18 @@ func (d *differ) rationalizeLastOps(ptr pointer, src, tgt interface{}, lastOpIdx
 		Path:  ptr,
 		Value: tgt,
 	}
-	ops = append(ops, replaceOp)
+	newOps = append(newOps, replaceOp)
+	curOps := d.patch[lastOpIdx:]
 
-	b2, _ := json.Marshal(replaceOp)
-	b1, _ := json.Marshal(d.patch[lastOpIdx:])
+	newLen := replaceOp.jsonLength(d.targetBytes)
+	curLen := curOps.jsonLength(d.targetBytes)
 
-	// If one operation is cheapest than many small
+	// If one operation is cheaper than many small
 	// operations that represents the changes between
 	// the two objects, replace the last operations.
-	if len(b1) > len(b2)+2 {
+	if curLen > newLen {
 		d.patch = d.patch[:lastOpIdx]
-		d.patch = append(d.patch, ops...)
+		d.patch = append(d.patch, newOps...)
 	}
 }
 
@@ -135,10 +139,10 @@ func (d *differ) compareObjects(ptr pointer, src, tgt map[string]interface{}) {
 	cmpSet := make(map[string]uint8)
 
 	for k := range src {
-		cmpSet[k] |= (1 << 0)
+		cmpSet[k] |= 1 << 0
 	}
 	for k := range tgt {
-		cmpSet[k] |= (1 << 1)
+		cmpSet[k] |= 1 << 1
 	}
 	for _, k := range sortedObjectKeys(cmpSet) {
 		v := cmpSet[k]
@@ -189,32 +193,30 @@ func (d *differ) add(ptr pointer, v interface{}) {
 	idx := d.findRemoved(v)
 	if idx != -1 {
 		op := d.patch[idx]
+
 		// https://tools.ietf.org/html/rfc6902#section-4.4
 		// The "from" location MUST NOT be a proper prefix
 		// of the "path" location; i.e., a location cannot
 		// be moved into one of its children.
-		if !strings.HasPrefix(ptr.String(), op.Path.String()) {
+		if !strings.HasPrefix(string(ptr), string(op.Path)) {
 			d.patch = d.patch.remove(idx)
 			d.patch = d.patch.append(OperationMove, op.Path, ptr, v, v)
 		}
 		return
 	}
 	uptr := d.findUnchanged(v)
-	if uptr != emptyPtr && !d.invertible {
+	if !uptr.isRoot() && !d.invertible {
 		d.patch = d.patch.append(OperationCopy, uptr, ptr, nil, v)
 	} else {
 		d.patch = d.patch.append(OperationAdd, emptyPtr, ptr, nil, v)
 	}
 }
 
-// areComparable returns whether the interfaces values
+// areComparable returns whether the interface values
 // i1 and i2 can be compared. The values are comparable
 // only if they are both non-nil and share the same kind.
 func areComparable(i1, i2 interface{}) bool {
-	typ1 := reflect.TypeOf(i1)
-	typ2 := reflect.TypeOf(i2)
-
-	return typ1 != nil && typ2 != nil && typ1.Kind() == typ2.Kind()
+	return typeSwitchKind(i1) == typeSwitchKind(i2)
 }
 
 func (d *differ) replace(ptr pointer, src, tgt interface{}) {
@@ -245,7 +247,7 @@ func (d *differ) findUnchanged(v interface{}) pointer {
 func (d *differ) findRemoved(v interface{}) int {
 	for i := 0; i < len(d.patch); i++ {
 		op := d.patch[i]
-		if op.Type == OperationRemove && reflect.DeepEqual(op.OldValue, v) {
+		if op.Type == OperationRemove && deepEqual(op.OldValue, v) {
 			return i
 		}
 	}

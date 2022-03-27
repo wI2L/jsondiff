@@ -21,18 +21,18 @@ func (h *hasher) digest(val interface{}) uint64 {
 func (h *hasher) hash(i interface{}) {
 	switch v := i.(type) {
 	case string:
-		h.mh.WriteString(v)
+		_, _ = h.mh.WriteString(v)
 	case bool:
-		h.mh.WriteString(strconv.FormatBool(v))
+		_, _ = h.mh.WriteString(strconv.FormatBool(v))
 	case float64:
 		var buf [8]byte
 		binary.BigEndian.PutUint64(buf[:], math.Float64bits(v))
-		h.mh.Write(buf[:])
+		_, _ = h.mh.Write(buf[:])
 	case nil:
-		h.mh.WriteString("nil")
+		_ = h.mh.WriteByte('0')
 	case []interface{}:
 		for i, e := range v {
-			h.mh.WriteString(strconv.Itoa(i))
+			_, _ = h.mh.WriteString(strconv.Itoa(i))
 			h.hash(e)
 		}
 	case map[string]interface{}:
@@ -45,7 +45,7 @@ func (h *hasher) hash(i interface{}) {
 		sort.Strings(keys)
 
 		for _, k := range keys {
-			h.mh.WriteString(k)
+			_, _ = h.mh.WriteString(k)
 			h.hash(v[k])
 		}
 	}

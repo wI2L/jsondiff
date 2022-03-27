@@ -44,29 +44,30 @@ const (
 	StorageMediumMemory  StorageMedium = "Memory"
 )
 
-func ExampleCompare() {
-	createPod := func() Pod {
-		return Pod{
-			Spec: PodSpec{
-				Containers: []Container{{
-					Name:  "webserver",
-					Image: "nginx:latest",
-					VolumeMounts: []VolumeMount{{
-						Name:      "shared-data",
-						MountPath: "/usr/share/nginx/html",
-					}},
+func createPod() Pod {
+	return Pod{
+		Spec: PodSpec{
+			Containers: []Container{{
+				Name:  "webserver",
+				Image: "nginx:latest",
+				VolumeMounts: []VolumeMount{{
+					Name:      "shared-data",
+					MountPath: "/usr/share/nginx/html",
 				}},
-				Volumes: []Volume{{
-					Name: "shared-data",
-					VolumeSource: VolumeSource{
-						EmptyDir: &EmptyDirVolumeSource{
-							Medium: StorageMediumMemory,
-						},
+			}},
+			Volumes: []Volume{{
+				Name: "shared-data",
+				VolumeSource: VolumeSource{
+					EmptyDir: &EmptyDirVolumeSource{
+						Medium: StorageMediumMemory,
 					},
-				}},
-			},
-		}
+				},
+			}},
+		},
 	}
+}
+
+func ExampleCompare() {
 	oldPod := createPod()
 	newPod := createPod()
 
@@ -83,6 +84,28 @@ func ExampleCompare() {
 	// Output:
 	// {"op":"replace","path":"/spec/containers/0/image","value":"nginx:1.19.5-alpine"}
 	// {"op":"remove","path":"/spec/volumes/0/emptyDir/medium"}
+}
+
+func ExampleCompareOpts() {
+	oldPod := createPod()
+	newPod := createPod()
+
+	newPod.Spec.Volumes = append(newPod.Spec.Volumes, oldPod.Spec.Volumes[0])
+
+	patch, err := jsondiff.CompareOpts(
+		oldPod,
+		newPod,
+		jsondiff.Factorize(),
+		jsondiff.Rationalize(),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, op := range patch {
+		fmt.Printf("%s\n", op)
+	}
+	// Output:
+	// {"op":"copy","from":"/spec/volumes/0","path":"/spec/volumes/-"}
 }
 
 func ExampleCompareJSON() {

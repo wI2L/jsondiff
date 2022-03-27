@@ -58,7 +58,9 @@ func BenchmarkCompare(b *testing.B) {
 		})
 		b.Run("differ_diff/"+bb.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				d := differ{}
+				d := differ{
+					targetBytes: afterBytes,
+				}
 				for _, opt := range bb.opts {
 					opt(&d)
 				}

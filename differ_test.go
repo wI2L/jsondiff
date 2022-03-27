@@ -62,7 +62,13 @@ func runTestCases(t *testing.T, cases []testcase, opts ...Option) {
 		name := testNameReplacer.Replace(tc.Name)
 
 		t.Run(name, func(t *testing.T) {
-			d := differ{}
+			beforeBytes, err := json.Marshal(tc.Before)
+			if err != nil {
+				t.Error(err)
+			}
+			d := differ{
+				targetBytes: beforeBytes,
+			}
 			d.applyOpts(opts...)
 			d.diff(tc.Before, tc.After)
 

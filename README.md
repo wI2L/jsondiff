@@ -3,7 +3,7 @@
 <p align="center"><strong>jsondiff</strong> is a Go package for computing the <i>diff</i> between two JSON documents as a series of <a href="https://tools.ietf.org/html/rfc6902">RFC6902</a> (JSON Patch) operations, which is particularly suitable to create the patch response of a Kubernetes Mutating Webhook for example.</p>
 <p align="center">
     <a href="https://pkg.go.dev/github.com/wI2L/jsondiff"><img src="https://img.shields.io/static/v1?label=godev&message=reference&color=00add8&logo=go"></a>
-    <a href="https://goreportcard.com/report/wI2L/jsondiff"><img src="https://goreportcard.com/badge/github.com/wI2L/fizz"></a>
+    <a href="https://goreportcard.com/report/wI2L/jsondiff"><img src="https://goreportcard.com/badge/github.com/wI2L/jsondiff"></a>
     <a href="https://github.com/wI2L/jsondiff/actions"><img src="https://github.com/wI2L/jsondiff/workflows/CI/badge.svg"></a>
     <a href="https://codecov.io/gh/wI2L/jsondiff"><img src="https://codecov.io/gh/wI2L/jsondiff/branch/master/graph/badge.svg"/></a>
     <a href="https://github.com/wI2L/jsondiff/releases"><img src="https://img.shields.io/github/v/tag/wI2L/jsondiff?color=blueviolet&label=version&sort=semver"></a>
@@ -314,7 +314,7 @@ CompareJSONOpts/all-options-8    106µs ± 1%
 
 ## Credits
 
-This package has been inspired by existing implementations of JSON Patch for various languages:
+This package has been inspired by existing implementations of JSON Patch in various languages:
 
 - [cujojs/jiff](https://github.com/cujojs/jiff)
 - [Starcounter-Jack/JSON-Patch](https://github.com/Starcounter-Jack/JSON-Patch)
