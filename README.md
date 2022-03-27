@@ -131,7 +131,7 @@ You can find a detailed description of that problem and its resolution in this G
 
 ##### Outdated package version
 
-There's also one other downside to the above example. If your webhook does not have the latest version of the `client-go` package, or whatever package that contains the types for the resource your manipulating, all fields not known in that version will be deleted.
+There's also one other downside to the above example. If your webhook does not have the latest version of the `client-go` package, or whatever package that contains the types for the resource you're manipulating, all fields not known in that version will be deleted.
 
 For example, if your webhook mutate `Service` resources, a user could set the field `.spec.allocateLoadBalancerNodePort` in Kubernetes 1.20 to disable allocating a node port for services with `Type=LoadBalancer`. However, if the webhook is still using the v1.19.x version of the `k8s.io/api/core/v1` package that define the `Service` type, instead of simply ignoring this field, a `remove` operation will be generated for it.
 
@@ -282,7 +282,7 @@ Finally, as a side example, if we were to use the `Rationalize()` option in the 
 
 ## Benchmarks
 
-Performance is not the primary target of the package, instead it strives for correctness. A simple benchmark that compare the performance of available options is provided to give a rough estimate of the cost of each option. You can find the JSON documents used by this benchmark in the directory [testdata/bench](testdata/bench).
+Performance is not the primary target of the package, instead it strives for correctness. A simple benchmark that compare the performance of available options is provided to give a rough estimate of the cost of each option. You can find the JSON documents used by this benchmark in the directory [testdata/benchs](testdata/benchs).
 
 If you'd like to run the benchmark yourself, use the following command:
 
@@ -293,23 +293,34 @@ go test -bench=. | prettybench
 
 ### Results
 
-The benchmark was run 10x (statistics computed with [benchstat](https://godoc.org/golang.org/x/perf/cmd/benchstat)) on a MacBook Pro 13", with the following specs:
+The benchmark was run 10x (statistics computed with [benchstat](https://godoc.org/golang.org/x/perf/cmd/benchstat)) on a MacBook Pro 15", with the following specs:
 ```
 OS : macOS Catalina (10.15.7)
-CPU: 1.4 GHz Intel Core i5
-Mem: 16GB 2133 MHz
-Go : go version go1.17 darwin/amd64
-Tag: v0.1.1
+CPU: 2.6 GHz Intel Core i7
+Mem: 16GB 1600 MHz
+Go : go version go1.18 darwin/amd64
 ```
 
 <details open><summary>Output</summary><br><pre>
-name                            time/op
-CompareJSONOpts/default-8       24.8µs ± 1%
-CompareJSONOpts/invertible-8    25.6µs ± 0%
-CompareJSONOpts/factorize-8     29.5µs ± 1%
-CompareJSONOpts/rationalize-8   76.6µs ± 1%
-CompareJSONOpts/factor+ratio-8  81.4µs ± 1%
-CompareJSONOpts/all-options-8    106µs ± 1%
+name                                time/op
+Compare/Compare/default-8           32.7µs ± 1%
+Compare/CompareJSON/default-8       24.2µs ± 0%
+Compare/differ_diff/default-8       5.22µs ± 0%
+Compare/Compare/invertible-8        33.5µs ± 0%
+Compare/CompareJSON/invertible-8    25.0µs ± 0%
+Compare/differ_diff/invertible-8    6.05µs ± 0%
+Compare/Compare/factorize-8         35.4µs ± 1%
+Compare/CompareJSON/factorize-8     26.7µs ± 0%
+Compare/differ_diff/factorize-8     7.55µs ± 1%
+Compare/Compare/rationalize-8       43.3µs ± 1%
+Compare/CompareJSON/rationalize-8   51.0µs ± 1%
+Compare/differ_diff/rationalize-8   30.6µs ± 0%
+Compare/Compare/factor+ratio-8      45.5µs ± 0%
+Compare/CompareJSON/factor+ratio-8  50.8µs ± 0%
+Compare/differ_diff/factor+ratio-8  29.9µs ± 0%
+Compare/Compare/all-options-8       53.2µs ± 1%
+Compare/CompareJSON/all-options-8   58.6µs ± 1%
+Compare/differ_diff/all-options-8   37.4µs ± 1%
 </pre></details>
 
 ## Credits
@@ -324,4 +335,4 @@ This package has been inspired by existing implementations of JSON Patch in vari
 
 ## License
 
-jsondiff is licensed under the **MIT** license. See the [LICENSE](LICENSE) file.
+`jsondiff` is licensed under the **MIT** license. See the [LICENSE](LICENSE) file.
