@@ -9,14 +9,19 @@ type differ struct {
 	patch       Patch
 	hasher      hasher
 	hashmap     map[uint64]jsonNode
+	targetBytes []byte
+	opts        options
+}
+
+type options struct {
 	factorize   bool
 	rationalize bool
 	invertible  bool
-	targetBytes []byte
+	equivalent  bool
 }
 
 func (d *differ) diff(src, tgt interface{}) {
-	if d.factorize {
+	if d.opts.factorize {
 		d.prepare(emptyPtr, src, tgt)
 	}
 	d.compare(emptyPtr, src, tgt)
@@ -60,7 +65,7 @@ func (d *differ) compare(ptr pointer, src, tgt interface{}) {
 		}
 	}
 	// Rationalize any new operations.
-	if d.rationalize && len(d.patch) > size {
+	if d.opts.rationalize && len(d.patch) > size {
 		d.rationalizeLastOps(ptr, src, tgt, size)
 	}
 }
@@ -108,7 +113,7 @@ func (d *differ) prepare(ptr pointer, src, tgt interface{}) {
 func (d *differ) rationalizeLastOps(ptr pointer, src, tgt interface{}, lastOpIdx int) {
 	newOps := make(Patch, 0, 2)
 
-	if d.invertible {
+	if d.opts.invertible {
 		newOps = newOps.append(OperationTest, emptyPtr, ptr, nil, src)
 	}
 	// replaceOp represents a single operation that
@@ -162,8 +167,8 @@ func (d *differ) compareObjects(ptr pointer, src, tgt map[string]interface{}) {
 
 // compareArrays generates the patch operations that
 // represents the differences between two JSON arrays.
-func (d *differ) compareArrays(ptr pointer, src, dst []interface{}) {
-	size := min(len(src), len(dst))
+func (d *differ) compareArrays(ptr pointer, src, tgt []interface{}) {
+	size := min(len(src), len(tgt))
 
 	// When the source array contains more elements
 	// than the target, entries are being removed
@@ -172,21 +177,50 @@ func (d *differ) compareArrays(ptr pointer, src, dst []interface{}) {
 	for i := size; i < len(src); i++ {
 		d.remove(ptr.appendIndex(size), src[i])
 	}
+	if d.opts.equivalent && d.unorderedDeepEqualSlice(src, tgt) {
+		goto next
+	}
 	// Compare the elements at each index present in
 	// both the source and destination arrays.
 	for i := 0; i < size; i++ {
-		d.compare(ptr.appendIndex(i), src[i], dst[i])
+		d.compare(ptr.appendIndex(i), src[i], tgt[i])
 	}
+next:
 	// When the target array contains more elements
 	// than the source, entries are appended to the
 	// destination.
-	for i := size; i < len(dst); i++ {
-		d.add(ptr.appendKey("-"), dst[i])
+	for i := size; i < len(tgt); i++ {
+		d.add(ptr.appendKey("-"), tgt[i])
 	}
 }
 
+func (d *differ) unorderedDeepEqualSlice(src, tgt []interface{}) bool {
+	if len(src) != len(tgt) {
+		return false
+	}
+	diff := make(map[uint64]int, len(src))
+
+	for _, v := range src {
+		k := d.hasher.digest(v)
+		diff[k]++
+	}
+	for _, v := range tgt {
+		k := d.hasher.digest(v)
+		// If the digest hash if not in the diff,
+		// return early.
+		if _, ok := diff[k]; !ok {
+			return false
+		}
+		diff[k] -= 1
+		if diff[k] == 0 {
+			delete(diff, k)
+		}
+	}
+	return len(diff) == 0
+}
+
 func (d *differ) add(ptr pointer, v interface{}) {
-	if !d.factorize {
+	if !d.opts.factorize {
 		d.patch = d.patch.append(OperationAdd, emptyPtr, ptr, nil, v)
 		return
 	}
@@ -194,7 +228,7 @@ func (d *differ) add(ptr pointer, v interface{}) {
 	if idx != -1 {
 		op := d.patch[idx]
 
-		// https://tools.ietf.org/html/rfc6902#section-4.4
+		// https://tools.ietf.org/html/rfc6902#section-4.4f
 		// The "from" location MUST NOT be a proper prefix
 		// of the "path" location; i.e., a location cannot
 		// be moved into one of its children.
@@ -205,29 +239,22 @@ func (d *differ) add(ptr pointer, v interface{}) {
 		return
 	}
 	uptr := d.findUnchanged(v)
-	if !uptr.isRoot() && !d.invertible {
+	if !uptr.isRoot() && !d.opts.invertible {
 		d.patch = d.patch.append(OperationCopy, uptr, ptr, nil, v)
 	} else {
 		d.patch = d.patch.append(OperationAdd, emptyPtr, ptr, nil, v)
 	}
 }
 
-// areComparable returns whether the interface values
-// i1 and i2 can be compared. The values are comparable
-// only if they are both non-nil and share the same kind.
-func areComparable(i1, i2 interface{}) bool {
-	return typeSwitchKind(i1) == typeSwitchKind(i2)
-}
-
 func (d *differ) replace(ptr pointer, src, tgt interface{}) {
-	if d.invertible {
+	if d.opts.invertible {
 		d.patch = d.patch.append(OperationTest, emptyPtr, ptr, nil, src)
 	}
 	d.patch = d.patch.append(OperationReplace, emptyPtr, ptr, src, tgt)
 }
 
 func (d *differ) remove(ptr pointer, v interface{}) {
-	if d.invertible {
+	if d.opts.invertible {
 		d.patch = d.patch.append(OperationTest, emptyPtr, ptr, nil, v)
 	}
 	d.patch = d.patch.append(OperationRemove, emptyPtr, ptr, v, nil)

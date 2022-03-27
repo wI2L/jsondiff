@@ -32,7 +32,8 @@ func TestOptions(t *testing.T) {
 		{"testdata/tests/options/invertible.json", makeopts(Invertible())},
 		{"testdata/tests/options/factorization.json", makeopts(Factorize())},
 		{"testdata/tests/options/rationalization.json", makeopts(Rationalize())},
-		{"testdata/tests/options/all.json", makeopts(Factorize(), Rationalize(), Invertible())},
+		{"testdata/tests/options/equivalence.json", makeopts(Equivalent())},
+		{"testdata/tests/options/all.json", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent())},
 	} {
 		var (
 			ext  = filepath.Ext(tt.testfile)

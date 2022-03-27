@@ -280,6 +280,28 @@ Finally, as a side example, if we were to use the `Rationalize()` option in the 
 ]
 ```
 
+#### Equivalence
+
+Some data types, such as arrays, can be deeply unequal and equivalent at the same time.
+
+Take the following JSON documents:
+```json
+[
+    "a", "b", "c", "d"
+]
+```
+```json
+[
+    "d", "c", "b", "a"
+]
+```
+
+The root arrays of each document are not equal because the values differ at each index. However, they are equivalent in terms of content:
+- they have the same length
+- the elements of the first can be found in the second, the same number of times for each
+
+For such situations, you can use the `Equivalent()` option to instruct the diff generator to skip the generation of operations that would otherwise be added to the patch to represent the differences between the two arrays.
+
 ## Benchmarks
 
 Performance is not the primary target of the package, instead it strives for correctness. A simple benchmark that compare the performance of available options is provided to give a rough estimate of the cost of each option. You can find the JSON documents used by this benchmark in the directory [testdata/benchs](testdata/benchs).

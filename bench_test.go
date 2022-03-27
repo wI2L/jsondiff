@@ -11,33 +11,41 @@ func BenchmarkCompare(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	var before interface{}
-	err = json.Unmarshal(beforeBytes, &before)
+	afterBytesOrdered, err := ioutil.ReadFile("testdata/benchs/after-ordered.json")
 	if err != nil {
 		b.Fatal(err)
 	}
-	afterBytes, err := ioutil.ReadFile("testdata/benchs/after.json")
-	if err != nil {
-		b.Fatal(err)
-	}
-	var after interface{}
-	err = json.Unmarshal(afterBytes, &after)
+	afterBytesUnordered, err := ioutil.ReadFile("testdata/benchs/after-unordered.json")
 	if err != nil {
 		b.Fatal(err)
 	}
 	makeopts := func(opts ...Option) []Option { return opts }
 
 	for _, bb := range []struct {
-		name string
-		opts []Option
+		name       string
+		opts       []Option
+		afterBytes []byte
 	}{
-		{"default", nil},
-		{"invertible", makeopts(Invertible())},
-		{"factorize", makeopts(Factorize())},
-		{"rationalize", makeopts(Rationalize())},
-		{"factor+ratio", makeopts(Factorize(), Rationalize())},
-		{"all-options", makeopts(Factorize(), Rationalize(), Invertible())},
+		{"default-ordered", nil, afterBytesOrdered},
+		{"default-unordered", nil, afterBytesUnordered},
+		{"invertible", makeopts(Invertible()), afterBytesOrdered},
+		{"factorize", makeopts(Factorize()), afterBytesOrdered},
+		{"rationalize", makeopts(Rationalize()), afterBytesOrdered},
+		{"equivalent-ordered", makeopts(Equivalent()), afterBytesOrdered},
+		{"equivalent-unordered", makeopts(Equivalent()), afterBytesUnordered},
+		{"factor+ratio", makeopts(Factorize(), Rationalize()), afterBytesOrdered},
+		{"all-options-ordered", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent()), afterBytesOrdered},
+		{"all-options-unordered", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent()), afterBytesUnordered},
 	} {
+		var before, after interface{}
+		err = json.Unmarshal(beforeBytes, &before)
+		if err != nil {
+			b.Fatal(err)
+		}
+		err = json.Unmarshal(bb.afterBytes, &after)
+		if err != nil {
+			b.Fatal(err)
+		}
 		b.Run("Compare/"+bb.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				patch, err := CompareOpts(before, after, bb.opts...)
@@ -49,7 +57,7 @@ func BenchmarkCompare(b *testing.B) {
 		})
 		b.Run("CompareJSON/"+bb.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				patch, err := CompareJSONOpts(beforeBytes, afterBytes, bb.opts...)
+				patch, err := CompareJSONOpts(beforeBytes, bb.afterBytes, bb.opts...)
 				if err != nil {
 					b.Error(err)
 				}
@@ -59,7 +67,7 @@ func BenchmarkCompare(b *testing.B) {
 		b.Run("differ_diff/"+bb.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				d := differ{
-					targetBytes: afterBytes,
+					targetBytes: bb.afterBytes,
 				}
 				for _, opt := range bb.opts {
 					opt(&d)

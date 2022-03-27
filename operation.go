@@ -20,12 +20,15 @@ const (
 )
 
 const (
-	operationBase = `{"op":"","path":""}`
-	fromPrefix    = `,"from":""`
-	valuePrefix   = `,"value":`
+	fromFieldLen  = 10 // ,"from":""
+	valueFieldLen = 9  // ,"value":
+	opBaseLen     = 19 // {"op":"","path":""}
 )
 
-// Operation represents a RFC6902 JSON Patch operation.
+// Patch represents a series of JSON Patch operations.
+type Patch []Operation
+
+// Operation represents a single RFC6902 JSON Patch operation.
 type Operation struct {
 	Type     string      `json:"op"`
 	From     pointer     `json:"from,omitempty"`
@@ -46,10 +49,10 @@ func (o Operation) String() string {
 // MarshalJSON implements the json.Marshaler interface.
 func (o Operation) MarshalJSON() ([]byte, error) {
 	type op Operation
-	switch o.Type {
-	case OperationCopy, OperationMove:
+	if !o.hasValue() {
 		o.Value = nil
-	case OperationAdd, OperationReplace, OperationTest:
+	}
+	if !o.hasFrom() {
 		o.From = emptyPtr
 	}
 	return json.Marshal(op(o))
@@ -58,26 +61,39 @@ func (o Operation) MarshalJSON() ([]byte, error) {
 // jsonLength returns the length in bytes that the
 // operation would occupy when marshaled as JSON.
 func (o Operation) jsonLength(targetBytes []byte) int {
-	l := len(operationBase) + len(o.Type) + len(o.Path)
+	l := opBaseLen + len(o.Type) + len(o.Path)
 
-	if o.Type != OperationCopy && o.Type != OperationMove {
-		var valueLen int
-		if o.Path.isRoot() {
-			valueLen = len(targetBytes)
-		} else {
+	if o.hasValue() {
+		valueLen := len(targetBytes)
+		if !o.Path.isRoot() {
 			r := gjson.GetBytes(targetBytes, o.Path.toJSONPath())
 			valueLen = len(r.Raw)
 		}
-		l += len(valuePrefix) + valueLen
+		l += valueFieldLen + valueLen
 	}
-	if o.Type != OperationAdd && o.Type != OperationReplace && o.Type != OperationTest {
-		l += len(fromPrefix) + len(o.From)
+	if o.hasFrom() {
+		l += fromFieldLen + len(o.From)
 	}
 	return l
 }
 
-// Patch represents a series of JSON Patch operations.
-type Patch []Operation
+func (o Operation) hasFrom() bool {
+	switch o.Type {
+	case OperationAdd, OperationReplace, OperationTest:
+		return false
+	default:
+		return true
+	}
+}
+
+func (o Operation) hasValue() bool {
+	switch o.Type {
+	case OperationCopy, OperationMove:
+		return false
+	default:
+		return true
+	}
+}
 
 // String implements the fmt.Stringer interface.
 func (p Patch) String() string {

@@ -139,4 +139,17 @@
         { "op": "replace", "path": "/1", "value": 4 },
         { "op": "replace", "path": "/3", "value": 2 }
     ]
+}, {
+    "name": "re-ordered array content",
+    "before": [
+        "a", "e", "c", "b", "d"
+    ],
+    "after": [
+        "a", "b", "c", "d", "e"
+    ],
+    "patch": [
+        { "op": "replace", "path": "/1", "value": "b" },
+        { "op": "replace", "path": "/3", "value": "d" },
+        { "op": "replace", "path": "/4", "value": "e" }
+    ]
 }]

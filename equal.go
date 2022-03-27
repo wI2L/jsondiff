@@ -1,6 +1,16 @@
 package jsondiff
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
+
+// areComparable returns whether the interface values
+// i1 and i2 can be compared. The values are comparable
+// only if they are both non-nil and share the same kind.
+func areComparable(i1, i2 interface{}) bool {
+	return typeSwitchKind(i1) == typeSwitchKind(i2)
+}
 
 // typeSwitchKind returns the reflect.Kind of
 // the interface i using a type switch statement.
@@ -19,7 +29,7 @@ func typeSwitchKind(i interface{}) reflect.Kind {
 	case map[string]interface{}:
 		return reflect.Map
 	default:
-		panic("unknown json type")
+		panic(fmt.Sprintf("invalid json type %T", i))
 	}
 }
 

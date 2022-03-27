@@ -42,12 +42,18 @@ func CompareJSONOpts(source, target []byte, opts ...Option) (Patch, error) {
 
 // Factorize enables factorization of operations.
 func Factorize() Option {
-	return func(o *differ) { o.factorize = true }
+	return func(o *differ) { o.opts.factorize = true }
 }
 
 // Rationalize enables rationalization of operations.
 func Rationalize() Option {
-	return func(o *differ) { o.rationalize = true }
+	return func(o *differ) { o.opts.rationalize = true }
+}
+
+// Equivalent disables the generation of operations for
+// arrays of equal length and content that are not ordered.
+func Equivalent() Option {
+	return func(o *differ) { o.opts.equivalent = true }
 }
 
 // Invertible enables the generation of an invertible
@@ -58,7 +64,7 @@ func Rationalize() Option {
 // such, using this option disable the usage of copy
 // operation in favor of add operations.
 func Invertible() Option {
-	return func(o *differ) { o.invertible = true }
+	return func(o *differ) { o.opts.invertible = true }
 }
 
 func compare(d *differ, src, tgt interface{}) (Patch, error) {

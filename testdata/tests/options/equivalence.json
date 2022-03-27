@@ -1,0 +1,24 @@
+[{
+    "name": "re-ordered array, unequal content/length",
+    "before": [
+        "a", "e", "c", "b", "d"
+    ],
+    "after": [
+        "a", "b", "c", "d", "e", "f"
+    ],
+    "patch": [
+        { "op": "replace", "path": "/1", "value": "b" },
+        { "op": "replace", "path": "/3", "value": "d" },
+        { "op": "replace", "path": "/4", "value": "e" },
+        { "op": "add", "path": "/-", "value": "f" }
+    ]
+}, {
+    "name": "re-ordered array, equal content/length",
+    "before": [
+        "a", "e", "c", "b", "d"
+    ],
+    "after": [
+        "a", "b", "c", "d", "e"
+    ],
+    "patch": []
+}]
