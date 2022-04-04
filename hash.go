@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"hash/maphash"
 	"math"
-	"sort"
 	"strconv"
 )
 
@@ -15,6 +14,7 @@ type hasher struct {
 func (h *hasher) digest(val interface{}) uint64 {
 	h.mh.Reset()
 	h.hash(val)
+
 	return h.mh.Sum64()
 }
 
@@ -36,13 +36,14 @@ func (h *hasher) hash(i interface{}) {
 			h.hash(e)
 		}
 	case map[string]interface{}:
+		keys := make([]string, 0, len(v))
+
 		// Extract keys first, and sort them
 		// in lexicographical order.
-		keys := make([]string, 0, len(v))
 		for k := range v {
 			keys = append(keys, k)
 		}
-		sort.Strings(keys)
+		sortStrings(keys)
 
 		for _, k := range keys {
 			_, _ = h.mh.WriteString(k)

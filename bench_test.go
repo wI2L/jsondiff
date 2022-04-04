@@ -6,16 +6,16 @@ import (
 	"testing"
 )
 
-func BenchmarkCompare(b *testing.B) {
-	beforeBytes, err := ioutil.ReadFile("testdata/benchs/before.json")
+func BenchmarkMedium(b *testing.B) {
+	beforeBytes, err := ioutil.ReadFile("testdata/benchs/medium/before.json")
 	if err != nil {
 		b.Fatal(err)
 	}
-	afterBytesOrdered, err := ioutil.ReadFile("testdata/benchs/after-ordered.json")
+	afterBytesOrdered, err := ioutil.ReadFile("testdata/benchs/medium/after-ordered.json")
 	if err != nil {
 		b.Fatal(err)
 	}
-	afterBytesUnordered, err := ioutil.ReadFile("testdata/benchs/after-unordered.json")
+	afterBytesUnordered, err := ioutil.ReadFile("testdata/benchs/medium/after-unordered.json")
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -64,15 +64,16 @@ func BenchmarkCompare(b *testing.B) {
 				_ = patch
 			}
 		})
-		b.Run("differ_diff/"+bb.name, func(b *testing.B) {
+		b.Run("DifferCompare/"+bb.name, func(b *testing.B) {
+			d := Differ{
+				targetBytes: bb.afterBytes,
+			}
+			for _, opt := range bb.opts {
+				opt(&d)
+			}
 			for i := 0; i < b.N; i++ {
-				d := differ{
-					targetBytes: bb.afterBytes,
-				}
-				for _, opt := range bb.opts {
-					opt(&d)
-				}
-				d.diff(before, after)
+				d.Compare(before, after)
+				d.Reset()
 			}
 		})
 	}

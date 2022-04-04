@@ -67,11 +67,11 @@ func runTestCases(t *testing.T, cases []testcase, opts ...Option) {
 			if err != nil {
 				t.Error(err)
 			}
-			d := differ{
+			d := Differ{
 				targetBytes: beforeBytes,
 			}
 			d.applyOpts(opts...)
-			d.diff(tc.Before, tc.After)
+			d.Compare(tc.Before, tc.After)
 
 			if d.patch != nil {
 				t.Logf("\n%s", d.patch)
