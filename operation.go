@@ -3,6 +3,7 @@ package jsondiff
 import (
 	"encoding/json"
 	"strings"
+	"unsafe"
 
 	"github.com/tidwall/gjson"
 )
@@ -56,10 +57,14 @@ func (jn jsonNull) MarshalJSON() ([]byte, error) {
 // MarshalJSON implements the json.Marshaler interface.
 func (o Operation) MarshalJSON() ([]byte, error) {
 	type op Operation
+
 	if !o.marshalWithValue() {
 		o.Value = nil
-	} else if o.Value == nil {
-		o.Value = jsonNull{}
+	} else {
+		// Generic check that passes for nil and type nil interface values.
+		if (*[2]uintptr)(unsafe.Pointer(&o.Value))[1] == 0 {
+			o.Value = jsonNull{}
+		}
 	}
 	if !o.hasFrom() {
 		o.From = emptyPtr

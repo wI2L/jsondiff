@@ -130,21 +130,21 @@
     "before": "foobar",
     "after": null,
     "patch": [
-        { "op": "add", "path": "" }
+        { "op": "add", "path": "", "value": null }
     ]
 }, {
     "name": "remove document (number)",
     "before": 1337,
     "after": null,
     "patch": [
-        { "op": "add", "path": "" }
+        { "op": "add", "path": "", "value": null }
     ]
 }, {
     "name": "remove document (boolean)",
     "before": true,
     "after": null,
     "patch": [
-        { "op": "add", "path": "" }
+        { "op": "add", "path": "", "value": null }
     ]
 }, {
     "name": "remove document (object)",
@@ -154,7 +154,7 @@
     },
     "after": null,
     "patch": [
-        { "op": "add", "path": "" }
+        { "op": "add", "path": "", "value": null }
     ]
 }, {
     "name": "remove document (array)",
@@ -163,7 +163,7 @@
     ],
     "after": null,
     "patch": [
-        { "op": "add", "path": "" }
+        { "op": "add", "path": "", "value": null }
     ]
 }, {
     "name": "replace array with object",

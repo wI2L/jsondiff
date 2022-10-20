@@ -7,7 +7,7 @@ func TestOperationMarshalJSON(t *testing.T) {
 		Op  Operation
 		Out string // marshaled output
 	}{
-		// Replace operations should ALWAYS be marshaled
+		// Replace and add operations should ALWAYS be marshaled
 		// with a value, even if it is null (override omitempty).
 		{
 			Operation{
@@ -21,9 +21,42 @@ func TestOperationMarshalJSON(t *testing.T) {
 			Operation{
 				Type:  OperationReplace,
 				Path:  "/foo/bar",
+				Value: typeNilIface(),
+			},
+			`{"op":"replace","path":"/foo/bar","value":null}`,
+		},
+		{
+			Operation{
+				Type:  OperationReplace,
+				Path:  "/foo/bar",
 				Value: "foo",
 			},
 			`{"op":"replace","path":"/foo/bar","value":"foo"}`,
+		},
+		{
+			// assigned interface
+			Operation{
+				Type:  OperationAdd,
+				Path:  "",
+				Value: nil,
+			},
+			`{"op":"add","path":"","value":null}`,
+		},
+		{
+			// unassigned interface Value
+			Operation{
+				Type: OperationAdd,
+				Path: "",
+			},
+			`{"op":"add","path":"","value":null}`,
+		},
+		{
+			Operation{
+				Type:  OperationAdd,
+				Path:  "",
+				Value: typeNilIface(),
+			},
+			`{"op":"add","path":"","value":null}`,
 		},
 		{
 			// Remove operation should NEVER be marshaled with
@@ -101,6 +134,15 @@ func TestNilPatchString(t *testing.T) {
 	s := p.String()
 
 	if s != "" {
-		t.Errorf("stringified operation mismatch, got %q, wantempty string", s)
+		t.Errorf("stringified operation mismatch, got %q, want empty string", s)
 	}
+}
+
+func typeNilIface() interface{} {
+	var i *int
+	var p interface{}
+
+	p = i
+
+	return p
 }
