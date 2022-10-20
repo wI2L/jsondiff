@@ -20,9 +20,9 @@ const (
 )
 
 const (
-	fromFieldLen  = 10 // ,"from":""
-	valueFieldLen = 9  // ,"value":
-	opBaseLen     = 19 // {"op":"","path":""}
+	fromFieldLen  = len(`,"from":""`)
+	valueFieldLen = len(`,"value":`)
+	opBaseLen     = len(`{"op":"","path":""}`)
 )
 
 // Patch represents a series of JSON Patch operations.
@@ -96,10 +96,13 @@ func (o Operation) hasValue() bool {
 }
 
 // String implements the fmt.Stringer interface.
-func (p Patch) String() string {
+func (p *Patch) String() string {
+	if p == nil {
+		return ""
+	}
 	sb := strings.Builder{}
 
-	for i, op := range p {
+	for i, op := range *p {
 		if i != 0 {
 			sb.WriteByte('\n')
 		}
@@ -122,15 +125,18 @@ func (p *Patch) append(typ string, from, path pointer, src, tgt interface{}) Pat
 	})
 }
 
-func (p Patch) jsonLength(targetBytes []byte) int {
+func (p *Patch) jsonLength(targetBytes []byte) int {
 	length := 0
-	for _, op := range p {
+	if p == nil {
+		return length
+	}
+	for _, op := range *p {
 		length += op.jsonLength(targetBytes)
 	}
 	// Count comma-separators if the patch
 	// has more than one operation.
-	if len(p) > 1 {
-		length += len(p) - 1
+	if len(*p) > 1 {
+		length += len(*p) - 1
 	}
 	return length
 }
