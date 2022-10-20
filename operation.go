@@ -46,11 +46,20 @@ func (o Operation) String() string {
 	return string(b)
 }
 
+type jsonNull struct{}
+
+// MarshalJSON implements the json.Marshaler interface.
+func (jn jsonNull) MarshalJSON() ([]byte, error) {
+	return []byte("null"), nil
+}
+
 // MarshalJSON implements the json.Marshaler interface.
 func (o Operation) MarshalJSON() ([]byte, error) {
 	type op Operation
-	if !o.hasValue() {
+	if !o.marshalWithValue() {
 		o.Value = nil
+	} else if o.Value == nil {
+		o.Value = jsonNull{}
 	}
 	if !o.hasFrom() {
 		o.From = emptyPtr
@@ -63,7 +72,7 @@ func (o Operation) MarshalJSON() ([]byte, error) {
 func (o Operation) jsonLength(targetBytes []byte) int {
 	l := opBaseLen + len(o.Type) + len(o.Path)
 
-	if o.hasValue() {
+	if o.marshalWithValue() {
 		valueLen := len(targetBytes)
 		if !o.Path.isRoot() {
 			r := gjson.GetBytes(targetBytes, o.Path.toJSONPath())
@@ -86,9 +95,9 @@ func (o Operation) hasFrom() bool {
 	}
 }
 
-func (o Operation) hasValue() bool {
+func (o Operation) marshalWithValue() bool {
 	switch o.Type {
-	case OperationCopy, OperationMove:
+	case OperationCopy, OperationMove, OperationRemove:
 		return false
 	default:
 		return true
