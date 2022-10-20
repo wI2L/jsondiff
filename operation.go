@@ -106,7 +106,7 @@ func (o Operation) marshalWithValue() bool {
 
 // String implements the fmt.Stringer interface.
 func (p *Patch) String() string {
-	if p == nil {
+	if p == nil || len(*p) == 0 {
 		return ""
 	}
 	sb := strings.Builder{}

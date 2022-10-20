@@ -67,3 +67,40 @@ func TestOperationMarshalJSON(t *testing.T) {
 		}
 	}
 }
+
+func TestPatchString(t *testing.T) {
+	patch := Patch{
+		{
+			Type:  OperationReplace,
+			Path:  "/foo/baz",
+			Value: 42,
+		},
+		{
+			Type: OperationRemove,
+			Path: "/xxx",
+		},
+		{
+			Type:  OperationAdd,
+			Path:  "/zzz",
+			Value: make(chan<- string), // UnsupportedTypeError
+		},
+	}
+	s := patch.String()
+
+	const expected = `{"op":"replace","path":"/foo/baz","value":42}
+{"op":"remove","path":"/xxx"}
+<invalid operation>`
+
+	if s != expected {
+		t.Errorf("stringified operation mismatch, got %q, want %q", s, expected)
+	}
+}
+
+func TestNilPatchString(t *testing.T) {
+	p := new(Patch)
+	s := p.String()
+
+	if s != "" {
+		t.Errorf("stringified operation mismatch, got %q, wantempty string", s)
+	}
+}
