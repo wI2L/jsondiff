@@ -15,11 +15,17 @@ type Differ struct {
 	opts        options
 }
 
+type jsonNode struct {
+	ptr pointer
+	val interface{}
+}
+
 type options struct {
 	factorize   bool
 	rationalize bool
 	invertible  bool
 	equivalent  bool
+	ignoredPtrs map[pointer]struct{}
 }
 
 // Patch returns the list of JSON patch operations
@@ -60,6 +66,9 @@ func (d *Differ) Compare(src, tgt interface{}) {
 
 func (d *Differ) diff(ptr pointer, src, tgt interface{}) {
 	if src == nil && tgt == nil {
+		return
+	}
+	if _, ok := d.opts.ignoredPtrs[ptr]; ok {
 		return
 	}
 	if !areComparable(src, tgt) {
@@ -196,9 +205,15 @@ func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]interface{}) {
 		case inOld && inNew:
 			d.diff(ptr.appendKey(k), src[k], tgt[k])
 		case inOld && !inNew:
-			d.remove(ptr.appendKey(k), src[k])
+			p := ptr.appendKey(k)
+			if _, ok := d.opts.ignoredPtrs[p]; !ok {
+				d.remove(p, src[k])
+			}
 		case !inOld && inNew:
-			d.add(ptr.appendKey(k), tgt[k])
+			p := ptr.appendKey(k)
+			if _, ok := d.opts.ignoredPtrs[p]; !ok {
+				d.add(p, tgt[k])
+			}
 		}
 	}
 }
@@ -213,7 +228,9 @@ func (d *Differ) compareArrays(ptr pointer, src, tgt []interface{}) {
 	// from the destination and the removal index
 	// is always equal to the original array length.
 	for i := size; i < len(src); i++ {
-		d.remove(ptr.appendIndex(size), src[i])
+		if _, ok := d.opts.ignoredPtrs[ptr.appendIndex(i)]; !ok {
+			d.remove(ptr.appendIndex(size), src[i])
+		}
 	}
 	if d.opts.equivalent && d.unorderedDeepEqualSlice(src, tgt) {
 		goto next
@@ -228,7 +245,9 @@ next:
 	// than the source, entries are appended to the
 	// destination.
 	for i := size; i < len(tgt); i++ {
-		d.add(ptr.appendKey("-"), tgt[i])
+		if _, ok := d.opts.ignoredPtrs[ptr.appendIndex(i)]; !ok {
+			d.add(ptr.appendKey("-"), tgt[i])
+		}
 	}
 }
 
@@ -244,7 +263,7 @@ func (d *Differ) unorderedDeepEqualSlice(src, tgt []interface{}) bool {
 	}
 	for _, v := range tgt {
 		k := d.hasher.digest(v)
-		// If the digest hash if not in the Compare,
+		// If the digest hash is not in the compare,
 		// return early.
 		if _, ok := diff[k]; !ok {
 			return false

@@ -14,7 +14,7 @@ func Rationalize() Option {
 }
 
 // Equivalent disables the generation of operations for
-// arrays of equal length and content that are not ordered.
+// arrays of equal length and unordered/equal elements.
 func Equivalent() Option {
 	return func(o *Differ) { o.opts.equivalent = true }
 }
@@ -28,4 +28,16 @@ func Equivalent() Option {
 // operation in favor of add operations.
 func Invertible() Option {
 	return func(o *Differ) { o.opts.invertible = true }
+}
+
+// Ignores defines the list of values that are ignored
+// by the diff generation, represented as a list of JSON
+// Pointer strings (RFC 6901).
+func Ignores(ptrs ...string) Option {
+	return func(o *Differ) {
+		o.opts.ignoredPtrs = make(map[pointer]struct{}, len(ptrs))
+		for _, ptr := range ptrs {
+			o.opts.ignoredPtrs[pointer(ptr)] = struct{}{}
+		}
+	}
 }

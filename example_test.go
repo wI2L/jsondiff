@@ -3,8 +3,8 @@ package jsondiff_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/wI2L/jsondiff"
 )
@@ -120,7 +120,7 @@ func ExampleCompareJSON() {
 		Age       int     `json:"age"`
 		Phones    []Phone `json:"phoneNumbers"`
 	}
-	source, err := ioutil.ReadFile("testdata/examples/john.json")
+	source, err := os.ReadFile("testdata/examples/john.json")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -190,4 +190,22 @@ func ExampleFactorize() {
 	// Output:
 	// {"op":"copy","from":"/a","path":"/c"}
 	// {"op":"move","from":"/b","path":"/d"}
+}
+
+func ExampleIgnores() {
+	source := `{"A":"bar","B":"baz","C":"foo"}`
+	target := `{"A":"rab","B":"baz","D":"foo"}`
+
+	patch, err := jsondiff.CompareJSONOpts(
+		[]byte(source),
+		[]byte(target),
+		jsondiff.Ignores("/A", "/C", "/D"),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, op := range patch {
+		fmt.Printf("%s\n", op)
+	}
+	// Output:
 }

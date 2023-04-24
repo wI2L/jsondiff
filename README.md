@@ -22,7 +22,7 @@ First, get the latest version of the library using the following command:
 $ go get github.com/wI2L/jsondiff@latest
 ```
 
-:warning: Requires Go1.14+, due to the usage of the package [`hash/maphash`](https://golang.org/pkg/hash/maphash/).
+:warning: Requires Go1.18+, due to the usage of the package [`hash/maphash`](https://golang.org/pkg/hash/maphash/), and the `any` keyword (predeclared type alias for the empty interface).
 
 ### Example use cases
 
@@ -272,6 +272,8 @@ The patch is similar to the following:
 
 As you can see, the `remove` and `replace` operations are preceded with a `test` operation which assert/verify the `value` of the previous `path`. On the other hand, the `add` operation can be reverted to a remove operation directly and doesn't need to be preceded by a `test`.
 
+[Run this example](https://pkg.go.dev/github.com/wI2L/jsondiff#example-Invertible).
+
 Finally, as a side example, if we were to use the `Rationalize()` option in the context of the previous example, the output would be shorter, but the generated patch would still remain invertible:
 
 ```json
@@ -302,6 +304,56 @@ The root arrays of each document are not equal because the values differ at each
 - the elements of the first can be found in the second, the same number of times for each
 
 For such situations, you can use the `Equivalent()` option to instruct the diff generator to skip the generation of operations that would otherwise be added to the patch to represent the differences between the two arrays.
+
+#### Ignores
+
+:construction: *This option is experimental and might be revised in the future.*
+<br/>
+<br/>
+
+The `Ignores()` option allows to exclude one or more JSON fields/values from the *generated diff*. The fields must be identified using the JSON Pointer (RFC6901) string syntax.
+
+The option accepts a variadic list of JSON Pointers, which all individually represent a value in the source document. However, if the value does not exist in the source document, the value will be considered to be in the target document, which allows to *ignore* `add` operations.
+
+For example, let's generate the diff between those two JSON documents:
+
+```json
+{
+    "A": "bar",
+    "B": "baz",
+    "C": "foo"
+}
+```
+
+```json
+{
+    "A": "rab",
+    "B": "baz",
+    "D": "foo"
+}
+```
+
+Without the `Ignores()` option, the output patch is the following:
+
+```json
+[
+    { "op": "replace", "path": "/A", "value": "rab" },
+    { "op": "remove", "path": "/C" },
+    { "op": "add", "path": "/D", "value": "foo" }
+]
+```
+
+Using the option with the following pointers list, we can ignore some of the fields that were updated, added or removed:
+
+```go
+jsondiff.Ignores("/A", "/B", "/C")
+```
+
+The resulting patch is empty, because all changes and ignored.
+
+[Run this example](https://pkg.go.dev/github.com/wI2L/jsondiff#example-Ignores).
+
+> See the actual [testcases](testdata/tests/options/ignore.json) for more examples.
 
 ## Benchmarks
 

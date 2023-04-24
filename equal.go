@@ -1,7 +1,6 @@
 package jsondiff
 
 import (
-	"fmt"
 	"reflect"
 )
 
@@ -13,7 +12,7 @@ func areComparable(i1, i2 interface{}) bool {
 }
 
 // typeSwitchKind returns the reflect.Kind of
-// the interface i using a type switch statement.
+// the interface using a type switch statement.
 func typeSwitchKind(i interface{}) reflect.Kind {
 	switch i.(type) {
 	case string:
@@ -29,7 +28,11 @@ func typeSwitchKind(i interface{}) reflect.Kind {
 	case map[string]interface{}:
 		return reflect.Map
 	default:
-		panic(fmt.Sprintf("invalid json type %T", i))
+		// reflect.Invalid is the zero-value of the
+		// reflect.Kind type and does not represent
+		// the actual kind of the value, it is used
+		// to signal an unsupported type.
+		return reflect.Invalid
 	}
 }
 

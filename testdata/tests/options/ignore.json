@@ -1,0 +1,179 @@
+[{
+    "name": "ignore updated elements of a array",
+    "before": [
+        "a", "b", "c", "d", "e"
+    ],
+    "after": [
+        "a", "x", "c", "y", "z"
+    ],
+    "ignores": [
+        "/1",
+        "/3"
+    ],
+    "patch": [
+        { "op": "replace", "path": "/1", "value": "x" },
+        { "op": "replace", "path": "/3", "value": "y" },
+        { "op": "replace", "path": "/4", "value": "z" }
+    ],
+    "incomplete_patch": [
+        { "op": "replace", "path": "/4", "value": "z" }
+    ]
+}, {
+    "name": "ignore added keys of a array",
+    "before": [
+        "a", "b", "c"
+    ],
+    "after": [
+        "a", "b", "c", "d", "e"
+    ],
+    "ignores": [
+        "/3"
+    ],
+    "patch": [
+        { "op": "add", "path": "/-", "value": "d" },
+        { "op": "add", "path": "/-", "value": "e" }
+    ],
+    "incomplete_patch": [
+        { "op": "add", "path": "/-", "value": "e" }
+    ]
+}, {
+    "name": "ignore removed keys of a array",
+    "before": [
+        "a", "b", "c", "d", "e"
+    ],
+    "after": [
+        "a", "b", "c"
+    ],
+    "ignores": [
+        "/4"
+    ],
+    "patch": [
+        { "op": "remove", "path": "/3" },
+        { "op": "remove", "path": "/3" }
+    ],
+    "incomplete_patch": [
+        { "op": "remove", "path": "/3" }
+    ]
+},{
+    "name": "ignore updated keys of an object",
+    "before": {
+        "a": "AAA",
+        "b": "BBB",
+        "c": "CCC"
+    },
+    "after": {
+        "a": "BBB",
+        "b": "AAA",
+        "c": "DDD"
+    },
+    "ignores": [
+        "/a"
+    ],
+    "patch": [
+        { "op": "replace", "path": "/a", "value": "BBB" },
+        { "op": "replace", "path": "/b", "value": "AAA" },
+        { "op": "replace", "path": "/c", "value": "DDD" }
+    ],
+    "incomplete_patch": [
+        { "op": "replace", "path": "/b", "value": "AAA" },
+        { "op": "replace", "path": "/c", "value": "DDD" }
+    ]
+}, {
+    "name": "ignore added keys of an object",
+    "before": {
+        "a": "AAA",
+        "b": "BBB",
+        "c": "CCC"
+    },
+    "after": {
+        "a": "AAA",
+        "b": "BBB",
+        "c": "CCC",
+        "d": "DDD",
+        "e": "EEE"
+    },
+    "ignores": [
+        "/d"
+    ],
+    "patch": [
+        { "op": "add", "path": "/d", "value": "DDD" },
+        { "op": "add", "path": "/e", "value": "EEE" }
+    ],
+    "incomplete_patch": [
+        { "op": "add", "path": "/e", "value": "EEE" }
+    ]
+},{
+    "name": "ignore removed keys of an object",
+    "before": {
+        "a": "AAA",
+        "b": "BBB",
+        "c": "CCC",
+        "d": "DDD",
+        "e": "EEE"
+    },
+    "after": {
+        "b": "BBB",
+        "d": "DDD",
+        "e": "EEE"
+    },
+    "ignores": [
+        "/a"
+    ],
+    "patch": [
+        { "op": "remove", "path": "/a" },
+        { "op": "remove", "path": "/c" }
+    ],
+    "incomplete_patch": [
+        { "op": "remove", "path": "/c" }
+    ]
+}, {
+    "name": "ignore embedded array index in objects",
+    "before": {
+        "a": {
+            "b": {
+                "c": [
+                    "x", "y", "z"
+                ]
+            }
+        }
+    },
+    "after": {
+        "a": {
+            "b": {
+                "c": [
+                    "x", "Y", "z"
+                ]
+            }
+        }
+    },
+    "ignores": [
+        "/a/b/c/1"
+    ],
+    "patch": [
+        { "op": "replace", "path": "/a/b/c/1", "value": "Y" }
+    ],
+    "incomplete_patch": null
+}, {
+    "name": "ignore embedded object keys in array",
+    "before": [
+        {
+            "a": {
+                "b": "c"
+            }
+        }
+    ],
+    "after": [
+        {
+            "a": {
+                "b": "d"
+            }
+        }
+    ],
+    "ignores": [
+        "/0/a/b"
+    ],
+    "patch": [
+        { "op": "replace", "path": "/0/a/b", "value": "d" }
+    ],
+    "incomplete_patch": null
+}]

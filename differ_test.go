@@ -2,7 +2,8 @@ package jsondiff
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -12,11 +13,15 @@ import (
 var testNameReplacer = strings.NewReplacer(",", "", "(", "", ")", "")
 
 type testcase struct {
-	Name   string      `json:"name"`
-	Before interface{} `json:"before"`
-	After  interface{} `json:"after"`
-	Patch  []Operation `json:"patch"`
+	Name            string      `json:"name"`
+	Before          interface{} `json:"before"`
+	After           interface{} `json:"after"`
+	Patch           Patch       `json:"patch"`
+	IncompletePatch Patch       `json:"incomplete_patch"`
+	Ignores         []string    `json:"ignores"`
 }
+
+type patchGetter func(tc *testcase) Patch
 
 func TestArrayCases(t *testing.T)  { runCasesFromFile(t, "testdata/tests/array.json") }
 func TestObjectCases(t *testing.T) { runCasesFromFile(t, "testdata/tests/object.json") }
@@ -33,6 +38,7 @@ func TestOptions(t *testing.T) {
 		{"testdata/tests/options/factorization.json", makeopts(Factorize())},
 		{"testdata/tests/options/rationalization.json", makeopts(Rationalize())},
 		{"testdata/tests/options/equivalence.json", makeopts(Equivalent())},
+		{"testdata/tests/options/ignore.json", makeopts()},
 		{"testdata/tests/options/all.json", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent())},
 	} {
 		var (
@@ -47,7 +53,7 @@ func TestOptions(t *testing.T) {
 }
 
 func runCasesFromFile(t *testing.T, filename string, opts ...Option) {
-	b, err := ioutil.ReadFile(filename)
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,42 +69,60 @@ func runTestCases(t *testing.T, cases []testcase, opts ...Option) {
 		name := testNameReplacer.Replace(tc.Name)
 
 		t.Run(name, func(t *testing.T) {
-			beforeBytes, err := json.Marshal(tc.Before)
-			if err != nil {
-				t.Error(err)
-			}
-			d := Differ{
-				targetBytes: beforeBytes,
-			}
-			d.applyOpts(opts...)
-			d.Compare(tc.Before, tc.After)
-
-			if d.patch != nil {
-				t.Logf("\n%s", d.patch)
-			}
-			if len(d.patch) != len(tc.Patch) {
-				t.Errorf("got %d patches, want %d", len(d.patch), len(tc.Patch))
-				return
-			}
-			for i, op := range d.patch {
-				want := tc.Patch[i]
-				if g, w := op.Type, want.Type; g != w {
-					t.Errorf("op #%d mismatch: op: got %q, want %q", i, g, w)
-				}
-				if g, w := op.Path.String(), want.Path.String(); g != w {
-					t.Errorf("op #%d mismatch: path: got %q, want %q", i, g, w)
-				}
-				switch want.Type {
-				case OperationCopy, OperationMove:
-					if g, w := op.From.String(), want.From.String(); g != w {
-						t.Errorf("op #%d mismatch: from: got %q, want %q", i, g, w)
-					}
-				case OperationAdd, OperationReplace:
-					if !reflect.DeepEqual(op.Value, want.Value) {
-						t.Errorf("op #%d mismatch: value: unequal", i)
-					}
-				}
-			}
+			runTestCase(t, tc, func(tc *testcase) Patch {
+				return tc.Patch
+			}, opts...)
 		})
+		if len(tc.Ignores) != 0 {
+			name = fmt.Sprintf("%s_with_ignore", name)
+			xopts := append(opts, Ignores(tc.Ignores...))
+
+			t.Run(name, func(t *testing.T) {
+				runTestCase(t, tc, func(tc *testcase) Patch {
+					return tc.IncompletePatch
+				}, xopts...)
+			})
+		}
+	}
+}
+
+func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
+	beforeBytes, err := json.Marshal(tc.Before)
+	if err != nil {
+		t.Error(err)
+	}
+	d := Differ{
+		targetBytes: beforeBytes,
+	}
+	d.applyOpts(opts...)
+	d.Compare(tc.Before, tc.After)
+
+	wantPatch := pc(&tc)
+
+	if d.patch != nil {
+		t.Logf("\n%s", d.patch)
+	}
+	if len(d.patch) != len(wantPatch) {
+		t.Errorf("got %d patches, want %d", len(d.patch), len(wantPatch))
+		return
+	}
+	for i, op := range d.patch {
+		want := wantPatch[i]
+		if g, w := op.Type, want.Type; g != w {
+			t.Errorf("op #%d mismatch: op: got %q, want %q", i, g, w)
+		}
+		if g, w := op.Path.String(), want.Path.String(); g != w {
+			t.Errorf("op #%d mismatch: path: got %q, want %q", i, g, w)
+		}
+		switch want.Type {
+		case OperationCopy, OperationMove:
+			if g, w := op.From.String(), want.From.String(); g != w {
+				t.Errorf("op #%d mismatch: from: got %q, want %q", i, g, w)
+			}
+		case OperationAdd, OperationReplace:
+			if !reflect.DeepEqual(op.Value, want.Value) {
+				t.Errorf("op #%d mismatch: value: unequal", i)
+			}
+		}
 	}
 }

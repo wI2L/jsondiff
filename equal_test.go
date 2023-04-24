@@ -26,3 +26,62 @@ func BenchmarkGetType(b *testing.B) {
 		}
 	})
 }
+
+func Test_typeSwitchKind(t *testing.T) {
+	for _, tt := range []struct {
+		val   any
+		valid bool
+		kind  reflect.Kind
+	}{
+		{
+			"foo",
+			true,
+			reflect.String,
+		},
+		{
+			false,
+			true,
+			reflect.Bool,
+		},
+		{
+			float32(3.14),
+			false,
+			reflect.Invalid,
+		},
+		{
+			nil,
+			true,
+			reflect.Ptr,
+		},
+		{
+			&struct{}{},
+			false,
+			reflect.Invalid,
+		},
+		{
+			3.14,
+			true,
+			reflect.Float64,
+		},
+		{
+			func() {},
+			false,
+			reflect.Invalid,
+		},
+		{
+			[]interface{}{},
+			true,
+			reflect.Slice,
+		},
+		{
+			map[string]interface{}{},
+			true,
+			reflect.Map,
+		},
+	} {
+		k := typeSwitchKind(tt.val)
+		if k != tt.kind {
+			t.Errorf("got %s, want %s", k, tt.kind)
+		}
+	}
+}
