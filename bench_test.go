@@ -2,20 +2,20 @@ package jsondiff
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"testing"
 )
 
 func BenchmarkMedium(b *testing.B) {
-	beforeBytes, err := ioutil.ReadFile("testdata/benchs/medium/before.json")
+	beforeBytes, err := os.ReadFile("testdata/benchs/medium/before.json")
 	if err != nil {
 		b.Fatal(err)
 	}
-	afterBytesOrdered, err := ioutil.ReadFile("testdata/benchs/medium/after-ordered.json")
+	afterBytesOrdered, err := os.ReadFile("testdata/benchs/medium/after-ordered.json")
 	if err != nil {
 		b.Fatal(err)
 	}
-	afterBytesUnordered, err := ioutil.ReadFile("testdata/benchs/medium/after-unordered.json")
+	afterBytesUnordered, err := os.ReadFile("testdata/benchs/medium/after-unordered.json")
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -47,6 +47,9 @@ func BenchmarkMedium(b *testing.B) {
 			b.Fatal(err)
 		}
 		b.Run("Compare/"+bb.name, func(b *testing.B) {
+			if testing.Short() {
+				b.Skip()
+			}
 			for i := 0; i < b.N; i++ {
 				patch, err := CompareOpts(before, after, bb.opts...)
 				if err != nil {
@@ -56,6 +59,9 @@ func BenchmarkMedium(b *testing.B) {
 			}
 		})
 		b.Run("CompareJSON/"+bb.name, func(b *testing.B) {
+			if testing.Short() {
+				b.Skip()
+			}
 			for i := 0; i < b.N; i++ {
 				patch, err := CompareJSONOpts(beforeBytes, bb.afterBytes, bb.opts...)
 				if err != nil {

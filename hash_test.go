@@ -3,12 +3,12 @@ package jsondiff
 import (
 	"encoding/json"
 	"hash/maphash"
-	"io/ioutil"
+	"os"
 	"testing"
 )
 
 func readJSON(filename string) (interface{}, error) {
-	b, err := ioutil.ReadFile(filename)
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
