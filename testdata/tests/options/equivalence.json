@@ -21,4 +21,20 @@
         "a", "b", "c", "d", "e"
     ],
     "patch": []
+}, {
+    "name": "unequal content",
+    "before": [
+        { "a": "AA" },
+        { "b": "BB" }
+    ],
+    "after": [
+        { "c": "CC" },
+        { "d": "DD" }
+    ],
+    "patch": [
+        { "op" : "remove", "path" : "/0/a" },
+        { "op" : "add", "path" : "/0/c", "value" : "CC" },
+        { "op" : "remove", "path" : "/1/b" },
+        { "op" : "add", "path" : "/1/d", "value" : "DD" }
+    ]
 }]

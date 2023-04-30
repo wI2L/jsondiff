@@ -10,7 +10,7 @@ func Test_parsePointer(t *testing.T) {
 		ptr    string
 		valid  bool
 		err    error
-		ntok   int
+		count  int
 		tokens []string
 	}{
 		// RFC Section 5.
@@ -157,12 +157,34 @@ func Test_parsePointer(t *testing.T) {
 				t.Errorf("error mismtahc, got %q, want %q", err, tt.err)
 			}
 		}
-		if l := len(tokens); l != tt.ntok {
-			t.Errorf("got %d tokens, want %d: %q", l, tt.ntok, tt.ptr)
+		if l := len(tokens); l != tt.count {
+			t.Errorf("got %d tokens, want %d: %q", l, tt.count, tt.ptr)
 		} else {
 			if !reflect.DeepEqual(tokens, tt.tokens) {
 				t.Errorf("tokens mismatch, got %v, want %v", tokens, tt.tokens)
 			}
 		}
 	}
+}
+
+func BenchmarkEscapeKey(b *testing.B) {
+	if testing.Short() {
+		b.Skip()
+	}
+	const key = "a/b~x~1!~0"
+
+	b.Run("strings.Replacer", func(b *testing.B) {
+		p := pointer{buf: make([]byte, 0, len(key)*2)}
+		for i := 0; i < b.N; i++ {
+			p.buf = append(p.buf, rfc6901Escaper.Replace(key)...)
+			p.buf = p.buf[:0]
+		}
+	})
+	b.Run("appendEscapeKey", func(b *testing.B) {
+		p := pointer{buf: make([]byte, 0, len(key)*2)}
+		for i := 0; i < b.N; i++ {
+			p.appendEscapeKey(key)
+			p.buf = p.buf[:0]
+		}
+	})
 }

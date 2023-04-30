@@ -35,9 +35,9 @@ func Invertible() Option {
 // Pointer strings (RFC 6901).
 func Ignores(ptrs ...string) Option {
 	return func(o *Differ) {
-		o.opts.ignores = make(map[pointer]struct{}, len(ptrs))
+		o.opts.ignores = make(map[string]struct{}, len(ptrs))
 		for _, ptr := range ptrs {
-			o.opts.ignores[pointer(ptr)] = struct{}{}
+			o.opts.ignores[ptr] = struct{}{}
 		}
 	}
 }

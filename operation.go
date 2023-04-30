@@ -32,8 +32,8 @@ type Patch []Operation
 // Operation represents a single RFC6902 JSON Patch operation.
 type Operation struct {
 	Type     string      `json:"op"`
-	From     pointer     `json:"from,omitempty"`
-	Path     pointer     `json:"path"`
+	From     string      `json:"from,omitempty"`
+	Path     string      `json:"path"`
 	OldValue interface{} `json:"-"`
 	Value    interface{} `json:"value,omitempty"`
 }
@@ -79,8 +79,8 @@ func (o Operation) jsonLength(targetBytes []byte) int {
 
 	if o.marshalWithValue() {
 		valueLen := len(targetBytes)
-		if !o.Path.isRoot() {
-			r := gjson.GetBytes(targetBytes, o.Path.toJSONPath())
+		if len(o.Path) != 0 {
+			r := gjson.GetBytes(targetBytes, toJSONPath(o.Path))
 			valueLen = len(r.Raw)
 		}
 		l += valueFieldLen + valueLen
@@ -129,7 +129,7 @@ func (p *Patch) remove(idx int) Patch {
 	return (*p)[:idx+copy((*p)[idx:], (*p)[idx+1:])]
 }
 
-func (p *Patch) append(typ string, from, path pointer, src, tgt interface{}) Patch {
+func (p *Patch) append(typ string, from, path string, src, tgt interface{}) Patch {
 	return append(*p, Operation{
 		Type:     typ,
 		From:     from,

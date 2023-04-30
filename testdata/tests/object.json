@@ -88,4 +88,24 @@
         { "op": "add", "path": "/0/c", "value": "d" },
         { "op": "replace", "path": "/2/bar", "value": "baz" }
     ]
+}, {
+    "name": "object with escape sequences in keys",
+    "before": {
+        "a/b": "AB",
+        "a~b": "AB",
+        "a~0b": "AB",
+        "a~1b": "AB"
+    },
+    "after": {
+        "a/b": "BA",
+        "a~b": "BA",
+        "a~0b": "BA",
+        "a~1b": "BA"
+    },
+    "patch": [
+        { "op": "replace", "path": "/a~1b", "value" : "BA"},
+        { "op": "replace", "path": "/a~00b", "value" : "BA"},
+        { "op": "replace", "path": "/a~01b", "value" : "BA"},
+        { "op": "replace", "path": "/a~0b", "value" : "BA"}
+    ]
 }]

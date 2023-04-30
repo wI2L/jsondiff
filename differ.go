@@ -13,6 +13,7 @@ type Differ struct {
 	hashmap     map[uint64]jsonNode
 	targetBytes []byte
 	opts        options
+	ptr         pointer
 }
 
 type (
@@ -25,13 +26,13 @@ type options struct {
 	rationalize bool
 	invertible  bool
 	equivalent  bool
-	ignores     map[pointer]struct{}
+	ignores     map[string]struct{}
 	marshal     marshalFunc
 	unmarshal   unmarshalFunc
 }
 
 type jsonNode struct {
-	ptr pointer
+	ptr string
 	val any
 }
 
@@ -55,6 +56,7 @@ func (d *Differ) WithOpts(opts ...Option) *Differ {
 // underlying storage for use by future comparisons.
 func (d *Differ) Reset() {
 	d.patch = d.patch[:0]
+	d.ptr = d.ptr.reset()
 
 	// Optimized map clear.
 	for k := range d.hashmap {
@@ -66,16 +68,17 @@ func (d *Differ) Reset() {
 // a series of JSON Patch operations.
 func (d *Differ) Compare(src, tgt interface{}) {
 	if d.opts.factorize {
-		d.prepare(emptyPtr, src, tgt)
+		d.prepare(d.ptr, src, tgt)
 	}
-	d.diff(emptyPtr, src, tgt)
+	d.ptr.reset()
+	d.diff(d.ptr, src, tgt)
 }
 
 func (d *Differ) diff(ptr pointer, src, tgt interface{}) {
 	if src == nil && tgt == nil {
 		return
 	}
-	if _, ok := d.opts.ignores[ptr]; ok {
+	if _, ok := d.opts.ignores[ptr.copy()]; ok {
 		return
 	}
 	if !areComparable(src, tgt) {
@@ -84,10 +87,10 @@ func (d *Differ) diff(ptr pointer, src, tgt interface{}) {
 			// of the document, use an add operation to replace
 			// the entire content of the document.
 			// https://tools.ietf.org/html/rfc6902#section-4.1
-			d.patch = d.patch.append(OperationAdd, emptyPtr, ptr, src, tgt)
+			d.patch = d.patch.append(OperationAdd, emptyPtr, ptr.copy(), src, tgt)
 		} else {
 			// Values are incomparable, generate a replacement.
-			d.replace(ptr, src, tgt)
+			d.replace(ptr.copy(), src, tgt)
 		}
 		return
 	}
@@ -107,7 +110,7 @@ func (d *Differ) diff(ptr pointer, src, tgt interface{}) {
 		// Generate a replace operation for
 		// scalar types.
 		if !deepValueEqual(src, tgt, typeSwitchKind(src)) {
-			d.replace(ptr, src, tgt)
+			d.replace(ptr.copy(), src, tgt)
 			return
 		}
 	}
@@ -130,7 +133,10 @@ func (d *Differ) prepare(ptr pointer, src, tgt interface{}) {
 		if d.hashmap == nil {
 			d.hashmap = make(map[uint64]jsonNode)
 		}
-		d.hashmap[k] = jsonNode{ptr: ptr, val: tgt}
+		d.hashmap[k] = jsonNode{
+			ptr: ptr.copy(),
+			val: tgt,
+		}
 		return
 	}
 	// At this point, the source and target values
@@ -161,13 +167,13 @@ func (d *Differ) rationalizeLastOps(ptr pointer, src, tgt interface{}, lastOpIdx
 	newOps := make(Patch, 0, 2)
 
 	if d.opts.invertible {
-		newOps = newOps.append(OperationTest, emptyPtr, ptr, nil, src)
+		newOps = newOps.append(OperationTest, emptyPtr, ptr.copy(), nil, src)
 	}
 	// replaceOp represents a single operation that
 	// replace the source document with the target.
 	replaceOp := Operation{
 		Type:  OperationReplace,
-		Path:  ptr,
+		Path:  ptr.copy(),
 		Value: tgt,
 	}
 	newOps = append(newOps, replaceOp)
@@ -208,35 +214,44 @@ func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]interface{}) {
 		inOld := v&(1<<0) != 0
 		inNew := v&(1<<1) != 0
 
+		ptr = ptr.snapshot()
+		ptr = ptr.appendKey(k)
 		switch {
 		case inOld && inNew:
-			d.diff(ptr.appendKey(k), src[k], tgt[k])
+			d.diff(ptr, src[k], tgt[k])
 		case inOld && !inNew:
-			p := ptr.appendKey(k)
-			if _, ok := d.opts.ignores[p]; !ok {
-				d.remove(p, src[k])
+			if _, ok := d.opts.ignores[ptr.string()]; !ok {
+				d.remove(ptr.copy(), src[k])
 			}
 		case !inOld && inNew:
-			p := ptr.appendKey(k)
-			if _, ok := d.opts.ignores[p]; !ok {
-				d.add(p, tgt[k])
+			if _, ok := d.opts.ignores[ptr.string()]; !ok {
+				d.add(ptr.copy(), tgt[k])
 			}
 		}
+		ptr = ptr.rewind()
 	}
 }
 
 // compareArrays generates the patch operations that
 // represents the differences between two JSON arrays.
 func (d *Differ) compareArrays(ptr pointer, src, tgt []interface{}) {
-	size := min(len(src), len(tgt))
+	ptr = ptr.snapshot()
 
-	// When the source array contains more elements
-	// than the target, entries are being removed
-	// from the destination and the removal index
-	// is always equal to the original array length.
-	for i := size; i < len(src); i++ {
-		if _, ok := d.opts.ignores[ptr.appendIndex(i)]; !ok {
-			d.remove(ptr.appendIndex(size), src[i])
+	size := min(len(src), len(tgt))
+	if size < len(src) {
+		psize := ptr.appendIndex(size).copy()
+
+		// When the source array contains more elements
+		// than the target, entries are being removed
+		// from the destination and the removal index
+		// is always equal to the original array length.
+		for i := size; i < len(src); i++ {
+			ptr = ptr.appendIndex(i)
+
+			if _, ok := d.opts.ignores[ptr.string()]; !ok {
+				d.remove(psize, src[i])
+			}
+			ptr = ptr.rewind()
 		}
 	}
 	if d.opts.equivalent && d.unorderedDeepEqualSlice(src, tgt) {
@@ -245,16 +260,21 @@ func (d *Differ) compareArrays(ptr pointer, src, tgt []interface{}) {
 	// Compare the elements at each index present in
 	// both the source and destination arrays.
 	for i := 0; i < size; i++ {
-		d.diff(ptr.appendIndex(i), src[i], tgt[i])
+		ptr = ptr.appendIndex(i)
+		d.diff(ptr, src[i], tgt[i])
+		ptr = ptr.rewind()
 	}
 next:
 	// When the target array contains more elements
 	// than the source, entries are appended to the
 	// destination.
 	for i := size; i < len(tgt); i++ {
-		if _, ok := d.opts.ignores[ptr.appendIndex(i)]; !ok {
-			d.add(ptr.appendKey("-"), tgt[i])
+		ptr = ptr.appendIndex(i)
+		if _, ok := d.opts.ignores[ptr.string()]; !ok {
+			ptr = ptr.rewind()
+			d.add(ptr.appendKey("-").copy(), tgt[i])
 		}
+		ptr.rewind()
 	}
 }
 
@@ -283,7 +303,7 @@ func (d *Differ) unorderedDeepEqualSlice(src, tgt []interface{}) bool {
 	return len(diff) == 0
 }
 
-func (d *Differ) add(ptr pointer, v interface{}) {
+func (d *Differ) add(ptr string, v interface{}) {
 	if !d.opts.factorize {
 		d.patch = d.patch.append(OperationAdd, emptyPtr, ptr, nil, v)
 		return
@@ -296,35 +316,35 @@ func (d *Differ) add(ptr pointer, v interface{}) {
 		// The "from" location MUST NOT be a proper prefix
 		// of the "path" location; i.e., a location cannot
 		// be moved into one of its children.
-		if !strings.HasPrefix(string(ptr), string(op.Path)) {
+		if !strings.HasPrefix(ptr, op.Path) {
 			d.patch = d.patch.remove(idx)
 			d.patch = d.patch.append(OperationMove, op.Path, ptr, v, v)
 		}
 		return
 	}
 	uptr := d.findUnchanged(v)
-	if !uptr.isRoot() && !d.opts.invertible {
+	if len(uptr) != 0 && !d.opts.invertible {
 		d.patch = d.patch.append(OperationCopy, uptr, ptr, nil, v)
 	} else {
 		d.patch = d.patch.append(OperationAdd, emptyPtr, ptr, nil, v)
 	}
 }
 
-func (d *Differ) replace(ptr pointer, src, tgt interface{}) {
+func (d *Differ) replace(ptr string, src, tgt interface{}) {
 	if d.opts.invertible {
 		d.patch = d.patch.append(OperationTest, emptyPtr, ptr, nil, src)
 	}
 	d.patch = d.patch.append(OperationReplace, emptyPtr, ptr, src, tgt)
 }
 
-func (d *Differ) remove(ptr pointer, v interface{}) {
+func (d *Differ) remove(ptr string, v interface{}) {
 	if d.opts.invertible {
 		d.patch = d.patch.append(OperationTest, emptyPtr, ptr, nil, v)
 	}
 	d.patch = d.patch.append(OperationRemove, emptyPtr, ptr, v, nil)
 }
 
-func (d *Differ) findUnchanged(v interface{}) pointer {
+func (d *Differ) findUnchanged(v interface{}) string {
 	if d.hashmap != nil {
 		k := d.hasher.digest(v)
 		node, ok := d.hashmap[k]

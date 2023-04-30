@@ -25,7 +25,7 @@ jobs:
           - windows-latest
     steps:
       - name: Install Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go }}
       - name: Checkout repository
@@ -48,7 +48,7 @@ jobs:
           - "1.20.x"
     steps:
       - name: Install Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go }}
       - name: Checkout repository

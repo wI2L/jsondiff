@@ -111,12 +111,12 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 		if g, w := op.Type, want.Type; g != w {
 			t.Errorf("op #%d mismatch: op: got %q, want %q", i, g, w)
 		}
-		if g, w := op.Path.String(), want.Path.String(); g != w {
+		if g, w := op.Path, want.Path; g != w {
 			t.Errorf("op #%d mismatch: path: got %q, want %q", i, g, w)
 		}
 		switch want.Type {
 		case OperationCopy, OperationMove:
-			if g, w := op.From.String(), want.From.String(); g != w {
+			if g, w := op.From, want.From; g != w {
 				t.Errorf("op #%d mismatch: from: got %q, want %q", i, g, w)
 			}
 		case OperationAdd, OperationReplace:
