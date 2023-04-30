@@ -13,11 +13,11 @@ const (
 )
 
 var (
-	// rfc6901Replacer is a replacer used to escape JSON
-	// pointer strings in compliance with the JavaScript
+	// rfc6901Escaper is a replacer that escapes a JSON
+	// Pointer string in compliance with the JavaScript
 	// Object Notation Pointer syntax.
 	// https://tools.ietf.org/html/rfc6901
-	rfc6901Replacer = strings.NewReplacer("~", "~0", "/", "~1")
+	rfc6901Escaper = strings.NewReplacer("~", "~0", "/", "~1")
 
 	// dotPathReplacer converts a RFC6901 JSON pointer to
 	// a JSON path, while also escaping any existing dot
@@ -43,7 +43,7 @@ func (p pointer) toJSONPath() string {
 }
 
 func (p pointer) appendKey(key string) pointer {
-	return pointer(string(p) + ptrSeparator + rfc6901Replacer.Replace(key))
+	return pointer(string(p) + ptrSeparator + rfc6901Escaper.Replace(key))
 }
 
 func (p pointer) appendIndex(idx int) pointer {

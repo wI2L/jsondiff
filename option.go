@@ -35,9 +35,29 @@ func Invertible() Option {
 // Pointer strings (RFC 6901).
 func Ignores(ptrs ...string) Option {
 	return func(o *Differ) {
-		o.opts.ignoredPtrs = make(map[pointer]struct{}, len(ptrs))
+		o.opts.ignores = make(map[pointer]struct{}, len(ptrs))
 		for _, ptr := range ptrs {
-			o.opts.ignoredPtrs[pointer(ptr)] = struct{}{}
+			o.opts.ignores[pointer(ptr)] = struct{}{}
 		}
+	}
+}
+
+// MarshalFunc allows to define the function/package
+// used to marshal objects to JSON.
+// The prototype of fn must match the one of the
+// encoding/json.Marshal function.
+func MarshalFunc(fn marshalFunc) Option {
+	return func(o *Differ) {
+		o.opts.marshal = fn
+	}
+}
+
+// UnmarshalFunc allows to define the function/package
+// used to unmarshal objects from JSON.
+// The prototype of fn must match the one of the
+// encoding/json.Unmarshal function.
+func UnmarshalFunc(fn unmarshalFunc) Option {
+	return func(o *Differ) {
+		o.opts.unmarshal = fn
 	}
 }

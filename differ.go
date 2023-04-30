@@ -15,17 +15,24 @@ type Differ struct {
 	opts        options
 }
 
-type jsonNode struct {
-	ptr pointer
-	val interface{}
-}
+type (
+	marshalFunc   func(any) ([]byte, error)
+	unmarshalFunc func([]byte, any) error
+)
 
 type options struct {
 	factorize   bool
 	rationalize bool
 	invertible  bool
 	equivalent  bool
-	ignoredPtrs map[pointer]struct{}
+	ignores     map[pointer]struct{}
+	marshal     marshalFunc
+	unmarshal   unmarshalFunc
+}
+
+type jsonNode struct {
+	ptr pointer
+	val any
 }
 
 // Patch returns the list of JSON patch operations
@@ -68,7 +75,7 @@ func (d *Differ) diff(ptr pointer, src, tgt interface{}) {
 	if src == nil && tgt == nil {
 		return
 	}
-	if _, ok := d.opts.ignoredPtrs[ptr]; ok {
+	if _, ok := d.opts.ignores[ptr]; ok {
 		return
 	}
 	if !areComparable(src, tgt) {
@@ -206,12 +213,12 @@ func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]interface{}) {
 			d.diff(ptr.appendKey(k), src[k], tgt[k])
 		case inOld && !inNew:
 			p := ptr.appendKey(k)
-			if _, ok := d.opts.ignoredPtrs[p]; !ok {
+			if _, ok := d.opts.ignores[p]; !ok {
 				d.remove(p, src[k])
 			}
 		case !inOld && inNew:
 			p := ptr.appendKey(k)
-			if _, ok := d.opts.ignoredPtrs[p]; !ok {
+			if _, ok := d.opts.ignores[p]; !ok {
 				d.add(p, tgt[k])
 			}
 		}
@@ -228,7 +235,7 @@ func (d *Differ) compareArrays(ptr pointer, src, tgt []interface{}) {
 	// from the destination and the removal index
 	// is always equal to the original array length.
 	for i := size; i < len(src); i++ {
-		if _, ok := d.opts.ignoredPtrs[ptr.appendIndex(i)]; !ok {
+		if _, ok := d.opts.ignores[ptr.appendIndex(i)]; !ok {
 			d.remove(ptr.appendIndex(size), src[i])
 		}
 	}
@@ -245,7 +252,7 @@ next:
 	// than the source, entries are appended to the
 	// destination.
 	for i := size; i < len(tgt); i++ {
-		if _, ok := d.opts.ignoredPtrs[ptr.appendIndex(i)]; !ok {
+		if _, ok := d.opts.ignores[ptr.appendIndex(i)]; !ok {
 			d.add(ptr.appendKey("-"), tgt[i])
 		}
 	}

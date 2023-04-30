@@ -355,6 +355,26 @@ The resulting patch is empty, because all changes and ignored.
 
 > See the actual [testcases](testdata/tests/options/ignore.json) for more examples.
 
+#### MarshalFunc / UnmarshalFunc
+
+By default, the package uses the `json.Marshal` and `json.Unmarshal` functions from the standard library's `encoding` package, to marshal and unmarshal objects to/from JSON.  If you wish to use another package for performance reasons, or simply to customize the encoding/decoding behavior, you can use the `MarshalFunc` and `UnmarshalFunc` options to configure it.
+
+The prototype of the function argument accepted by these options is the same as the official `json.Marshal` and `json.Unmarshal` functions.
+
+For example, the `UnmarshalFunc` option can be used to set up a custom JSON [`Decoder`](https://pkg.go.dev/encoding/json#Decoder) with the [`UserNumber`](https://pkg.go.dev/encoding/json#Decoder.UseNumber) flag enabled, to decode JSON numbers as [`json.Number`](https://pkg.go.dev/encoding/json#Decoder.UseNumber) instead of float64:
+
+```go
+patch, err := jsondiff.CompareJSONOpts(
+	source,
+	target,
+	jsondiff.UnmarshalFunc(func(b []byte, v any) error {
+		dec := json.NewDecoder(bytes.NewReader(b))
+		dec.UseNumber()
+		return dec.Decode(v)
+	}),
+)
+```
+
 ## Benchmarks
 
 Performance is not the primary target of the package, instead it strives for correctness. A simple benchmark that compare the performance of available options is provided to give a rough estimate of the cost of each option. You can find the JSON documents used by this benchmark in the directory [testdata/benchs](testdata/benchs).

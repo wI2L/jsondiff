@@ -1,6 +1,7 @@
 package jsondiff_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -208,4 +209,59 @@ func ExampleIgnores() {
 		fmt.Printf("%s\n", op)
 	}
 	// Output:
+}
+
+func ExampleMarshalFunc() {
+	oldPod := createPod()
+	newPod := createPod()
+
+	newPod.Spec.Containers[0].Name = "nginx"
+	newPod.Spec.Volumes[0].Name = "data"
+
+	patch, err := jsondiff.CompareOpts(
+		oldPod,
+		newPod,
+		jsondiff.MarshalFunc(func(v any) ([]byte, error) {
+			buf := bytes.Buffer{}
+			enc := json.NewEncoder(&buf)
+			err := enc.Encode(v)
+			if err != nil {
+				return nil, err
+			}
+			return buf.Bytes(), nil
+		}),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, op := range patch {
+		fmt.Printf("%s\n", op)
+	}
+	// Output:
+	// {"op":"replace","path":"/spec/containers/0/name","value":"nginx"}
+	// {"op":"replace","path":"/spec/volumes/0/name","value":"data"}
+}
+
+func ExampleUnmarshalFunc() {
+	source := `{"A":"bar","B":3.14,"C":false}`
+	target := `{"A":"baz","B":3.14159,"C":true}`
+
+	patch, err := jsondiff.CompareJSONOpts(
+		[]byte(source),
+		[]byte(target),
+		jsondiff.UnmarshalFunc(func(b []byte, v any) error {
+			dec := json.NewDecoder(bytes.NewReader(b))
+			return dec.Decode(v)
+		}),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, op := range patch {
+		fmt.Printf("%s\n", op)
+	}
+	// Output:
+	// {"op":"replace","path":"/A","value":"baz"}
+	// {"op":"replace","path":"/B","value":3.14159}
+	// {"op":"replace","path":"/C","value":true}
 }
