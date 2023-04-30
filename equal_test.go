@@ -1,6 +1,7 @@
 package jsondiff
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 )
@@ -77,6 +78,11 @@ func Test_typeSwitchKind(t *testing.T) {
 			map[string]interface{}{},
 			true,
 			reflect.Map,
+		},
+		{
+			json.Number("3.14"),
+			true,
+			reflect.String,
 		},
 	} {
 		k := typeSwitchKind(tt.val)

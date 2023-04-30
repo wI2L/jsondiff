@@ -1,6 +1,8 @@
 package jsondiff
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 )
 
@@ -16,6 +18,8 @@ func areComparable(i1, i2 interface{}) bool {
 func typeSwitchKind(i interface{}) reflect.Kind {
 	switch i.(type) {
 	case string:
+		return reflect.String
+	case json.Number:
 		return reflect.String
 	case bool:
 		return reflect.Bool
@@ -50,6 +54,9 @@ func deepEqual(src, tgt interface{}) bool {
 func deepValueEqual(src, tgt interface{}, kind reflect.Kind) bool {
 	switch kind {
 	case reflect.String:
+		if v, ok := src.(json.Number); ok {
+			return v == tgt.(json.Number)
+		}
 		return src.(string) == tgt.(string)
 	case reflect.Bool:
 		return src.(bool) == tgt.(bool)
@@ -88,6 +95,6 @@ func deepValueEqual(src, tgt interface{}, kind reflect.Kind) bool {
 		}
 		return true
 	default:
-		panic("unknown json type")
+		panic(fmt.Sprintf("unknown json type: %s", kind))
 	}
 }

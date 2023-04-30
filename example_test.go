@@ -251,6 +251,7 @@ func ExampleUnmarshalFunc() {
 		[]byte(target),
 		jsondiff.UnmarshalFunc(func(b []byte, v any) error {
 			dec := json.NewDecoder(bytes.NewReader(b))
+			dec.UseNumber()
 			return dec.Decode(v)
 		}),
 	)
