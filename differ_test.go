@@ -91,22 +91,23 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 	if err != nil {
 		t.Error(err)
 	}
-	d := Differ{
+	d := &Differ{
 		targetBytes: beforeBytes,
 	}
-	d.applyOpts(opts...)
+	d = d.WithOpts(opts...)
 	d.Compare(tc.Before, tc.After)
 
+	patch := d.Patch()
 	wantPatch := pc(&tc)
 
-	if d.patch != nil {
-		t.Logf("\n%s", d.patch)
+	if patch != nil {
+		t.Logf("\n%s", patch)
 	}
-	if len(d.patch) != len(wantPatch) {
-		t.Errorf("got %d patches, want %d", len(d.patch), len(wantPatch))
+	if len(patch) != len(wantPatch) {
+		t.Errorf("got %d patches, want %d", len(patch), len(wantPatch))
 		return
 	}
-	for i, op := range d.patch {
+	for i, op := range patch {
 		want := wantPatch[i]
 		if g, w := op.Type, want.Type; g != w {
 			t.Errorf("op #%d mismatch: op: got %q, want %q", i, g, w)
@@ -124,5 +125,32 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 				t.Errorf("op #%d mismatch: value: unequal", i)
 			}
 		}
+	}
+}
+
+func TestDiffer_Reset(t *testing.T) {
+	d := &Differ{
+		ptr: pointer{
+			buf: make([]byte, 15, 15),
+			end: 15,
+		},
+		hashmap: map[uint64]jsonNode{
+			1: {},
+		},
+		patch: make([]Operation, 42, 42),
+	}
+	d.Reset()
+
+	if l := len(d.patch); l != 0 {
+		t.Errorf("expected empty patch collection, got length %d", l)
+	}
+	if l := len(d.hashmap); l != 0 {
+		t.Errorf("expected cleared hashmap, got length %d", l)
+	}
+	if d.ptr.end != 0 {
+		t.Errorf("expected reset ptr")
+	}
+	if l := len(d.ptr.buf); l != 0 {
+		t.Errorf("expected empty ptr buf, got length %d", l)
 	}
 }

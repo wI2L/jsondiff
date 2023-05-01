@@ -2,7 +2,6 @@ package jsondiff
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -138,9 +137,6 @@ func parsePointer(s string) ([]string, error) {
 				return nil, errInvalidEscapeSequence
 			}
 		} else {
-			if !isUnescaped(r) {
-				return nil, fmt.Errorf("invalid rune %q", r)
-			}
 			if i == len(a)-1 {
 				// End of string, accumulate from last separator.
 				tokens = append(tokens, string(a[ls+1:]))
@@ -148,11 +144,4 @@ func parsePointer(s string) ([]string, error) {
 		}
 	}
 	return tokens, nil
-}
-
-func isUnescaped(r rune) bool {
-	// Unescaped range is defined as:
-	// %x00-2E / %x30-7D / %x7F-10FFFF
-	// https://datatracker.ietf.org/doc/html/rfc6901#section-3
-	return r >= 0x00 && r <= 0x2E || r >= 0x30 && r <= 0x7D || r >= 0x7F && r <= 0x10FFFF
 }

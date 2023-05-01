@@ -91,3 +91,12 @@ func Test_typeSwitchKind(t *testing.T) {
 		}
 	}
 }
+
+func Test_deepValueEqual_invalid_type(t *testing.T) {
+	defer func() {
+		if err := recover(); err == nil {
+			t.Error("expected to recover non-nil error")
+		}
+	}()
+	deepValueEqual(nil, nil, reflect.Func)
+}

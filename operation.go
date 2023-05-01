@@ -115,7 +115,6 @@ func (p *Patch) String() string {
 		return ""
 	}
 	sb := strings.Builder{}
-
 	for i, op := range *p {
 		if i != 0 {
 			sb.WriteByte('\n')
@@ -140,10 +139,10 @@ func (p *Patch) append(typ string, from, path string, src, tgt interface{}) Patc
 }
 
 func (p *Patch) jsonLength(targetBytes []byte) int {
-	length := 0
 	if p == nil {
-		return length
+		return 0
 	}
+	var length int
 	for _, op := range *p {
 		length += op.jsonLength(targetBytes)
 	}

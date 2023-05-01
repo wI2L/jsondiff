@@ -167,6 +167,27 @@ func Test_parsePointer(t *testing.T) {
 	}
 }
 
+func Test_toJSONPath(t *testing.T) {
+	for _, tt := range []struct {
+		ptr  string
+		path string
+	}{
+		{
+			"/a/b/c",
+			"a.b.c",
+		},
+		{
+			"",
+			"@this",
+		},
+	} {
+		path := toJSONPath(tt.ptr)
+		if path != tt.path {
+			t.Errorf("got %q, want %q", path, tt.path)
+		}
+	}
+}
+
 func BenchmarkEscapeKey(b *testing.B) {
 	if testing.Short() {
 		b.Skip()

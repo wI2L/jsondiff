@@ -69,8 +69,8 @@ func (d *Differ) Reset() {
 func (d *Differ) Compare(src, tgt interface{}) {
 	if d.opts.factorize {
 		d.prepare(d.ptr, src, tgt)
+		d.ptr.reset()
 	}
-	d.ptr.reset()
 	d.diff(d.ptr, src, tgt)
 }
 
@@ -194,7 +194,7 @@ func (d *Differ) rationalizeLastOps(ptr pointer, src, tgt interface{}, lastOpIdx
 // compareObjects generates the patch operations that
 // represents the differences between two JSON objects.
 func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]interface{}) {
-	cmpSet := map[string]uint8{}
+	cmpSet := make(map[string]uint8, max(len(src), len(tgt)))
 
 	for k := range src {
 		cmpSet[k] |= 1 << 0
@@ -397,6 +397,13 @@ func insertionSort(v []string) {
 
 func min(i, j int) int {
 	if i < j {
+		return i
+	}
+	return j
+}
+
+func max(i, j int) int {
+	if i > j {
 		return i
 	}
 	return j
