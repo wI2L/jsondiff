@@ -150,7 +150,7 @@ For instance, given the following document:
 
 ```json
 {
-    "a": [1, 2, 3],
+    "a": [ 1, 2, 3 ],
     "b": { "foo": "bar" }
 }
 ```
@@ -159,8 +159,8 @@ In order to obtain this updated version:
 
 ```json
 {
-    "a": [1, 2, 3],
-    "c": [1, 2, 3],
+    "a": [ 1, 2, 3 ],
+    "c": [ 1, 2, 3 ],
     "d": { "foo": "bar" }
 }
 ```
@@ -170,7 +170,7 @@ The package generates the following patch:
 ```json
 [
     { "op": "remove", "path": "/b" },
-    { "op": "add", "path": "/c", "value": [1, 2, 3] },
+    { "op": "add", "path": "/c", "value": [ 1, 2, 3 ] },
     { "op": "add", "path": "/d", "value": { "foo": "bar" } }
 ]
 ```
@@ -390,32 +390,24 @@ go test -bench=. | prettybench
 
 The benchmark was run 10x (statistics computed with [benchstat](https://godoc.org/golang.org/x/perf/cmd/benchstat)) on a MacBook Pro 15", with the following specs:
 ```
-OS : macOS Catalina (10.15.7)
+OS : macOS Big Sur (11.7.6)
 CPU: 2.6 GHz Intel Core i7
 Mem: 16GB 1600 MHz
-Go : go version go1.18 darwin/amd64
+Go : go version go1.20 darwin/amd64
 ```
 
 <details open><summary>Output</summary><br><pre>
-name                                time/op
-Compare/Compare/default-8           32.7µs ± 1%
-Compare/CompareJSON/default-8       24.2µs ± 0%
-Compare/differ_diff/default-8       5.22µs ± 0%
-Compare/Compare/invertible-8        33.5µs ± 0%
-Compare/CompareJSON/invertible-8    25.0µs ± 0%
-Compare/differ_diff/invertible-8    6.05µs ± 0%
-Compare/Compare/factorize-8         35.4µs ± 1%
-Compare/CompareJSON/factorize-8     26.7µs ± 0%
-Compare/differ_diff/factorize-8     7.55µs ± 1%
-Compare/Compare/rationalize-8       43.3µs ± 1%
-Compare/CompareJSON/rationalize-8   51.0µs ± 1%
-Compare/differ_diff/rationalize-8   30.6µs ± 0%
-Compare/Compare/factor+ratio-8      45.5µs ± 0%
-Compare/CompareJSON/factor+ratio-8  50.8µs ± 0%
-Compare/differ_diff/factor+ratio-8  29.9µs ± 0%
-Compare/Compare/all-options-8       53.2µs ± 1%
-Compare/CompareJSON/all-options-8   58.6µs ± 1%
-Compare/differ_diff/all-options-8   37.4µs ± 1%
+name                                          time/op
+Medium/DifferCompare/default-ordered-8        3.54µs ± 0%
+Medium/DifferCompare/default-unordered-8      3.87µs ± 1%
+Medium/DifferCompare/invertible-8             3.58µs ± 0%
+Medium/DifferCompare/factorize-8              5.59µs ± 1%
+Medium/DifferCompare/rationalize-8            20.4µs ± 0%
+Medium/DifferCompare/equivalent-ordered-8     4.67µs ± 1%
+Medium/DifferCompare/equivalent-unordered-8   5.13µs ± 0%
+Medium/DifferCompare/factor+ratio-8           20.5µs ± 1%
+Medium/DifferCompare/all-options-ordered-8    30.6µs ± 0%
+Medium/DifferCompare/all-options-unordered-8  34.5µs ± 1%
 </pre></details>
 
 ## Credits
