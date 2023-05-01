@@ -28,6 +28,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go }}
+          cache: false
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Run tests
@@ -51,6 +52,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go }}
+          cache: false
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Install tools
@@ -60,7 +62,7 @@ jobs:
       - name: Run benchmarks
         run: ./ci/bench.sh
       - name: Upload statistics
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Benchstats-Go${{ matrix.go }}
           path: benchstats
