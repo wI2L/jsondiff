@@ -22,10 +22,9 @@ var (
 	// https://tools.ietf.org/html/rfc6901
 	rfc6901Escaper = strings.NewReplacer("~", "~0", "/", "~1")
 
-	// dotPathReplacer converts a RFC6901 JSON pointer to
-	// a JSON path, while also escaping any existing dot
-	// characters present in the original pointer.
-	dotPathReplacer = strings.NewReplacer(".", "\\.", "/", ".")
+	// pointerToGJSONPath converts a RFC6901 JSON pointer to a GJSON path.
+	// See https://github.com/tidwall/gjson/blob/master/SYNTAX.md
+	pointerToGJSONPath = strings.NewReplacer(".", "\\.", "*", "\\*", "?", "\\?", "/", ".", "~0", "~", "~1", "/")
 )
 
 // pointer represents an RFC 6901 JSON Pointer.
@@ -93,7 +92,7 @@ func (p pointer) reset() pointer {
 
 func toJSONPath(s string) string {
 	if len(s) != 0 {
-		return dotPathReplacer.Replace(s[1:])
+		return pointerToGJSONPath.Replace(s[1:])
 	}
 	// @this is a special modifier that can
 	// be used to retrieve the root path.

@@ -27,6 +27,33 @@ func TestArrayCases(t *testing.T)  { runCasesFromFile(t, "testdata/tests/array.j
 func TestObjectCases(t *testing.T) { runCasesFromFile(t, "testdata/tests/object.json") }
 func TestRootCases(t *testing.T)   { runCasesFromFile(t, "testdata/tests/root.json") }
 
+func TestDiffer_Reset(t *testing.T) {
+	d := &Differ{
+		ptr: pointer{
+			buf: make([]byte, 15, 15),
+			end: 15,
+		},
+		hashmap: map[uint64]jsonNode{
+			1: {},
+		},
+		patch: make([]Operation, 42, 42),
+	}
+	d.Reset()
+
+	if l := len(d.patch); l != 0 {
+		t.Errorf("expected empty patch collection, got length %d", l)
+	}
+	if l := len(d.hashmap); l != 0 {
+		t.Errorf("expected cleared hashmap, got length %d", l)
+	}
+	if d.ptr.end != 0 {
+		t.Errorf("expected reset ptr")
+	}
+	if l := len(d.ptr.buf); l != 0 {
+		t.Errorf("expected empty ptr buf, got length %d", l)
+	}
+}
+
 func TestOptions(t *testing.T) {
 	makeopts := func(opts ...Option) []Option { return opts }
 
@@ -125,32 +152,5 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 				t.Errorf("op #%d mismatch: value: unequal", i)
 			}
 		}
-	}
-}
-
-func TestDiffer_Reset(t *testing.T) {
-	d := &Differ{
-		ptr: pointer{
-			buf: make([]byte, 15, 15),
-			end: 15,
-		},
-		hashmap: map[uint64]jsonNode{
-			1: {},
-		},
-		patch: make([]Operation, 42, 42),
-	}
-	d.Reset()
-
-	if l := len(d.patch); l != 0 {
-		t.Errorf("expected empty patch collection, got length %d", l)
-	}
-	if l := len(d.hashmap); l != 0 {
-		t.Errorf("expected cleared hashmap, got length %d", l)
-	}
-	if d.ptr.end != 0 {
-		t.Errorf("expected reset ptr")
-	}
-	if l := len(d.ptr.buf); l != 0 {
-		t.Errorf("expected empty ptr buf, got length %d", l)
 	}
 }
