@@ -22,7 +22,7 @@ var (
 	// https://tools.ietf.org/html/rfc6901
 	rfc6901Escaper = strings.NewReplacer("~", "~0", "/", "~1")
 
-	// pointerToGJSONPath converts a RFC6901 JSON pointer to a GJSON path.
+	// pointerToGJSONPath converts a RFC6901 JSON Pointer to a GJSON Path.
 	// See https://github.com/tidwall/gjson/blob/master/SYNTAX.md
 	pointerToGJSONPath = strings.NewReplacer(".", "\\.", "*", "\\*", "?", "\\?", "/", ".", "~0", "~", "~1", "/")
 )

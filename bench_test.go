@@ -34,8 +34,8 @@ func BenchmarkMedium(b *testing.B) {
 		{"equivalent-ordered", makeopts(Equivalent()), afterBytesOrdered},
 		{"equivalent-unordered", makeopts(Equivalent()), afterBytesUnordered},
 		{"factor+ratio", makeopts(Factorize(), Rationalize()), afterBytesOrdered},
-		{"all-options-ordered", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent()), afterBytesOrdered},
-		{"all-options-unordered", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent()), afterBytesUnordered},
+		{"all-ordered", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent()), afterBytesOrdered},
+		{"all-unordered", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent()), afterBytesUnordered},
 	} {
 		var before, after interface{}
 		err = json.Unmarshal(beforeBytes, &before)
@@ -71,12 +71,28 @@ func BenchmarkMedium(b *testing.B) {
 			}
 		})
 		b.Run("DifferCompare/"+bb.name, func(b *testing.B) {
-			d := Differ{
-				targetBytes: bb.afterBytes,
+			if testing.Short() {
+				b.Skip()
 			}
+			b.ReportAllocs()
+			b.ResetTimer()
+
+			for i := 0; i < b.N; i++ {
+				d := Differ{targetBytes: bb.afterBytes}
+				for _, opt := range bb.opts {
+					opt(&d)
+				}
+				d.Compare(before, after)
+			}
+		})
+		b.Run("DifferResetCompare/"+bb.name, func(b *testing.B) {
+			d := Differ{targetBytes: bb.afterBytes}
 			for _, opt := range bb.opts {
 				opt(&d)
 			}
+			b.ReportAllocs()
+			b.ResetTimer()
+
 			for i := 0; i < b.N; i++ {
 				d.Compare(before, after)
 				d.Reset()
