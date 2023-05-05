@@ -365,13 +365,13 @@ For example, the `UnmarshalFunc` option can be used to set up a custom JSON [`De
 
 ```go
 patch, err := jsondiff.CompareJSONOpts(
-	source,
-	target,
-	jsondiff.UnmarshalFunc(func(b []byte, v any) error {
-		dec := json.NewDecoder(bytes.NewReader(b))
-		dec.UseNumber()
-		return dec.Decode(v)
-	}),
+    source,
+    target,
+    jsondiff.UnmarshalFunc(func(b []byte, v any) error {
+        dec := json.NewDecoder(bytes.NewReader(b))
+        dec.UseNumber()
+        return dec.Decode(v)
+    }),
 )
 ```
 
