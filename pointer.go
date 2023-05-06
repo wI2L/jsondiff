@@ -41,6 +41,22 @@ func (p pointer) copy() string {
 	return string(p.buf)
 }
 
+func (p pointer) base() string {
+	b := p.buf[p.end+1:]
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+func (p pointer) appendKey(key string) pointer {
+	p.buf = append(p.buf, separator)
+	return p.appendEscapeKey(key)
+}
+
+func (p pointer) appendIndex(idx int) pointer {
+	p.buf = append(p.buf, separator)
+	p.buf = strconv.AppendInt(p.buf, int64(idx), 10)
+	return p
+}
+
 func (p pointer) snapshot() pointer {
 	return pointer{
 		buf: p.buf,
@@ -53,17 +69,6 @@ func (p pointer) rewind() pointer {
 		buf: p.buf[:p.end],
 		end: p.end,
 	}
-}
-
-func (p pointer) appendIndex(idx int) pointer {
-	p.buf = append(p.buf, separator)
-	p.buf = strconv.AppendInt(p.buf, int64(idx), 10)
-	return p
-}
-
-func (p pointer) appendKey(key string) pointer {
-	p.buf = append(p.buf, separator)
-	return p.appendEscapeKey(key)
 }
 
 func (p pointer) appendEscapeKey(k string) pointer {

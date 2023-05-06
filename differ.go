@@ -3,6 +3,8 @@ package jsondiff
 import (
 	"sort"
 	"strings"
+
+	"github.com/tidwall/gjson"
 )
 
 // A Differ is a JSON Patch generator.
@@ -71,10 +73,15 @@ func (d *Differ) Compare(src, tgt interface{}) {
 		d.prepare(d.ptr, src, tgt)
 		d.ptr.reset()
 	}
-	d.diff(d.ptr, src, tgt)
+	var document string
+
+	if d.opts.rationalize {
+		document = gjson.ParseBytes(d.targetBytes).Raw
+	}
+	d.diff(d.ptr, src, tgt, document)
 }
 
-func (d *Differ) diff(ptr pointer, src, tgt interface{}) {
+func (d *Differ) diff(ptr pointer, src, tgt interface{}, document string) {
 	if src == nil && tgt == nil {
 		return
 	}
@@ -103,9 +110,9 @@ func (d *Differ) diff(ptr pointer, src, tgt interface{}) {
 	// equivalent.
 	switch val := src.(type) {
 	case []interface{}:
-		d.compareArrays(ptr, val, tgt.([]interface{}))
+		d.compareArrays(ptr, val, tgt.([]interface{}), document)
 	case map[string]interface{}:
-		d.compareObjects(ptr, val, tgt.(map[string]interface{}))
+		d.compareObjects(ptr, val, tgt.(map[string]interface{}), document)
 	default:
 		// Generate a replace operation for
 		// scalar types.
@@ -114,9 +121,9 @@ func (d *Differ) diff(ptr pointer, src, tgt interface{}) {
 			return
 		}
 	}
-	// Rationalize any new operations.
+	// Rationalize new operations, if any.
 	if d.opts.rationalize && len(d.patch) > size {
-		d.rationalizeLastOps(ptr, src, tgt, size)
+		d.rationalizeLastOps(ptr, src, tgt, size, document)
 	}
 }
 
@@ -163,7 +170,7 @@ func (d *Differ) prepare(ptr pointer, src, tgt interface{}) {
 	}
 }
 
-func (d *Differ) rationalizeLastOps(ptr pointer, src, tgt interface{}, lastOpIdx int) {
+func (d *Differ) rationalizeLastOps(ptr pointer, src, tgt interface{}, lastOpIdx int, document string) {
 	// replaceOp represents a single operation that
 	// replace the source document with the target.
 	replaceOp := Operation{
@@ -171,9 +178,9 @@ func (d *Differ) rationalizeLastOps(ptr pointer, src, tgt interface{}, lastOpIdx
 		Path:  ptr.copy(),
 		Value: tgt,
 	}
-	newLen := replaceOp.jsonLength(d.targetBytes)
+	newLen := replaceOp.jsonLength(ptr, document)
 	curOps := d.patch[lastOpIdx:]
-	curLen := curOps.jsonLength(d.targetBytes)
+	curLen := curOps.jsonLength(ptr, document)
 
 	// If one operation is cheaper than many small
 	// operations that represents the changes between
@@ -190,7 +197,7 @@ func (d *Differ) rationalizeLastOps(ptr pointer, src, tgt interface{}, lastOpIdx
 
 // compareObjects generates the patch operations that
 // represents the differences between two JSON objects.
-func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]interface{}) {
+func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]interface{}, document string) {
 	cmpSet := make(map[string]uint8, max(len(src), len(tgt)))
 
 	for k := range src {
@@ -215,7 +222,11 @@ func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]interface{}) {
 		ptr = ptr.appendKey(k)
 		switch {
 		case inOld && inNew:
-			d.diff(ptr, src[k], tgt[k])
+			if d.opts.rationalize {
+				d.diff(ptr, src[k], tgt[k], gjson.Get(document, ptr.base()).Raw)
+			} else {
+				d.diff(ptr, src[k], tgt[k], document)
+			}
 		case inOld && !inNew:
 			if _, ok := d.opts.ignores[ptr.string()]; !ok {
 				d.remove(ptr.copy(), src[k])
@@ -231,18 +242,17 @@ func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]interface{}) {
 
 // compareArrays generates the patch operations that
 // represents the differences between two JSON arrays.
-func (d *Differ) compareArrays(ptr pointer, src, tgt []interface{}) {
+func (d *Differ) compareArrays(ptr pointer, src, tgt []interface{}, document string) {
 	ptr = ptr.snapshot()
+	min := min(len(src), len(tgt))
 
-	size := min(len(src), len(tgt))
-	if size < len(src) {
-		psize := ptr.appendIndex(size).copy()
-
-		// When the source array contains more elements
-		// than the target, entries are being removed
-		// from the destination and the removal index
-		// is always equal to the original array length.
-		for i := size; i < len(src); i++ {
+	// When the source array contains more elements
+	// than the target, entries are being removed
+	// from the destination and the removal index
+	// is always equal to the original array length.
+	if len(tgt) < len(src) {
+		psize := ptr.appendIndex(min).copy()
+		for i := min; i < len(src); i++ {
 			ptr = ptr.appendIndex(i)
 
 			if _, ok := d.opts.ignores[ptr.string()]; !ok {
@@ -250,22 +260,27 @@ func (d *Differ) compareArrays(ptr pointer, src, tgt []interface{}) {
 			}
 			ptr = ptr.rewind()
 		}
+		goto comparisons // skip equivalence test since arrays are different
 	}
 	if d.opts.equivalent && d.unorderedDeepEqualSlice(src, tgt) {
-		goto next
+		return
 	}
+comparisons:
 	// Compare the elements at each index present in
 	// both the source and destination arrays.
-	for i := 0; i < size; i++ {
+	for i := 0; i < min; i++ {
 		ptr = ptr.appendIndex(i)
-		d.diff(ptr, src[i], tgt[i])
+		if d.opts.rationalize {
+			d.diff(ptr, src[i], tgt[i], gjson.Get(document, ptr.base()).Raw)
+		} else {
+			d.diff(ptr, src[i], tgt[i], document)
+		}
 		ptr = ptr.rewind()
 	}
-next:
 	// When the target array contains more elements
 	// than the source, entries are appended to the
 	// destination.
-	for i := size; i < len(tgt); i++ {
+	for i := min; i < len(tgt); i++ {
 		ptr = ptr.appendIndex(i)
 		if _, ok := d.opts.ignores[ptr.string()]; !ok {
 			ptr = ptr.rewind()

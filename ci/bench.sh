@@ -14,4 +14,3 @@ do
 done
 
 benchstat .benchruns | tee benchstats
-rm -f .benchruns

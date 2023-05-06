@@ -74,13 +74,14 @@ func (o Operation) MarshalJSON() ([]byte, error) {
 
 // jsonLength returns the length in bytes that the
 // operation would occupy when marshaled to JSON.
-func (o Operation) jsonLength(targetBytes []byte) int {
+func (o Operation) jsonLength(documentPtr pointer, document string) int {
 	l := opBaseLen + len(o.Type) + len(o.Path)
 
 	if o.marshalWithValue() {
-		valueLen := len(targetBytes)
+		valueLen := len(document)
+
 		if len(o.Path) != 0 {
-			r := gjson.GetBytes(targetBytes, toJSONPath(o.Path))
+			r := gjson.Get(document, toJSONPath(o.Path[len(documentPtr.buf):]))
 			valueLen = len(r.Raw)
 		}
 		l += valueFieldLen + valueLen
@@ -138,13 +139,13 @@ func (p *Patch) append(typ string, from, path string, src, tgt interface{}) Patc
 	})
 }
 
-func (p *Patch) jsonLength(targetBytes []byte) int {
+func (p *Patch) jsonLength(documentPtr pointer, document string) int {
 	if p == nil {
 		return 0
 	}
 	var length int
 	for _, op := range *p {
-		length += op.jsonLength(targetBytes)
+		length += op.jsonLength(documentPtr, document)
 	}
 	// Count comma-separators if the patch
 	// has more than one operation.

@@ -1,13 +1,13 @@
 [{
     "name": "one replace vs lots of small changes (object)",
     "before": {
-        "a": { "b": { "c": { "1": 1, "2": 2, "3": 3 } } }
+        "a": { "": { "c": { "1": 1, "2": 2, "3": 3 } } }
     },
     "after": {
-        "a": { "b": { "c": { "x": 1, "y": 2, "z": 3 } } }
+        "a": { "": { "c": { "x": 1, "y": 2, "z": 3 } } }
     },
     "patch": [
-        { "op": "replace", "path": "/a/b/c", "value": { "x": 1, "y": 2, "z": 3 } }
+        { "op": "replace", "path": "/a//c", "value": { "x": 1, "y": 2, "z": 3 } }
     ]
 }, {
     "name": "one replace vs lots of small changes (array)",
@@ -26,13 +26,13 @@
         "1": "a",
         "2": "b",
         "3": "c",
-        "4": "add some length to this so it should not be replaced because repeating all this is more expensive than the overhead from the operations"
+        "4": "add some length to this so it should not be replaced because repeating all of this is more expensive than the overhead from the operations"
     },
     "after": {
         "1": "x",
         "2": "y",
         "3": "z",
-        "4": "add some length to this so it should not be replaced because repeating all this is more expensive than the overhead from the operations"
+        "4": "add some length to this so it should not be replaced because repeating all of this is more expensive than the overhead from the operations"
     },
     "patch": [
         { "op": "replace", "path": "/1", "value": "x" },
@@ -44,13 +44,13 @@
     "before": {
         "a": [
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-            "add some length to this so it should not be replaced because repeating all this is more expensive than the overhead from the operations"
+            "add some length to this so it should not be replaced because repeating all of this is more expensive than the overhead from the operations"
         ]
     },
     "after": {
         "a": [
             11, 12, 13, 14, 5, 6, 7, 8, 9, 10,
-            "add some length to this so it should not be replaced because repeating all this is more expensive than the overhead from the operations"
+            "add some length to this so it should not be replaced because repeating all of this is more expensive than the overhead from the operations"
         ]
     },
     "patch": [
