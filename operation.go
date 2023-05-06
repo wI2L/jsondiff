@@ -61,7 +61,7 @@ func (o Operation) MarshalJSON() ([]byte, error) {
 	if !o.marshalWithValue() {
 		o.Value = nil
 	} else {
-		// Generic check that passes for nil and type nil interface values.
+		// Generic check that passes for nil and typed nil interface values.
 		if (*[2]uintptr)(unsafe.Pointer(&o.Value))[1] == 0 {
 			o.Value = jsonNull{}
 		}
@@ -73,7 +73,7 @@ func (o Operation) MarshalJSON() ([]byte, error) {
 }
 
 // jsonLength returns the length in bytes that the
-// operation would occupy when marshaled as JSON.
+// operation would occupy when marshaled to JSON.
 func (o Operation) jsonLength(targetBytes []byte) int {
 	l := opBaseLen + len(o.Type) + len(o.Path)
 

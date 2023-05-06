@@ -164,11 +164,6 @@ func (d *Differ) prepare(ptr pointer, src, tgt interface{}) {
 }
 
 func (d *Differ) rationalizeLastOps(ptr pointer, src, tgt interface{}, lastOpIdx int) {
-	newOps := make(Patch, 0, 2)
-
-	if d.opts.invertible {
-		newOps = newOps.append(OperationTest, emptyPtr, ptr.copy(), nil, src)
-	}
 	// replaceOp represents a single operation that
 	// replace the source document with the target.
 	replaceOp := Operation{
@@ -176,10 +171,8 @@ func (d *Differ) rationalizeLastOps(ptr pointer, src, tgt interface{}, lastOpIdx
 		Path:  ptr.copy(),
 		Value: tgt,
 	}
-	newOps = append(newOps, replaceOp)
-	curOps := d.patch[lastOpIdx:]
-
 	newLen := replaceOp.jsonLength(d.targetBytes)
+	curOps := d.patch[lastOpIdx:]
 	curLen := curOps.jsonLength(d.targetBytes)
 
 	// If one operation is cheaper than many small
@@ -187,7 +180,11 @@ func (d *Differ) rationalizeLastOps(ptr pointer, src, tgt interface{}, lastOpIdx
 	// the two objects, replace the last operations.
 	if curLen > newLen {
 		d.patch = d.patch[:lastOpIdx]
-		d.patch = append(d.patch, newOps...)
+
+		if d.opts.invertible {
+			d.patch = d.patch.append(OperationTest, emptyPtr, replaceOp.Path, nil, src)
+		}
+		d.patch = append(d.patch, replaceOp)
 	}
 }
 
