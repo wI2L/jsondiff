@@ -386,7 +386,7 @@ func (d *Differ) applyOpts(opts ...Option) {
 }
 
 func sortStrings(v []string) {
-	if len(v) < 20 {
+	if len(v) <= 20 {
 		insertionSort(v)
 	} else {
 		sort.Strings(v)
@@ -394,16 +394,10 @@ func sortStrings(v []string) {
 }
 
 func insertionSort(v []string) {
-	for j := 1; j < len(v); j++ {
-		// Invariant: v[:j] contains the same elements as
-		// the original slice v[:j], but in sorted order.
-		key := v[j]
-		i := j - 1
-		for i >= 0 && v[i] > key {
-			v[i+1] = v[i]
-			i--
+	for i := 0; i < len(v); i++ {
+		for j := i; j > 0 && v[j-1] > v[j]; j-- {
+			v[j], v[j-1] = v[j-1], v[j]
 		}
-		v[i+1] = key
 	}
 }
 

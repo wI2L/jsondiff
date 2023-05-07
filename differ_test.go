@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -152,5 +153,111 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 				t.Errorf("op #%d mismatch: value: unequal", i)
 			}
 		}
+	}
+}
+
+func Benchmark_sortStrings(b *testing.B) {
+	for _, v := range [][]string{
+		// 5
+		{
+			"medieval",
+			"bike",
+			"trust",
+			"sodium",
+			"hemisphere",
+		},
+		// 10
+		{
+			"general",
+			"lamp",
+			"journal",
+			"common",
+			"grind",
+			"hay",
+			"dismiss",
+			"sunrise",
+			"shoulder",
+			"certain",
+		},
+		// 15
+		{
+			"plant",
+			"instinct",
+			"infect",
+			"transaction",
+			"transport",
+			"beer",
+			"printer",
+			"neutral",
+			"collect",
+			"message",
+			"chaos",
+			"dynamic",
+			"justice",
+			"master",
+			"want",
+		},
+		// 20
+		{
+			"absorption",
+			"ditch",
+			"gradual",
+			"leftovers",
+			"lace",
+			"clash",
+			"fun",
+			"stereotype",
+			"lamp",
+			"deter",
+			"circle",
+			"lay",
+			"murder",
+			"grimace",
+			"jacket",
+			"have",
+			"ambiguous",
+			"pit",
+			"plug",
+			"notice",
+		},
+		// 25
+		{
+			"flesh",
+			"kidney",
+			"hard",
+			"carbon",
+			"ignorant",
+			"pocket",
+			"strategic",
+			"allow",
+			"advance",
+			"impulse",
+			"infinite",
+			"integrated",
+			"expenditure",
+			"technology",
+			"prevent",
+			"valid",
+			"revive",
+			"manager",
+			"sheep",
+			"kitchen",
+			"guest",
+			"dismissal",
+			"divide",
+			"bow",
+			"buffet",
+		},
+	} {
+		b.Run(fmt.Sprintf("sort.Strings-%d", len(v)), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				sort.Strings(v)
+			}
+		})
+		b.Run(fmt.Sprintf("sortStrings-%d", len(v)), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				sortStrings(v)
+			}
+		})
 	}
 }
