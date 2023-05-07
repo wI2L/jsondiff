@@ -10,12 +10,12 @@ import (
 // A Differ is a JSON Patch generator.
 // The zero value is an empty generator ready to use.
 type Differ struct {
-	patch       Patch
-	hasher      hasher
-	hashmap     map[uint64]jsonNode
-	targetBytes []byte
 	opts        options
+	hashmap     map[uint64]jsonNode
+	patch       Patch
+	targetBytes []byte
 	ptr         pointer
+	hasher      hasher
 }
 
 type (
@@ -24,18 +24,18 @@ type (
 )
 
 type options struct {
+	ignores     map[string]struct{}
+	marshal     marshalFunc
+	unmarshal   unmarshalFunc
 	factorize   bool
 	rationalize bool
 	invertible  bool
 	equivalent  bool
-	ignores     map[string]struct{}
-	marshal     marshalFunc
-	unmarshal   unmarshalFunc
 }
 
 type jsonNode struct {
-	ptr string
 	val any
+	ptr string
 }
 
 // Patch returns the list of JSON patch operations

@@ -83,7 +83,7 @@ func ExampleCompare() {
 		fmt.Printf("%s\n", op)
 	}
 	// Output:
-	// {"op":"replace","path":"/spec/containers/0/image","value":"nginx:1.19.5-alpine"}
+	// {"value":"nginx:1.19.5-alpine","op":"replace","path":"/spec/containers/0/image"}
 	// {"op":"remove","path":"/spec/volumes/0/emptyDir/medium"}
 }
 
@@ -146,8 +146,8 @@ func ExampleCompareJSON() {
 		fmt.Printf("%s\n", op)
 	}
 	// Output:
-	// {"op":"replace","path":"/age","value":30}
-	// {"op":"add","path":"/phoneNumbers/-","value":{"number":"209-212-0015","type":"mobile"}}
+	// {"value":30,"op":"replace","path":"/age"}
+	// {"value":{"number":"209-212-0015","type":"mobile"},"op":"add","path":"/phoneNumbers/-"}
 }
 
 func ExampleInvertible() {
@@ -166,11 +166,11 @@ func ExampleInvertible() {
 		fmt.Printf("%s\n", op)
 	}
 	// Output:
-	// {"op":"test","path":"/a","value":"1"}
-	// {"op":"replace","path":"/a","value":"3"}
-	// {"op":"test","path":"/b","value":"2"}
+	// {"value":"1","op":"test","path":"/a"}
+	// {"value":"3","op":"replace","path":"/a"}
+	// {"value":"2","op":"test","path":"/b"}
 	// {"op":"remove","path":"/b"}
-	// {"op":"add","path":"/c","value":"4"}
+	// {"value":"4","op":"add","path":"/c"}
 }
 
 func ExampleFactorize() {
@@ -238,8 +238,8 @@ func ExampleMarshalFunc() {
 		fmt.Printf("%s\n", op)
 	}
 	// Output:
-	// {"op":"replace","path":"/spec/containers/0/name","value":"nginx"}
-	// {"op":"replace","path":"/spec/volumes/0/name","value":"data"}
+	// {"value":"nginx","op":"replace","path":"/spec/containers/0/name"}
+	// {"value":"data","op":"replace","path":"/spec/volumes/0/name"}
 }
 
 func ExampleUnmarshalFunc() {
@@ -262,7 +262,7 @@ func ExampleUnmarshalFunc() {
 		fmt.Printf("%s\n", op)
 	}
 	// Output:
-	// {"op":"replace","path":"/A","value":"baz"}
-	// {"op":"replace","path":"/B","value":3.14159}
-	// {"op":"replace","path":"/C","value":true}
+	// {"value":"baz","op":"replace","path":"/A"}
+	// {"value":3.14159,"op":"replace","path":"/B"}
+	// {"value":true,"op":"replace","path":"/C"}
 }

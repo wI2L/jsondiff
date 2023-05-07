@@ -157,6 +157,9 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 }
 
 func Benchmark_sortStrings(b *testing.B) {
+	if testing.Short() {
+		b.Skip()
+	}
 	for _, v := range [][]string{
 		// 5
 		{

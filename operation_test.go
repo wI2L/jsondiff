@@ -15,7 +15,7 @@ func TestOperationMarshalJSON(t *testing.T) {
 				Path:  "/foo/bar",
 				Value: nil,
 			},
-			`{"op":"replace","path":"/foo/bar","value":null}`,
+			`{"value":null,"op":"replace","path":"/foo/bar"}`,
 		},
 		{
 			Operation{
@@ -23,7 +23,7 @@ func TestOperationMarshalJSON(t *testing.T) {
 				Path:  "/foo/bar",
 				Value: typeNilIface(),
 			},
-			`{"op":"replace","path":"/foo/bar","value":null}`,
+			`{"value":null,"op":"replace","path":"/foo/bar"}`,
 		},
 		{
 			Operation{
@@ -31,7 +31,7 @@ func TestOperationMarshalJSON(t *testing.T) {
 				Path:  "/foo/bar",
 				Value: "foo",
 			},
-			`{"op":"replace","path":"/foo/bar","value":"foo"}`,
+			`{"value":"foo","op":"replace","path":"/foo/bar"}`,
 		},
 		{
 			// assigned interface
@@ -40,7 +40,7 @@ func TestOperationMarshalJSON(t *testing.T) {
 				Path:  "",
 				Value: nil,
 			},
-			`{"op":"add","path":"","value":null}`,
+			`{"value":null,"op":"add","path":""}`,
 		},
 		{
 			// unassigned interface Value
@@ -48,7 +48,7 @@ func TestOperationMarshalJSON(t *testing.T) {
 				Type: OperationAdd,
 				Path: "",
 			},
-			`{"op":"add","path":"","value":null}`,
+			`{"value":null,"op":"add","path":""}`,
 		},
 		{
 			Operation{
@@ -56,7 +56,7 @@ func TestOperationMarshalJSON(t *testing.T) {
 				Path:  "",
 				Value: typeNilIface(),
 			},
-			`{"op":"add","path":"","value":null}`,
+			`{"value":null,"op":"add","path":""}`,
 		},
 		{
 			// Remove operation should NEVER be marshaled with
@@ -120,7 +120,7 @@ func TestPatchString(t *testing.T) {
 	}
 	s := patch.String()
 
-	const expected = `{"op":"replace","path":"/foo/baz","value":42}
+	const expected = `{"value":42,"op":"replace","path":"/foo/baz"}
 {"op":"remove","path":"/xxx"}
 <invalid operation>`
 

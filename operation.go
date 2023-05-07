@@ -31,11 +31,11 @@ type Patch []Operation
 
 // Operation represents a single RFC6902 JSON Patch operation.
 type Operation struct {
+	Value    interface{} `json:"value,omitempty"`
+	OldValue interface{} `json:"-"`
 	Type     string      `json:"op"`
 	From     string      `json:"from,omitempty"`
 	Path     string      `json:"path"`
-	OldValue interface{} `json:"-"`
-	Value    interface{} `json:"value,omitempty"`
 }
 
 // String implements the fmt.Stringer interface.
