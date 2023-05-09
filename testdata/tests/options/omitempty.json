@@ -1,0 +1,52 @@
+[{
+  "name": "OmitEmpty empty string add value",
+  "before": {
+    "b": "data"
+  },
+  "after" : {
+    "a": "",
+    "b": "data"
+  },
+  "patch": []
+},{
+  "name": "OmitEmpty empty null add value",
+  "before": {
+    "b": "data"
+  },
+  "after" : {
+    "a": null,
+    "b": "data"
+  },
+  "patch": []
+},{
+  "name": "OmitEmpty empty string remove value",
+  "before": {
+    "a": "",
+    "b": "data"
+  },
+  "after" : {
+    "b": "data"
+  },
+  "patch": []
+},{
+  "name": "OmitEmpty empty null remove value",
+  "before": {
+    "a": null,
+    "b": "data"
+  },
+  "after" : {
+    "b": "data"
+  },
+  "patch": []
+}, {
+  "name": "OmitEmpty empty both places",
+  "before": {
+    "a": null,
+    "b": "data"
+  },
+  "after" : {
+    "a": "",
+    "b": "data"
+  },
+  "patch": []
+}]

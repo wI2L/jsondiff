@@ -42,6 +42,13 @@ func Ignores(ptrs ...string) Option {
 	}
 }
 
+// OmitEmpty ignores empty values
+func OmitEmpty() Option {
+	return func(o *Differ) {
+		o.opts.omitEmpty = true
+	}
+}
+
 // MarshalFunc allows to define the function/package
 // used to marshal objects to JSON.
 // The prototype of fn must match the one of the

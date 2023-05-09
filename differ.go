@@ -26,6 +26,7 @@ type options struct {
 	rationalize bool
 	invertible  bool
 	equivalent  bool
+	omitEmpty   bool
 	ignores     map[string]struct{}
 	marshal     marshalFunc
 	unmarshal   unmarshalFunc
@@ -79,6 +80,9 @@ func (d *Differ) diff(ptr pointer, src, tgt interface{}) {
 		return
 	}
 	if _, ok := d.opts.ignores[ptr.copy()]; ok {
+		return
+	}
+	if d.opts.omitEmpty && isEmpty(src) && isEmpty(tgt) {
 		return
 	}
 	if !areComparable(src, tgt) {
@@ -216,6 +220,7 @@ func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]interface{}) {
 
 		ptr = ptr.snapshot()
 		ptr = ptr.appendKey(k)
+
 		switch {
 		case inOld && inNew:
 			d.diff(ptr, src[k], tgt[k])
@@ -304,6 +309,9 @@ func (d *Differ) unorderedDeepEqualSlice(src, tgt []interface{}) bool {
 }
 
 func (d *Differ) add(ptr string, v interface{}) {
+	if d.opts.omitEmpty && isEmpty(v) {
+		return
+	}
 	if !d.opts.factorize {
 		d.patch = d.patch.append(OperationAdd, emptyPtr, ptr, nil, v)
 		return
@@ -331,6 +339,9 @@ func (d *Differ) add(ptr string, v interface{}) {
 }
 
 func (d *Differ) replace(ptr string, src, tgt interface{}) {
+	if d.opts.omitEmpty && isEmpty(src) && isEmpty(tgt) {
+		return
+	}
 	if d.opts.invertible {
 		d.patch = d.patch.append(OperationTest, emptyPtr, ptr, nil, src)
 	}
@@ -338,6 +349,9 @@ func (d *Differ) replace(ptr string, src, tgt interface{}) {
 }
 
 func (d *Differ) remove(ptr string, v interface{}) {
+	if d.opts.omitEmpty && isEmpty(v) {
+		return
+	}
 	if d.opts.invertible {
 		d.patch = d.patch.append(OperationTest, emptyPtr, ptr, nil, v)
 	}
@@ -407,4 +421,16 @@ func max(i, j int) int {
 		return i
 	}
 	return j
+}
+
+func isEmpty(v interface{}) bool {
+	if v == nil {
+		return true
+	}
+
+	if s, isString := v.(string); isString {
+		return s == ""
+	}
+
+	return false
 }

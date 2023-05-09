@@ -39,6 +39,7 @@ func TestOptions(t *testing.T) {
 		{"testdata/tests/options/rationalization.json", makeopts(Rationalize())},
 		{"testdata/tests/options/equivalence.json", makeopts(Equivalent())},
 		{"testdata/tests/options/ignore.json", makeopts()},
+		{"testdata/tests/options/omitempty.json", makeopts(OmitEmpty())},
 		{"testdata/tests/options/all.json", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent())},
 	} {
 		var (
