@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"hash/maphash"
 	"math"
-	"strconv"
 )
 
 type hasher struct {
@@ -23,7 +22,11 @@ func (h *hasher) hash(i interface{}) {
 	case string:
 		_, _ = h.mh.WriteString(v)
 	case bool:
-		_, _ = h.mh.WriteString(strconv.FormatBool(v))
+		if v {
+			_ = h.mh.WriteByte('1')
+		} else {
+			_ = h.mh.WriteByte('0')
+		}
 	case float64:
 		var buf [8]byte
 		binary.BigEndian.PutUint64(buf[:], math.Float64bits(v))
@@ -31,8 +34,7 @@ func (h *hasher) hash(i interface{}) {
 	case nil:
 		_ = h.mh.WriteByte('0')
 	case []interface{}:
-		for i, e := range v {
-			_, _ = h.mh.WriteString(strconv.Itoa(i))
+		for _, e := range v {
 			h.hash(e)
 		}
 	case map[string]interface{}:
