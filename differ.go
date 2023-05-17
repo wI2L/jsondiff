@@ -3,6 +3,7 @@ package jsondiff
 import (
 	"sort"
 	"strings"
+	"unsafe"
 
 	"github.com/tidwall/gjson"
 )
@@ -76,7 +77,7 @@ func (d *Differ) Compare(src, tgt interface{}) {
 	var document string
 
 	if d.opts.rationalize {
-		document = gjson.ParseBytes(d.targetBytes).Raw
+		document = gjson.Parse(b2s(d.targetBytes)).Raw
 	}
 	d.diff(d.ptr, src, tgt, document)
 }
@@ -413,4 +414,8 @@ func max(i, j int) int {
 		return i
 	}
 	return j
+}
+
+func b2s(bs []byte) string {
+	return *(*string)(unsafe.Pointer(&bs))
 }

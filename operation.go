@@ -47,13 +47,6 @@ func (o Operation) String() string {
 	return string(b)
 }
 
-type jsonNull struct{}
-
-// MarshalJSON implements the json.Marshaler interface.
-func (jn jsonNull) MarshalJSON() ([]byte, error) {
-	return []byte("null"), nil
-}
-
 // MarshalJSON implements the json.Marshaler interface.
 func (o Operation) MarshalJSON() ([]byte, error) {
 	type op Operation
@@ -61,7 +54,7 @@ func (o Operation) MarshalJSON() ([]byte, error) {
 	if !o.marshalWithValue() {
 		o.Value = nil
 	} else {
-		// Generic check that passes for nil and typed nil interface values.
+		// Generic check that works for nil and typed nil interface values.
 		if (*[2]uintptr)(unsafe.Pointer(&o.Value))[1] == 0 {
 			o.Value = jsonNull{}
 		}
@@ -153,4 +146,11 @@ func (p *Patch) jsonLength(documentPtr pointer, document string) int {
 		length += len(*p) - 1
 	}
 	return length
+}
+
+type jsonNull struct{}
+
+// MarshalJSON implements the json.Marshaler interface.
+func (jn jsonNull) MarshalJSON() ([]byte, error) {
+	return []byte("null"), nil
 }
