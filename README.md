@@ -186,7 +186,7 @@ If we take the previous example and generate the patch with factorization enable
 
 #### Operations rationalization
 
-The default method used to compare two JSON documents is a recursive comparison. This produce one or more operations for each difference found. On the other hand, in certain situations, it might be beneficial to replace a set of operations representing several changes inside a JSON node by a single replace operation targeting the parent node.
+The default method used to compare two JSON documents is a recursive comparison. This produce one or more operations for each difference found. On the other hand, in certain situations, it might be beneficial to replace a set of operations representing several changes inside a JSON node by a single replace operation targeting the parent node, in order to reduce the "size" of the patch (the length in bytes of the JSON representation of the patch).
 
 For that purpose, you can use the `Rationalize()` option. It uses a simple weight function to decide which patch is best (it marshals both sets of operations to JSON and looks at the length of bytes to keep the smaller footprint).
 
@@ -237,11 +237,17 @@ And finally, with rationalization enabled, those operations are replaced with a 
 ]
 ```
 
+##### Input compaction
+
+Reducing the size of a JSON Patch is usually beneficial when it needs to be sent on the wire (HTTP request with the `application/json-patch+json` media type for example). As such, the package assumes that the desired JSON representation of a patch is a compact ("minified") JSON document.
+
+When the `Rationalize()` option is enabled, the package pre-process the JSON input given to the `CompareJSON*` functions. If your inputs are already compact JSON documents, you **should** also use the `SkipCompact()` option to instruct the package to skip the compaction step, resulting in a *nice and free* performance improvement.
+
 #### Invertible patch
 
 Using the functional option `Invertible()`, it is possible to instruct the diff generator to precede each `remove` and `replace` operation with a `test` operation. Such patches can be inverted to return a patched document to its original form.
 
-However, note that it comes with one limitation. `copy` operations cannot be inverted, as they are ambiguous (the reverse of a `copy` is a `remove`, which could then become either an `add` or a `copy`). As such, using this option disable the generation of `copy` operations (if option `Factorize()` is used) and replace them with `add`, albeit potentially at the cost of increased patch size.
+However, note that it comes with one limitation. `copy` operations cannot be inverted, as they are ambiguous (the reverse of a `copy` is a `remove`, which could then become either an `add` or a `copy`). As such, using this option disable the generation of `copy` operations (if option `Factorize()` is used) and replace them with `add` operations, albeit potentially at the cost of increased patch size.
 
 For example, let's generate the diff between those two JSON documents:
 

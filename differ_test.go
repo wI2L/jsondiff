@@ -32,7 +32,7 @@ func TestDiffer_Reset(t *testing.T) {
 	d := &Differ{
 		ptr: pointer{
 			buf: make([]byte, 15, 15),
-			end: 15,
+			sep: 15,
 		},
 		hashmap: map[uint64]jsonNode{
 			1: {},
@@ -47,7 +47,7 @@ func TestDiffer_Reset(t *testing.T) {
 	if l := len(d.hashmap); l != 0 {
 		t.Errorf("expected cleared hashmap, got length %d", l)
 	}
-	if d.ptr.end != 0 {
+	if d.ptr.sep != 0 {
 		t.Errorf("expected reset ptr")
 	}
 	if l := len(d.ptr.buf); l != 0 {
@@ -115,12 +115,12 @@ func runTestCases(t *testing.T, cases []testcase, opts ...Option) {
 }
 
 func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
-	beforeBytes, err := json.Marshal(tc.Before)
+	afterBytes, err := json.Marshal(tc.After)
 	if err != nil {
 		t.Error(err)
 	}
 	d := &Differ{
-		targetBytes: beforeBytes,
+		targetBytes: afterBytes,
 	}
 	d = d.WithOpts(opts...)
 	d.Compare(tc.Before, tc.After)
@@ -152,6 +152,47 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 			if !reflect.DeepEqual(op.Value, want.Value) {
 				t.Errorf("op #%d mismatch: value: unequal", i)
 			}
+		}
+	}
+}
+
+func TestDiffer_unorderedDeepEqualSlice(t *testing.T) {
+	for _, tt := range []struct {
+		src, tgt []interface{}
+		equal    bool
+	}{
+		{
+			src:   []interface{}{1, 2, 3},
+			tgt:   []interface{}{3, 2, 1},
+			equal: true,
+		},
+		{
+			src:   []interface{}{1, 2, 3},
+			tgt:   []interface{}{4, 3, 2, 1},
+			equal: false,
+		},
+		{
+			src: []interface{}{
+				"foo",
+				map[string]interface{}{"A": "AAA"},
+				map[string]interface{}{"B": "BBB"},
+				"foo",
+				"bar",
+			},
+			tgt: []interface{}{
+				"foo",
+				"foo",
+				map[string]interface{}{"A": "AAA"},
+				map[string]interface{}{"B": "BBB"},
+				"bar",
+			},
+			equal: true,
+		},
+	} {
+		d := Differ{}
+		eq := d.unorderedDeepEqualSlice(tt.src, tt.tgt)
+		if eq != tt.equal {
+			t.Errorf("equality mismatch, got %t, want %t", eq, tt.equal)
 		}
 	}
 }

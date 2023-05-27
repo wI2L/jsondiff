@@ -23,80 +23,97 @@ func BenchmarkGetType(b *testing.B) {
 	})
 	b.Run("typeSwitch", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			_ = typeSwitchKind(m)
+			_ = jsonTypeSwitch(m)
 		}
 	})
 }
 
-func Test_typeSwitchKind(t *testing.T) {
+func Test_jsonTypeSwitch(t *testing.T) {
 	for _, tt := range []struct {
 		val   any
 		valid bool
-		kind  reflect.Kind
+		kind  jsonValueType
 	}{
 		{
 			"foo",
 			true,
-			reflect.String,
+			jsonString,
 		},
 		{
 			false,
 			true,
-			reflect.Bool,
+			jsonBoolean,
 		},
 		{
 			float32(3.14),
 			false,
-			reflect.Invalid,
+			jsonInvalid,
 		},
 		{
 			nil,
 			true,
-			reflect.Ptr,
+			jsonNull,
 		},
 		{
 			&struct{}{},
 			false,
-			reflect.Invalid,
+			jsonInvalid,
 		},
 		{
 			3.14,
 			true,
-			reflect.Float64,
-		},
-		{
-			func() {},
-			false,
-			reflect.Invalid,
-		},
-		{
-			[]interface{}{},
-			true,
-			reflect.Slice,
-		},
-		{
-			map[string]interface{}{},
-			true,
-			reflect.Map,
+			jsonNumberFloat,
 		},
 		{
 			json.Number("3.14"),
 			true,
-			reflect.String,
+			jsonNumberString,
+		},
+		{
+			func() {},
+			false,
+			jsonInvalid,
+		},
+		{
+			[]interface{}{},
+			true,
+			jsonArray,
+		},
+		{
+			map[string]interface{}{},
+			true,
+			jsonObject,
 		},
 	} {
-		k := typeSwitchKind(tt.val)
+		k := jsonTypeSwitch(tt.val)
 		if k != tt.kind {
 			t.Errorf("got %s, want %s", k, tt.kind)
 		}
 	}
 }
 
-func Test_deepValueEqual_invalid_type(t *testing.T) {
+func Test_deepEqual_invalid_type(t *testing.T) {
 	defer func() {
 		if err := recover(); err == nil {
 			t.Error("expected to recover non-nil error")
 		}
 	}()
-	deepValueEqual(nil, nil, reflect.Func)
+	fn := func() {}
+	deepEqual(fn, fn)
+}
+
+func Test_jsonValueType_String(t *testing.T) {
+	for typ := 0; typ < len(jsonTypeNames); typ++ {
+		s := jsonValueType(typ).String()
+		if s != jsonTypeNames[typ] {
+			t.Errorf("got %q, want %q", s, jsonTypeNames[typ])
+		}
+	}
+	unknownType := jsonValueType(9000)
+	s := unknownType.String()
+
+	const want = "type9000"
+	if s != want {
+		t.Errorf("got %q, want %q", s, want)
+	}
 }

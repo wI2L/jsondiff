@@ -1,5 +1,5 @@
 [{
-    "name": "one replace vs lots of small changes (object)",
+    "name": "one replace vs lots of small changes (object) #1",
     "before": {
         "a": { "": { "c": { "1": 1, "2": 2, "3": 3 } } }
     },
@@ -8,6 +8,21 @@
     },
     "patch": [
         { "op": "replace", "path": "/a//c", "value": { "x": 1, "y": 2, "z": 3 } }
+    ]
+}, {
+    "name": "one replace vs lots of small changes (object) #2",
+    "before": {
+        "a": "11",
+        "b": "12",
+        "c": "13"
+    },
+    "after": {
+        "a": "1",
+        "b": "2",
+        "c": "3"
+    },
+    "patch": [
+        { "op": "replace", "path": "", "value": { "a": "1", "b": "2", "c": "3" } }
     ]
 }, {
     "name": "one replace vs lots of small changes (array)",
@@ -58,5 +73,39 @@
         { "op": "replace", "path": "/a/1", "value": 12 },
         { "op": "replace", "path": "/a/2", "value": 13 },
         { "op": "replace", "path": "/a/3", "value": 14 }
+    ]
+}, {
+    "name": "multi-dimensional array #1",
+    "before": [
+        "add some length to this so it should not be replaced because repeating all of this is more expensive than the overhead from the operations",
+        [ { "a": 1 }, { "a": 2 }, { "a": 3 } ],
+        { "foo": "baz" },
+        [ { "a": 7 }, { "a": 8 }, { "a": 9 } ]
+    ],
+    "after": [
+        "add some length to this so it should not be replaced because repeating all of this is more expensive than the overhead from the operations",
+        [ { "a": 1 }, { "a": 2 }, { "a": 0 } ],
+        [ { "a": 4 }, { "a": 5 }, { "a": 6 } ],
+        { "foo": "bar" }
+    ],
+    "patch": [
+        { "value": 0, "op": "replace", "path": "/1/2/a" },
+        { "value": [ { "a": 4 }, { "a": 5 }, { "a": 6 } ], "op": "replace", "path": "/2" },
+        { "value": { "foo": "bar" }, "op": "replace", "path": "/3" }
+    ]
+}, {
+    "name": "multi-dimensional array #2",
+    "before": [
+        [ { "a": 1 }, { "a": 2 }, { "a": 3 } ],
+        { "foo": "baz" },
+        [ { "a": 7 }, { "a": 8 }, { "a": 9 } ]
+    ],
+    "after": [
+        [ { "a": 1 }, { "a": 2 }, { "a": 0 } ],
+        [ { "a": 4 }, { "a": 5 }, { "a": 6 } ],
+        { "foo": "bar" }
+    ],
+    "patch": [
+        { "value": [ [ { "a": 1 }, { "a": 2 }, { "a": 0 } ], [ { "a": 4 }, { "a": 5 }, { "a": 6 } ], { "foo": "bar" } ], "op": "replace", "path": "" }
     ]
 }]

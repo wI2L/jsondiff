@@ -167,43 +167,26 @@ func Test_parsePointer(t *testing.T) {
 	}
 }
 
-func Test_toJSONPath(t *testing.T) {
+func TestPointer_escapeKey(t *testing.T) {
 	for _, tt := range []struct {
-		ptr  string
-		path string
+		key string
+		esc string
 	}{
 		{
-			"/a/b/c",
-			"a.b.c",
+			`a/b~x~1!~0`,
+			`a~1b~0x~01!~00`,
 		},
 		{
-			"/a/b~1c/",
-			"a.b/c.",
-		},
-		{
-			"/a~0/b~0/~1",
-			"a~.b~./",
-		},
-		{
-			"/foo//a~1b",
-			"foo..a/b",
-		},
-		{
-			"/a.b~1/c//d",
-			"a\\.b/.c..d",
-		},
-		{
-			"/a/b?/c*",
-			"a.b\\?.c\\*",
-		},
-		{
-			"",
-			"@this",
+			`🔥🚒🧯`,
+			`🔥🚒🧯`,
 		},
 	} {
-		path := toJSONPath(tt.ptr)
-		if path != tt.path {
-			t.Errorf("got %q, want %q", path, tt.path)
+		p := pointer{
+			buf: make([]byte, 0, len(tt.key)*2),
+		}
+		p.appendEscapeKey(tt.key)
+		if s := p.copy(); s != tt.esc {
+			t.Errorf("got %q, want %q", s, tt.esc)
 		}
 	}
 }

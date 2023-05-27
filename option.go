@@ -30,18 +30,6 @@ func Invertible() Option {
 	return func(o *Differ) { o.opts.invertible = true }
 }
 
-// Ignores defines the list of values that are ignored
-// by the diff generation, represented as a list of JSON
-// Pointer strings (RFC 6901).
-func Ignores(ptrs ...string) Option {
-	return func(o *Differ) {
-		o.opts.ignores = make(map[string]struct{}, len(ptrs))
-		for _, ptr := range ptrs {
-			o.opts.ignores[ptr] = struct{}{}
-		}
-	}
-}
-
 // MarshalFunc allows to define the function/package
 // used to marshal objects to JSON.
 // The prototype of fn must match the one of the
@@ -59,5 +47,29 @@ func MarshalFunc(fn marshalFunc) Option {
 func UnmarshalFunc(fn unmarshalFunc) Option {
 	return func(o *Differ) {
 		o.opts.unmarshal = fn
+	}
+}
+
+// SkipCompact instructs to skip the compaction of the input
+// JSON documents when the Rationalize option is enabled.
+func SkipCompact() Option {
+	return func(o *Differ) {
+		o.isCompact = true
+	}
+}
+
+// Ignores defines the list of values that are ignored
+// by the diff generation, represented as a list of JSON
+// Pointer strings (RFC 6901).
+func Ignores(ptrs ...string) Option {
+	return func(o *Differ) {
+		if len(ptrs) == 0 {
+			return
+		}
+		o.opts.ignores = make(map[string]struct{}, len(ptrs))
+		for _, ptr := range ptrs {
+			o.opts.ignores[ptr] = struct{}{}
+		}
+		o.opts.hasIgnore = true
 	}
 }

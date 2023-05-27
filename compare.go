@@ -52,8 +52,9 @@ func compare(d *Differ, src, tgt interface{}) (Patch, error) {
 		return nil, err
 	}
 	d.targetBytes = tb
-	d.Compare(si, ti)
+	d.compactInPlace = true
 
+	d.Compare(si, ti)
 	return d.patch, nil
 }
 
@@ -69,8 +70,9 @@ func compareJSON(d *Differ, src, tgt []byte, unmarshal unmarshalFunc) (Patch, er
 		return nil, err
 	}
 	d.targetBytes = tgt
-	d.Compare(si, ti)
+	d.compactInPlace = true
 
+	d.Compare(si, ti)
 	return d.patch, nil
 }
 
@@ -81,9 +83,9 @@ func marshalUnmarshal(v any, opts options) (interface{}, []byte, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	var val interface{}
-	if err := opts.unmarshal(b, &val); err != nil {
+	var i interface{}
+	if err := opts.unmarshal(b, &i); err != nil {
 		return nil, nil, err
 	}
-	return val, b, nil
+	return i, b, nil
 }

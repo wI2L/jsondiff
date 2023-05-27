@@ -53,3 +53,4 @@ benchstats
 .benchruns
 coverage.txt
 dist/
+*.txt

@@ -4,104 +4,88 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-	"unicode/utf8"
 	"unsafe"
 )
 
 const (
-	separator   = '/'
-	emptyPtr    = ""
-	escapeSlash = "~1"
-	escapeTilde = "~0"
+	separator    = '/'
+	escapeSlash  = "~1"
+	escapeTilde  = "~0"
+	emptyPointer = ""
 )
 
-var (
-	// rfc6901Escaper is a replacer that escapes a JSON
-	// Pointer string in compliance with the JavaScript
-	// Object Notation Pointer syntax.
-	// https://tools.ietf.org/html/rfc6901
-	rfc6901Escaper = strings.NewReplacer("~", "~0", "/", "~1")
+// rfc6901Escaper is a replacer that escapes a JSON Pointer string
+// in compliance with the JavaScript Object Notation Pointer syntax.
+// https://tools.ietf.org/html/rfc6901
+var rfc6901Escaper = strings.NewReplacer("~", escapeTilde, "/", escapeSlash)
 
-	// pointerToGJSONPath converts a RFC6901 JSON Pointer to a GJSON Path.
-	// See https://github.com/tidwall/gjson/blob/master/SYNTAX.md
-	pointerToGJSONPath = strings.NewReplacer(".", "\\.", "*", "\\*", "?", "\\?", "/", ".", "~0", "~", "~1", "/")
-)
+type segment struct {
+	key string
+	idx int
+}
 
 // pointer represents an RFC 6901 JSON Pointer.
 type pointer struct {
-	buf []byte
-	end int
+	buf  []byte
+	base segment
+	prev segment
+	sep  int
 }
 
-func (p pointer) string() string {
-	return *(*string)(unsafe.Pointer(&p.buf))
+func (p *pointer) clone() pointer {
+	return *p
 }
 
-func (p pointer) copy() string {
+func (p *pointer) copy() string {
 	return string(p.buf)
 }
 
-func (p pointer) base() string {
-	b := p.buf[p.end+1:]
-	return *(*string)(unsafe.Pointer(&b))
+func (p *pointer) string() string {
+	return *(*string)(unsafe.Pointer(&p.buf))
 }
 
-func (p pointer) appendKey(key string) pointer {
-	p.buf = append(p.buf, separator)
-	return p.appendEscapeKey(key)
-}
-
-func (p pointer) appendIndex(idx int) pointer {
-	p.buf = append(p.buf, separator)
-	p.buf = strconv.AppendInt(p.buf, int64(idx), 10)
-	return p
-}
-
-func (p pointer) snapshot() pointer {
-	return pointer{
-		buf: p.buf,
-		end: len(p.buf),
-	}
-}
-
-func (p pointer) rewind() pointer {
-	return pointer{
-		buf: p.buf[:p.end],
-		end: p.end,
-	}
-}
-
-func (p pointer) appendEscapeKey(k string) pointer {
-	for _, r := range k {
-		if r == '/' {
-			p.buf = append(p.buf, escapeSlash...)
-			continue
-		} else if r == '~' {
-			p.buf = append(p.buf, escapeTilde...)
-			continue
-		}
-		p.buf = utf8.AppendRune(p.buf, r)
-	}
-	return p
-}
-
-func (p pointer) isRoot() bool {
+func (p *pointer) isRoot() bool {
 	return len(p.buf) == 0
 }
 
-func (p pointer) reset() pointer {
-	p.buf = p.buf[:0]
-	p.end = 0
-	return p
+func (p *pointer) appendKey(key string) {
+	p.buf = append(p.buf, separator)
+	p.base = segment{key: key}
+	p.appendEscapeKey(key)
 }
 
-func toJSONPath(s string) string {
-	if len(s) != 0 {
-		return pointerToGJSONPath.Replace(s[1:])
+func (p *pointer) appendIndex(idx int) {
+	p.buf = append(p.buf, separator)
+	p.buf = strconv.AppendInt(p.buf, int64(idx), 10)
+	p.base = segment{idx: idx}
+}
+
+func (p *pointer) snapshot() {
+	p.sep = len(p.buf)
+	p.prev = p.base
+}
+
+func (p *pointer) rewind() {
+	p.buf = p.buf[:p.sep]
+	p.base = p.prev
+}
+
+func (p *pointer) reset() {
+	p.buf = p.buf[:0]
+	p.sep = 0
+}
+
+func (p *pointer) appendEscapeKey(k string) {
+	for _, c := range []byte(k) {
+		switch c {
+		case '/':
+			p.buf = append(p.buf, escapeSlash...)
+		case '~':
+			p.buf = append(p.buf, escapeTilde...)
+		default:
+			p.buf = append(p.buf, c)
+		}
 	}
-	// @this is a special modifier that can
-	// be used to retrieve the root path.
-	return "@this"
 }
 
 var (
