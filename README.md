@@ -383,9 +383,9 @@ patch, err := jsondiff.CompareJSONOpts(
 
 ## Benchmarks
 
-Performance is not the primary target of the package, instead it strives for correctness. A simple benchmark that compare the performance of available options is provided to give a rough estimate of the cost of each option. You can find the JSON documents used by this benchmark in the directory [testdata/benchs](testdata/benchs).
+A couple of benchmarks that compare the performance for different JSON document sizes are provided to give a rough estimate of the cost of each option. You can find the JSON documents used by those benchmarks in the directory [testdata/benchs](testdata/benchs).
 
-If you'd like to run the benchmark yourself, use the following command:
+If you'd like to run the benchmarks yourself, use the following command:
 
 ```shell
 go get github.com/cespare/prettybench
@@ -394,26 +394,139 @@ go test -bench=. | prettybench
 
 ### Results
 
-The benchmark was run 10x (statistics computed with [benchstat](https://godoc.org/golang.org/x/perf/cmd/benchstat)) on a MacBook Pro 15", with the following specs:
+The benchmarks were run 10x (statistics computed with [benchstat](https://godoc.org/golang.org/x/perf/cmd/benchstat)) on a MacBook Pro 15", with the following specs:
+
 ```
 OS : macOS Big Sur (11.7.6)
 CPU: 2.6 GHz Intel Core i7
 Mem: 16GB 1600 MHz
-Go : go version go1.20 darwin/amd64
+Go : go version go1.20.4 darwin/amd64
 ```
 
-<details open><summary>Output</summary><br><pre>
-name                                          time/op
-Medium/DifferCompare/default-ordered-8        3.54µs ± 0%
-Medium/DifferCompare/default-unordered-8      3.87µs ± 1%
-Medium/DifferCompare/invertible-8             3.58µs ± 0%
-Medium/DifferCompare/factorize-8              5.59µs ± 1%
-Medium/DifferCompare/rationalize-8            20.4µs ± 0%
-Medium/DifferCompare/equivalent-ordered-8     4.67µs ± 1%
-Medium/DifferCompare/equivalent-unordered-8   5.13µs ± 0%
-Medium/DifferCompare/factor+ratio-8           20.5µs ± 1%
-Medium/DifferCompare/all-options-ordered-8    30.6µs ± 0%
-Medium/DifferCompare/all-options-unordered-8  34.5µs ± 1%
+<details><summary>Output</summary><br><pre>
+name                                       time/op
+Small/DifferReset/default-8                2.13µs ± 1%
+Small/Differ/default-8                     2.56µs ± 1%
+Small/DifferReset/default-unordered-8      2.29µs ± 1%
+Small/Differ/default-unordered-8           2.93µs ± 1%
+Small/DifferReset/invertible-8             2.16µs ± 0%
+Small/Differ/invertible-8                  2.81µs ± 1%
+Small/DifferReset/factorize-8              3.52µs ± 0%
+Small/Differ/factorize-8                   4.09µs ± 1%
+Small/DifferReset/rationalize-8            3.23µs ± 1%
+Small/Differ/rationalize-8                 3.82µs ± 3%
+Small/DifferReset/equivalent-8             2.12µs ± 1%
+Small/Differ/equivalent-8                  2.56µs ± 1%
+Small/DifferReset/equivalent-unordered-8   2.31µs ± 1%
+Small/Differ/equivalent-unordered-8        2.74µs ± 1%
+Small/DifferReset/factor+ratio-8           4.64µs ± 1%
+Small/Differ/factor+ratio-8                5.35µs ± 1%
+Small/DifferReset/all-8                    4.74µs ± 0%
+Small/Differ/all-8                         5.73µs ± 1%
+Small/DifferReset/all-unordered-8          4.94µs ± 0%
+Small/Differ/all-unordered-8               5.91µs ± 1%
+Medium/DifferReset/default-8               6.20µs ± 0%
+Medium/Differ/default-8                    7.27µs ± 0%
+Medium/DifferReset/default-unordered-8     6.79µs ± 1%
+Medium/Differ/default-unordered-8          8.52µs ± 1%
+Medium/DifferReset/invertible-8            6.32µs ± 0%
+Medium/Differ/invertible-8                 8.09µs ± 1%
+Medium/DifferReset/factorize-8             11.3µs ± 1%
+Medium/Differ/factorize-8                  13.0µs ± 1%
+Medium/DifferReset/rationalize-8           15.3µs ± 1%
+Medium/Differ/rationalize-8                17.2µs ± 0%
+Medium/DifferReset/equivalent-8            10.0µs ± 0%
+Medium/Differ/equivalent-8                 11.1µs ± 1%
+Medium/DifferReset/equivalent-unordered-8  11.0µs ± 1%
+Medium/Differ/equivalent-unordered-8       12.1µs ± 1%
+Medium/DifferReset/factor+ratio-8          20.6µs ± 1%
+Medium/Differ/factor+ratio-8               23.3µs ± 1%
+Medium/DifferReset/all-8                   24.9µs ± 0%
+Medium/Differ/all-8                        27.8µs ± 1%
+Medium/DifferReset/all-unordered-8         27.3µs ± 1%
+Medium/Differ/all-unordered-8              30.2µs ± 1%
+<br>name                                       alloc/op
+Small/DifferReset/default-8                  216B ± 0%
+Small/Differ/default-8                     1.19kB ± 0%
+Small/DifferReset/default-unordered-8        312B ± 0%
+Small/Differ/default-unordered-8           1.99kB ± 0%
+Small/DifferReset/invertible-8               216B ± 0%
+Small/Differ/invertible-8                  1.90kB ± 0%
+Small/DifferReset/factorize-8                400B ± 0%
+Small/Differ/factorize-8                   1.78kB ± 0%
+Small/DifferReset/rationalize-8              360B ± 0%
+Small/Differ/rationalize-8                 1.48kB ± 0%
+Small/DifferReset/equivalent-8               216B ± 0%
+Small/Differ/equivalent-8                  1.19kB ± 0%
+Small/DifferReset/equivalent-unordered-8     216B ± 0%
+Small/Differ/equivalent-unordered-8        1.19kB ± 0%
+Small/DifferReset/factor+ratio-8             544B ± 0%
+Small/Differ/factor+ratio-8                2.06kB ± 0%
+Small/DifferReset/all-8                      544B ± 0%
+Small/Differ/all-8                         2.77kB ± 0%
+Small/DifferReset/all-unordered-8            656B ± 0%
+Small/Differ/all-unordered-8               2.88kB ± 0%
+Medium/DifferReset/default-8                 624B ± 0%
+Medium/Differ/default-8                    3.71kB ± 0%
+Medium/DifferReset/default-unordered-8       848B ± 0%
+Medium/Differ/default-unordered-8          7.01kB ± 0%
+Medium/DifferReset/invertible-8              624B ± 0%
+Medium/Differ/invertible-8                 6.78kB ± 0%
+Medium/DifferReset/factorize-8             1.41kB ± 0%
+Medium/Differ/factorize-8                  5.60kB ± 0%
+Medium/DifferReset/rationalize-8           1.14kB ± 0%
+Medium/Differ/rationalize-8                5.12kB ± 0%
+Medium/DifferReset/equivalent-8            1.39kB ± 0%
+Medium/Differ/equivalent-8                 4.48kB ± 0%
+Medium/DifferReset/equivalent-unordered-8  1.49kB ± 0%
+Medium/Differ/equivalent-unordered-8       4.58kB ± 0%
+Medium/DifferReset/factor+ratio-8          1.92kB ± 0%
+Medium/Differ/factor+ratio-8               7.01kB ± 0%
+Medium/DifferReset/all-8                   2.73kB ± 0%
+Medium/Differ/all-8                        7.82kB ± 0%
+Medium/DifferReset/all-unordered-8         2.88kB ± 0%
+Medium/Differ/all-unordered-8              7.96kB ± 0%
+<br>name                                       allocs/op
+Small/DifferReset/default-8                  9.00 ± 0%
+Small/Differ/default-8                       13.0 ± 0%
+Small/DifferReset/default-unordered-8        13.0 ± 0%
+Small/Differ/default-unordered-8             18.0 ± 0%
+Small/DifferReset/invertible-8               9.00 ± 0%
+Small/Differ/invertible-8                    14.0 ± 0%
+Small/DifferReset/factorize-8                21.0 ± 0%
+Small/Differ/factorize-8                     27.0 ± 0%
+Small/DifferReset/rationalize-8              10.0 ± 0%
+Small/Differ/rationalize-8                   14.0 ± 0%
+Small/DifferReset/equivalent-8               9.00 ± 0%
+Small/Differ/equivalent-8                    13.0 ± 0%
+Small/DifferReset/equivalent-unordered-8     9.00 ± 0%
+Small/Differ/equivalent-unordered-8          13.0 ± 0%
+Small/DifferReset/factor+ratio-8             22.0 ± 0%
+Small/Differ/factor+ratio-8                  28.0 ± 0%
+Small/DifferReset/all-8                      22.0 ± 0%
+Small/Differ/all-8                           29.0 ± 0%
+Small/DifferReset/all-unordered-8            25.0 ± 0%
+Small/Differ/all-unordered-8                 32.0 ± 0%
+Medium/DifferReset/default-8                 18.0 ± 0%
+Medium/Differ/default-8                      24.0 ± 0%
+Medium/DifferReset/default-unordered-8       26.0 ± 0%
+Medium/Differ/default-unordered-8            33.0 ± 0%
+Medium/DifferReset/invertible-8              18.0 ± 0%
+Medium/Differ/invertible-8                   25.0 ± 0%
+Medium/DifferReset/factorize-8               55.0 ± 0%
+Medium/Differ/factorize-8                    64.0 ± 0%
+Medium/DifferReset/rationalize-8             19.0 ± 0%
+Medium/Differ/rationalize-8                  25.0 ± 0%
+Medium/DifferReset/equivalent-8              26.0 ± 0%
+Medium/Differ/equivalent-8                   32.0 ± 0%
+Medium/DifferReset/equivalent-unordered-8    30.0 ± 0%
+Medium/Differ/equivalent-unordered-8         36.0 ± 0%
+Medium/DifferReset/factor+ratio-8            56.0 ± 0%
+Medium/Differ/factor+ratio-8                 65.0 ± 0%
+Medium/DifferReset/all-8                     68.0 ± 0%
+Medium/Differ/all-8                          77.0 ± 0%
+Medium/DifferReset/all-unordered-8           75.0 ± 0%
+Medium/Differ/all-unordered-8                84.0 ± 0%
 </pre></details>
 
 ## Credits
