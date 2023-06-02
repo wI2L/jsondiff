@@ -92,6 +92,44 @@ func Test_jsonTypeSwitch(t *testing.T) {
 	}
 }
 
+func Test_deepEqualValue(t *testing.T) {
+	for _, tt := range []struct {
+		src, tgt interface{}
+		equal    bool
+	}{
+		{
+			nil,
+			nil,
+			true,
+		},
+		{
+			"foobar",
+			"foobar",
+			true,
+		},
+		{
+			true,
+			false,
+			false,
+		},
+		{
+			3.14,
+			3.14,
+			true,
+		},
+		{
+			json.Number("42.69"),
+			json.Number("69.42"),
+			false,
+		},
+	} {
+		ok := deepEqualValue(tt.src, tt.tgt)
+		if ok != tt.equal {
+			t.Errorf("got %t, want %t", ok, tt.equal)
+		}
+	}
+}
+
 func Test_deepEqual_invalid_type(t *testing.T) {
 	defer func() {
 		if err := recover(); err == nil {

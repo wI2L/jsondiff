@@ -2,7 +2,7 @@ package jsondiff
 
 import "testing"
 
-func TestOperationMarshalJSON(t *testing.T) {
+func TestOperation_MarshalJSON(t *testing.T) {
 	for _, tc := range []struct {
 		Op  Operation
 		Out string // marshaled output
@@ -101,7 +101,7 @@ func TestOperationMarshalJSON(t *testing.T) {
 	}
 }
 
-func TestPatchString(t *testing.T) {
+func TestPatch_String(t *testing.T) {
 	patch := Patch{
 		{
 			Type:  OperationReplace,
@@ -129,13 +129,30 @@ func TestPatchString(t *testing.T) {
 	}
 }
 
-func TestNilPatchString(t *testing.T) {
+func TestPatch_String_nil(t *testing.T) {
 	p := new(Patch)
 	s := p.String()
 
 	if s != "" {
 		t.Errorf("stringified operation mismatch, got %q, want empty string", s)
 	}
+}
+
+func TestPatch_jsonLength(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		p := new(Patch)
+		l := p.jsonLength()
+		if l != 0 {
+			t.Error("expected zero length for empty patch")
+		}
+	})
+	t.Run("nil", func(t *testing.T) {
+		var p *Patch
+		l := p.jsonLength()
+		if l != 0 {
+			t.Error("expected zero length for nil patch")
+		}
+	})
 }
 
 func typeNilIface() interface{} {
