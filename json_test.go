@@ -2,6 +2,7 @@ package jsondiff
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
 )
 
@@ -139,5 +140,19 @@ func Test_findIndex(t *testing.T) {
 		if s != tt.want {
 			t.Errorf("got %q, want %q", s, tt.want)
 		}
+	}
+}
+
+func Test__compact(t *testing.T) {
+	small, err := os.ReadFile("testdata/benchs/small/source.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	b := _compact(small, small)
+
+	const want = `{"pine":true,"silence":{"feathers":"could","lion":false,"provide":["lake",1886677335,"research",false],"ate":"nearest"},"already":true,"it":false}`
+
+	if string(b) != want {
+		t.Errorf("got %q, want %q", b, want)
 	}
 }

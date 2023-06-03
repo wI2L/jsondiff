@@ -55,10 +55,11 @@ func subBenchmarks(b *testing.B, src, tgt, tgtUnordered []byte) {
 		if err := json.Unmarshal(bb.afterBytes, &after); err != nil {
 			b.Fatal(err)
 		}
-		b.ResetTimer()
-
 		b.Run("DifferReset/"+bb.name, func(b *testing.B) {
-			d := Differ{targetBytes: bb.afterBytes}
+			d := Differ{
+				targetBytes: compactBytes(bb.afterBytes),
+				isCompact:   true,
+			}
 			for _, opt := range bb.opts {
 				opt(&d)
 			}
@@ -69,11 +70,18 @@ func subBenchmarks(b *testing.B, src, tgt, tgtUnordered []byte) {
 				d.Compare(before, after)
 				d.Reset()
 			}
+
 		})
 		b.Run("Differ/"+bb.name, func(b *testing.B) {
+			targetBytes := compactBytes(bb.afterBytes)
 			b.ReportAllocs()
+			b.ResetTimer()
+
 			for i := 0; i < b.N; i++ {
-				d := Differ{targetBytes: bb.afterBytes}
+				d := Differ{
+					targetBytes: targetBytes,
+					isCompact:   true,
+				}
 				for _, opt := range bb.opts {
 					opt(&d)
 				}
@@ -105,4 +113,11 @@ func subBenchmarks(b *testing.B, src, tgt, tgtUnordered []byte) {
 			}
 		})
 	}
+}
+
+func compactBytes(src []byte) []byte {
+	b := make([]byte, 0, len(src))
+	copy(b, src)
+	b = _compact(b, b)
+	return b
 }

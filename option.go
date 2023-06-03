@@ -58,6 +58,16 @@ func SkipCompact() Option {
 	}
 }
 
+// InPlaceCompaction instructs to compact the input JSON
+// documents in place; it does not allocate to create
+// a copy, but modify the original byte slice.
+// This option has no effect if used alongside SkipCompact.
+func InPlaceCompaction() Option {
+	return func(o *Differ) {
+		o.compactInPlace = true
+	}
+}
+
 // Ignores defines the list of values that are ignored
 // by the diff generation, represented as a list of JSON
 // Pointer strings (RFC 6901).

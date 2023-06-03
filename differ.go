@@ -75,17 +75,16 @@ func (d *Differ) Compare(src, tgt interface{}) {
 		d.prepare(d.ptr, src, tgt)
 		d.ptr.reset()
 	}
-	var doc string
-
 	if d.opts.rationalize {
-		if d.compactInPlace {
-			d.targetBytes = compactInPlace(d.targetBytes)
-		} else {
-			d.targetBytes = compact(d.targetBytes)
+		if !d.isCompact {
+			if d.compactInPlace {
+				d.targetBytes = compactInPlace(d.targetBytes)
+			} else {
+				d.targetBytes = compact(d.targetBytes)
+			}
 		}
-		doc = b2s(d.targetBytes)
 	}
-	d.diff(d.ptr, src, tgt, doc)
+	d.diff(d.ptr, src, tgt, b2s(d.targetBytes))
 }
 
 func (d *Differ) isIgnored(ptr pointer) bool {

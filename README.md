@@ -243,6 +243,12 @@ Reducing the size of a JSON Patch is usually beneficial when it needs to be sent
 
 When the `Rationalize()` option is enabled, the package pre-process the JSON input given to the `CompareJSON*` functions. If your inputs are already compact JSON documents, you **should** also use the `SkipCompact()` option to instruct the package to skip the compaction step, resulting in a *nice and free* performance improvement.
 
+##### In-place compaction
+
+By default, the package will not modify the JSON documents given to the `CompareJSON` and `CompareJSONOpts` functions. Instead, a copy of the `target` byte slice argument is created and then compacted to remove insignificant spaces.
+
+To avoid an extra allocation, you can use the `InPlaceCompaction()` option to allow the package to *take ownership* of the `target` byte slice and modify it directly. **Note that you should not update it concurrently with a call to the `CompareJSON*` functions.**
+
 #### Invertible patch
 
 Using the functional option `Invertible()`, it is possible to instruct the diff generator to precede each `remove` and `replace` operation with a `test` operation. Such patches can be inverted to return a patched document to its original form.
@@ -367,7 +373,9 @@ By default, the package uses the `json.Marshal` and `json.Unmarshal` functions f
 
 The prototype of the function argument accepted by these options is the same as the official `json.Marshal` and `json.Unmarshal` functions.
 
-For example, the `UnmarshalFunc` option can be used to set up a custom JSON [`Decoder`](https://pkg.go.dev/encoding/json#Decoder) with the [`UserNumber`](https://pkg.go.dev/encoding/json#Decoder.UseNumber) flag enabled, to decode JSON numbers as [`json.Number`](https://pkg.go.dev/encoding/json#Decoder.UseNumber) instead of float64:
+##### Custom decoder
+
+In the following example, the `UnmarshalFunc` option is used to set up a custom JSON [`Decoder`](https://pkg.go.dev/encoding/json#Decoder) with the [`UserNumber`](https://pkg.go.dev/encoding/json#Decoder.UseNumber) flag enabled, to decode JSON numbers as [`json.Number`](https://pkg.go.dev/encoding/json#Decoder.UseNumber) instead of `float64`:
 
 ```go
 patch, err := jsondiff.CompareJSONOpts(
@@ -405,46 +413,46 @@ Go : go version go1.20.4 darwin/amd64
 
 <details><summary>Output</summary><br><pre>
 name                                       time/op
-Small/DifferReset/default-8                2.13µs ± 1%
-Small/Differ/default-8                     2.56µs ± 1%
-Small/DifferReset/default-unordered-8      2.29µs ± 1%
-Small/Differ/default-unordered-8           2.93µs ± 1%
-Small/DifferReset/invertible-8             2.16µs ± 0%
-Small/Differ/invertible-8                  2.81µs ± 1%
-Small/DifferReset/factorize-8              3.52µs ± 0%
-Small/Differ/factorize-8                   4.09µs ± 1%
-Small/DifferReset/rationalize-8            3.23µs ± 1%
-Small/Differ/rationalize-8                 3.82µs ± 3%
-Small/DifferReset/equivalent-8             2.12µs ± 1%
-Small/Differ/equivalent-8                  2.56µs ± 1%
-Small/DifferReset/equivalent-unordered-8   2.31µs ± 1%
-Small/Differ/equivalent-unordered-8        2.74µs ± 1%
-Small/DifferReset/factor+ratio-8           4.64µs ± 1%
-Small/Differ/factor+ratio-8                5.35µs ± 1%
-Small/DifferReset/all-8                    4.74µs ± 0%
-Small/Differ/all-8                         5.73µs ± 1%
-Small/DifferReset/all-unordered-8          4.94µs ± 0%
-Small/Differ/all-unordered-8               5.91µs ± 1%
-Medium/DifferReset/default-8               6.20µs ± 0%
-Medium/Differ/default-8                    7.27µs ± 0%
-Medium/DifferReset/default-unordered-8     6.79µs ± 1%
+Small/DifferReset/default-8                2.15µs ± 0%
+Small/Differ/default-8                     2.57µs ± 1%
+Small/DifferReset/default-unordered-8      2.31µs ± 1%
+Small/Differ/default-unordered-8           2.95µs ± 0%
+Small/DifferReset/invertible-8             2.18µs ± 1%
+Small/Differ/invertible-8                  2.82µs ± 1%
+Small/DifferReset/factorize-8              3.53µs ± 0%
+Small/Differ/factorize-8                   4.11µs ± 0%
+Small/DifferReset/rationalize-8            2.29µs ± 0%
+Small/Differ/rationalize-8                 2.73µs ± 1%
+Small/DifferReset/equivalent-8             2.14µs ± 1%
+Small/Differ/equivalent-8                  2.57µs ± 1%
+Small/DifferReset/equivalent-unordered-8   2.32µs ± 1%
+Small/Differ/equivalent-unordered-8        2.76µs ± 1%
+Small/DifferReset/factor+ratio-8           3.67µs ± 1%
+Small/Differ/factor+ratio-8                4.26µs ± 1%
+Small/DifferReset/all-8                    3.77µs ± 0%
+Small/Differ/all-8                         4.59µs ± 0%
+Small/DifferReset/all-unordered-8          3.99µs ± 1%
+Small/Differ/all-unordered-8               4.82µs ± 0%
+Medium/DifferReset/default-8               6.23µs ± 0%
+Medium/Differ/default-8                    7.30µs ± 1%
+Medium/DifferReset/default-unordered-8     6.81µs ± 1%
 Medium/Differ/default-unordered-8          8.52µs ± 1%
-Medium/DifferReset/invertible-8            6.32µs ± 0%
-Medium/Differ/invertible-8                 8.09µs ± 1%
+Medium/DifferReset/invertible-8            6.32µs ± 1%
+Medium/Differ/invertible-8                 8.09µs ± 0%
 Medium/DifferReset/factorize-8             11.3µs ± 1%
 Medium/Differ/factorize-8                  13.0µs ± 1%
-Medium/DifferReset/rationalize-8           15.3µs ± 1%
-Medium/Differ/rationalize-8                17.2µs ± 0%
-Medium/DifferReset/equivalent-8            10.0µs ± 0%
+Medium/DifferReset/rationalize-8           6.91µs ± 1%
+Medium/Differ/rationalize-8                7.66µs ± 1%
+Medium/DifferReset/equivalent-8            10.0µs ± 1%
 Medium/Differ/equivalent-8                 11.1µs ± 1%
 Medium/DifferReset/equivalent-unordered-8  11.0µs ± 1%
-Medium/Differ/equivalent-unordered-8       12.1µs ± 1%
-Medium/DifferReset/factor+ratio-8          20.6µs ± 1%
-Medium/Differ/factor+ratio-8               23.3µs ± 1%
-Medium/DifferReset/all-8                   24.9µs ± 0%
-Medium/Differ/all-8                        27.8µs ± 1%
-Medium/DifferReset/all-unordered-8         27.3µs ± 1%
-Medium/Differ/all-unordered-8              30.2µs ± 1%
+Medium/Differ/equivalent-unordered-8       12.1µs ± 0%
+Medium/DifferReset/factor+ratio-8          11.8µs ± 0%
+Medium/Differ/factor+ratio-8               13.1µs ± 0%
+Medium/DifferReset/all-8                   16.1µs ± 1%
+Medium/Differ/all-8                        17.9µs ± 1%
+Medium/DifferReset/all-unordered-8         17.7µs ± 1%
+Medium/Differ/all-unordered-8              19.5µs ± 0%
 <br>name                                       alloc/op
 Small/DifferReset/default-8                  216B ± 0%
 Small/Differ/default-8                     1.19kB ± 0%
@@ -454,18 +462,18 @@ Small/DifferReset/invertible-8               216B ± 0%
 Small/Differ/invertible-8                  1.90kB ± 0%
 Small/DifferReset/factorize-8                400B ± 0%
 Small/Differ/factorize-8                   1.78kB ± 0%
-Small/DifferReset/rationalize-8              360B ± 0%
-Small/Differ/rationalize-8                 1.48kB ± 0%
+Small/DifferReset/rationalize-8              224B ± 0%
+Small/Differ/rationalize-8                 1.20kB ± 0%
 Small/DifferReset/equivalent-8               216B ± 0%
 Small/Differ/equivalent-8                  1.19kB ± 0%
 Small/DifferReset/equivalent-unordered-8     216B ± 0%
 Small/Differ/equivalent-unordered-8        1.19kB ± 0%
-Small/DifferReset/factor+ratio-8             544B ± 0%
-Small/Differ/factor+ratio-8                2.06kB ± 0%
-Small/DifferReset/all-8                      544B ± 0%
-Small/Differ/all-8                         2.77kB ± 0%
-Small/DifferReset/all-unordered-8            656B ± 0%
-Small/Differ/all-unordered-8               2.88kB ± 0%
+Small/DifferReset/factor+ratio-8             408B ± 0%
+Small/Differ/factor+ratio-8                1.78kB ± 0%
+Small/DifferReset/all-8                      408B ± 0%
+Small/Differ/all-8                         2.49kB ± 0%
+Small/DifferReset/all-unordered-8            520B ± 0%
+Small/Differ/all-unordered-8               2.60kB ± 0%
 Medium/DifferReset/default-8                 624B ± 0%
 Medium/Differ/default-8                    3.71kB ± 0%
 Medium/DifferReset/default-unordered-8       848B ± 0%
@@ -474,18 +482,18 @@ Medium/DifferReset/invertible-8              624B ± 0%
 Medium/Differ/invertible-8                 6.78kB ± 0%
 Medium/DifferReset/factorize-8             1.41kB ± 0%
 Medium/Differ/factorize-8                  5.60kB ± 0%
-Medium/DifferReset/rationalize-8           1.14kB ± 0%
-Medium/Differ/rationalize-8                5.12kB ± 0%
+Medium/DifferReset/rationalize-8             672B ± 0%
+Medium/Differ/rationalize-8                2.35kB ± 0%
 Medium/DifferReset/equivalent-8            1.39kB ± 0%
 Medium/Differ/equivalent-8                 4.48kB ± 0%
 Medium/DifferReset/equivalent-unordered-8  1.49kB ± 0%
 Medium/Differ/equivalent-unordered-8       4.58kB ± 0%
-Medium/DifferReset/factor+ratio-8          1.92kB ± 0%
-Medium/Differ/factor+ratio-8               7.01kB ± 0%
-Medium/DifferReset/all-8                   2.73kB ± 0%
-Medium/Differ/all-8                        7.82kB ± 0%
-Medium/DifferReset/all-unordered-8         2.88kB ± 0%
-Medium/Differ/all-unordered-8              7.96kB ± 0%
+Medium/DifferReset/factor+ratio-8          1.45kB ± 0%
+Medium/Differ/factor+ratio-8               4.24kB ± 0%
+Medium/DifferReset/all-8                   2.22kB ± 0%
+Medium/Differ/all-8                        6.41kB ± 0%
+Medium/DifferReset/all-unordered-8         2.36kB ± 0%
+Medium/Differ/all-unordered-8              6.55kB ± 0%
 <br>name                                       allocs/op
 Small/DifferReset/default-8                  9.00 ± 0%
 Small/Differ/default-8                       13.0 ± 0%
@@ -515,18 +523,18 @@ Medium/DifferReset/invertible-8              18.0 ± 0%
 Medium/Differ/invertible-8                   25.0 ± 0%
 Medium/DifferReset/factorize-8               55.0 ± 0%
 Medium/Differ/factorize-8                    64.0 ± 0%
-Medium/DifferReset/rationalize-8             19.0 ± 0%
-Medium/Differ/rationalize-8                  25.0 ± 0%
+Medium/DifferReset/rationalize-8             22.0 ± 0%
+Medium/Differ/rationalize-8                  27.0 ± 0%
 Medium/DifferReset/equivalent-8              26.0 ± 0%
 Medium/Differ/equivalent-8                   32.0 ± 0%
 Medium/DifferReset/equivalent-unordered-8    30.0 ± 0%
 Medium/Differ/equivalent-unordered-8         36.0 ± 0%
-Medium/DifferReset/factor+ratio-8            56.0 ± 0%
-Medium/Differ/factor+ratio-8                 65.0 ± 0%
-Medium/DifferReset/all-8                     68.0 ± 0%
-Medium/Differ/all-8                          77.0 ± 0%
-Medium/DifferReset/all-unordered-8           75.0 ± 0%
-Medium/Differ/all-unordered-8                84.0 ± 0%
+Medium/DifferReset/factor+ratio-8            59.0 ± 0%
+Medium/Differ/factor+ratio-8                 67.0 ± 0%
+Medium/DifferReset/all-8                     67.0 ± 0%
+Medium/Differ/all-8                          76.0 ± 0%
+Medium/DifferReset/all-unordered-8           74.0 ± 0%
+Medium/Differ/all-unordered-8                83.0 ± 0%
 </pre></details>
 
 ## Credits
