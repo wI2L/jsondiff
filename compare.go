@@ -5,14 +5,7 @@ import "encoding/json"
 // Compare compares the JSON representations of the
 // given values and returns the differences relative
 // to the former as a list of JSON Patch operations.
-func Compare(source, target interface{}) (Patch, error) {
-	var d Differ
-	return compare(&d, source, target)
-}
-
-// CompareOpts is similar to Compare, but also accepts
-// a list of options to configure the behavior.
-func CompareOpts(source, target interface{}, opts ...Option) (Patch, error) {
+func Compare(source, target interface{}, opts ...Option) (Patch, error) {
 	var d Differ
 	d.applyOpts(opts...)
 
@@ -22,14 +15,7 @@ func CompareOpts(source, target interface{}, opts ...Option) (Patch, error) {
 // CompareJSON compares the given JSON documents and
 // returns the differences relative to the former as
 // a list of JSON Patch operations.
-func CompareJSON(source, target []byte) (Patch, error) {
-	var d Differ
-	return compareJSON(&d, source, target, json.Unmarshal)
-}
-
-// CompareJSONOpts is similar to CompareJSON, but also
-// accepts a list of options to configure the behavior.
-func CompareJSONOpts(source, target []byte, opts ...Option) (Patch, error) {
+func CompareJSON(source, target []byte, opts ...Option) (Patch, error) {
 	var d Differ
 	d.applyOpts(opts...)
 

@@ -93,7 +93,7 @@ func subBenchmarks(b *testing.B, src, tgt, tgtUnordered []byte) {
 				b.Skip()
 			}
 			for i := 0; i < b.N; i++ {
-				patch, err := CompareJSONOpts(src, bb.afterBytes, bb.opts...)
+				patch, err := CompareJSON(src, bb.afterBytes, bb.opts...)
 				if err != nil {
 					b.Error(err)
 				}
@@ -105,7 +105,7 @@ func subBenchmarks(b *testing.B, src, tgt, tgtUnordered []byte) {
 				b.Skip()
 			}
 			for i := 0; i < b.N; i++ {
-				patch, err := CompareOpts(before, after, bb.opts...)
+				patch, err := Compare(before, after, bb.opts...)
 				if err != nil {
 					b.Error(err)
 				}

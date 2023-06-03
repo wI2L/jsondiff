@@ -87,28 +87,6 @@ func ExampleCompare() {
 	// {"op":"remove","path":"/spec/volumes/0/emptyDir/medium"}
 }
 
-func ExampleCompareOpts() {
-	oldPod := createPod()
-	newPod := createPod()
-
-	newPod.Spec.Volumes = append(newPod.Spec.Volumes, oldPod.Spec.Volumes[0])
-
-	patch, err := jsondiff.CompareOpts(
-		oldPod,
-		newPod,
-		jsondiff.Factorize(),
-		jsondiff.Rationalize(),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, op := range patch {
-		fmt.Printf("%s\n", op)
-	}
-	// Output:
-	// {"op":"copy","from":"/spec/volumes/0","path":"/spec/volumes/-"}
-}
-
 func ExampleCompareJSON() {
 	type Phone struct {
 		Type   string `json:"type"`
@@ -154,7 +132,7 @@ func ExampleInvertible() {
 	source := `{"a":"1","b":"2"}`
 	target := `{"a":"3","c":"4"}`
 
-	patch, err := jsondiff.CompareJSONOpts(
+	patch, err := jsondiff.CompareJSON(
 		[]byte(source),
 		[]byte(target),
 		jsondiff.Invertible(),
@@ -177,7 +155,7 @@ func ExampleFactorize() {
 	source := `{"a":[1,2,3],"b":{"foo":"bar"}}`
 	target := `{"a":[1,2,3],"c":[1,2,3],"d":{"foo":"bar"}}`
 
-	patch, err := jsondiff.CompareJSONOpts(
+	patch, err := jsondiff.CompareJSON(
 		[]byte(source),
 		[]byte(target),
 		jsondiff.Factorize(),
@@ -197,7 +175,7 @@ func ExampleIgnores() {
 	source := `{"A":"bar","B":"baz","C":"foo"}`
 	target := `{"A":"rab","B":"baz","D":"foo"}`
 
-	patch, err := jsondiff.CompareJSONOpts(
+	patch, err := jsondiff.CompareJSON(
 		[]byte(source),
 		[]byte(target),
 		jsondiff.Ignores("/A", "/C", "/D"),
@@ -218,7 +196,7 @@ func ExampleMarshalFunc() {
 	newPod.Spec.Containers[0].Name = "nginx"
 	newPod.Spec.Volumes[0].Name = "data"
 
-	patch, err := jsondiff.CompareOpts(
+	patch, err := jsondiff.Compare(
 		oldPod,
 		newPod,
 		jsondiff.MarshalFunc(func(v any) ([]byte, error) {
@@ -246,7 +224,7 @@ func ExampleUnmarshalFunc() {
 	source := `{"A":"bar","B":3.14,"C":false}`
 	target := `{"A":"baz","B":3.14159,"C":true}`
 
-	patch, err := jsondiff.CompareJSONOpts(
+	patch, err := jsondiff.CompareJSON(
 		[]byte(source),
 		[]byte(target),
 		jsondiff.UnmarshalFunc(func(b []byte, v any) error {
