@@ -37,32 +37,3 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: coverage.txt
-
-  bench:
-    name: Benchmarks
-    needs: test
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        go:
-          - "1.20.x"
-    steps:
-      - name: Install Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: ${{ matrix.go }}
-          cache: false
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Install tools
-        run: go get golang.org/x/perf/cmd/benchstat
-        env:
-          GOPROXY: https://proxy.golang.org
-      - name: Run benchmarks
-        run: ./ci/bench.sh
-      - name: Upload statistics
-        uses: actions/upload-artifact@v3
-        with:
-          name: Benchstats-Go${{ matrix.go }}
-          path: benchstats
