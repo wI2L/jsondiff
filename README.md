@@ -78,7 +78,7 @@ newPod.Spec.Containers[0].Image = "nginx:1.19.5-alpine"
 newPod.Spec.Volumes[0].EmptyDir.Medium = corev1.StorageMediumDefault
 ```
 
-Finally, generate the patch that represents the changes relative to the original value. Note that when the `Compare` or `CompareOpts` functions are used, the `source` and `target` parameters are first marshaled using the `encoding/json` package in order to obtain their final JSON representation, prior to comparing them.
+Finally, generate the patch that represents the changes relative to the original value. Note that when the `Compare` function is called, the `source` and `target` parameters are first marshaled using the `encoding/json` package (or a custom func) in order to obtain their final JSON representation, prior to comparing them.
 
 ```go
 import "github.com/wI2L/jsondiff"
@@ -138,7 +138,7 @@ For example, if your webhook mutate `Service` resources, a user could set the fi
 
 ### Diff options
 
-If more control over the diff behaviour is required, use the `CompareOpts` or `CompareJSONOpts` function instead. The third parameter is variadic and accept a list of functional opt-in options described below.
+If more control over the diff behaviour is required, you can pass a variadic list of functional options as the third argument of the `Compare` and `CompareJSON` functions.
 
 Note that any combination of options can be used without issues.
 
@@ -245,7 +245,7 @@ When the `Rationalize()` option is enabled, the package pre-process the JSON inp
 
 ##### In-place compaction
 
-By default, the package will not modify the JSON documents given to the `CompareJSON` and `CompareJSONOpts` functions. Instead, a copy of the `target` byte slice argument is created and then compacted to remove insignificant spaces.
+By default, the package will not modify the JSON documents given to the `CompareJSON` function. Instead, a copy of the `target` byte slice argument is created and then compacted to remove insignificant spaces.
 
 To avoid an extra allocation, you can use the `InPlaceCompaction()` option to allow the package to *take ownership* of the `target` byte slice and modify it directly. **Note that you should not update it concurrently with a call to the `CompareJSON*` functions.**
 
@@ -378,7 +378,7 @@ The prototype of the function argument accepted by these options is the same as 
 In the following example, the `UnmarshalFunc` option is used to set up a custom JSON [`Decoder`](https://pkg.go.dev/encoding/json#Decoder) with the [`UserNumber`](https://pkg.go.dev/encoding/json#Decoder.UseNumber) flag enabled, to decode JSON numbers as [`json.Number`](https://pkg.go.dev/encoding/json#Decoder.UseNumber) instead of `float64`:
 
 ```go
-patch, err := jsondiff.CompareJSONOpts(
+patch, err := jsondiff.CompareJSON(
     source,
     target,
     jsondiff.UnmarshalFunc(func(b []byte, v any) error {
