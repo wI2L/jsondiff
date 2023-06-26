@@ -197,6 +197,7 @@ func (d *Differ) rationalize(ptr pointer, src, tgt interface{}, lastOpIdx int, d
 	replaceOp := Operation{
 		Type:     OperationReplace,
 		Path:     ptr.string(), // shallow copy
+		OldValue: src,
 		Value:    tgt,
 		valueLen: len(doc),
 	}
