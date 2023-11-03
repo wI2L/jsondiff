@@ -1,11 +1,11 @@
 run:
+  go: 1.21
   timeout: 10m
 linters:
   disable-all: true
   enable:
     - asciicheck
     - bodyclose
-    - deadcode
     - depguard
     - dogsled
     - dupl
@@ -29,13 +29,11 @@ linters:
     - revive
     - rowserrcheck
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
 linters-settings:
   gofmt:

@@ -31,13 +31,13 @@ func TestRootCases(t *testing.T)   { runCasesFromFile(t, "testdata/tests/root.js
 func TestDiffer_Reset(t *testing.T) {
 	d := &Differ{
 		ptr: pointer{
-			buf: make([]byte, 15, 15),
+			buf: make([]byte, 15),
 			sep: 15,
 		},
 		hashmap: map[uint64]jsonNode{
 			1: {},
 		},
-		patch: make([]Operation, 42, 42),
+		patch: make([]Operation, 42),
 	}
 	d.Reset()
 
@@ -195,6 +195,64 @@ func TestDiffer_unorderedDeepEqualSlice(t *testing.T) {
 			t.Errorf("equality mismatch, got %t, want %t", eq, tt.equal)
 		}
 	}
+}
+
+func Test_issue17(t *testing.T) {
+	type (
+		VolumeMount struct {
+			Name      string `json:"name"`
+			MountPath string `json:"mountPath"`
+		}
+		Container struct {
+			VolumeMounts []VolumeMount `json:"volumeMounts,omitempty"`
+		}
+	)
+	src := Container{
+		VolumeMounts: []VolumeMount{{
+			Name:      "name1",
+			MountPath: "/foo/bar/1",
+		}, {
+			Name:      "name2",
+			MountPath: "/foo/bar/2",
+		}, {
+			Name:      "name3",
+			MountPath: "/foo/bar/3",
+		}, {
+			Name:      "name4",
+			MountPath: "/foo/bar/4",
+		}, {
+			Name:      "name5",
+			MountPath: "/foo/bar/5",
+		}, {
+			Name:      "name6",
+			MountPath: "/foo/bar/6",
+		}},
+	}
+	tgt := Container{
+		VolumeMounts: []VolumeMount{{
+			Name:      "name1",
+			MountPath: "/foo/bar/1",
+		}, {
+			Name:      "name2",
+			MountPath: "/foo/bar/2",
+		}, {
+			Name:      "name4",
+			MountPath: "/foo/bar/4",
+		}, {
+			Name:      "name5",
+			MountPath: "/foo/bar/5",
+		}, {
+			Name:      "name6",
+			MountPath: "/foo/bar/6",
+		}},
+	}
+	patch, _ := Compare(src, tgt, LCS())
+
+	if len(patch) != 1 {
+		t.Errorf("expected a patch with 1 operation, got %d", len(patch))
+	}
+	b, _ := json.Marshal(patch)
+	t.Logf("%s", string(b))
 }
 
 func Benchmark_sortStrings(b *testing.B) {

@@ -33,6 +33,7 @@ type options struct {
 	rationalize bool
 	invertible  bool
 	equivalent  bool
+	lcs         bool
 }
 
 type jsonNode struct {
@@ -130,7 +131,11 @@ func (d *Differ) diff(ptr pointer, src, tgt interface{}, doc string) {
 	// equivalent.
 	switch val := src.(type) {
 	case []interface{}:
-		d.compareArrays(ptr, val, tgt.([]interface{}), doc)
+		if d.opts.lcs {
+			d.compareArraysLCS(ptr, val, tgt.([]interface{}), doc)
+		} else {
+			d.compareArrays(ptr, val, tgt.([]interface{}), doc)
+		}
 	case map[string]interface{}:
 		d.compareObjects(ptr, val, tgt.(map[string]interface{}), doc)
 	default:
@@ -271,7 +276,7 @@ func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]interface{}, do
 func (d *Differ) compareArrays(ptr pointer, src, tgt []interface{}, doc string) {
 	ptr.snapshot()
 	sl, tl := len(src), len(tgt)
-	min := min(sl, tl)
+	ml := min(sl, tl)
 
 	// When the source array contains more elements
 	// than the target, entries are being removed
@@ -279,9 +284,9 @@ func (d *Differ) compareArrays(ptr pointer, src, tgt []interface{}, doc string) 
 	// is always equal to the original array length.
 	if tl < sl {
 		np := ptr.clone()
-		np.appendIndex(min) // "removal" path
+		np.appendIndex(ml) // "removal" path
 		p := np.copy()
-		for i := min; i < sl; i++ {
+		for i := ml; i < sl; i++ {
 			ptr.appendIndex(i)
 
 			if !d.isIgnored(ptr) {
@@ -297,7 +302,7 @@ func (d *Differ) compareArrays(ptr pointer, src, tgt []interface{}, doc string) 
 comparisons:
 	// Compare the elements at each index present in
 	// both the source and destination arrays.
-	for i := 0; i < min; i++ {
+	for i := 0; i < ml; i++ {
 		ptr.appendIndex(i)
 		if d.opts.rationalize {
 			d.diff(ptr, src[i], tgt[i], findIndex(doc, ptr.base.idx))
@@ -313,12 +318,82 @@ comparisons:
 		np := ptr.clone()
 		np.appendKey("-") // "append" path
 		p := np.copy()
-		for i := min; i < tl; i++ {
+		for i := ml; i < tl; i++ {
 			ptr.appendIndex(i)
 			if !d.isIgnored(ptr) {
 				d.add(p, tgt[i], doc)
 			}
 			ptr.rewind()
+		}
+	}
+}
+
+func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc string) {
+	ptr.snapshot()
+	pairs := lcs(src, tgt)
+
+	var ai, bi int // src && tgt arrows
+	for p := 0; p < len(pairs); p++ {
+		ma, mb := pairs[p][0], pairs[p][1]
+
+		for ai < ma || bi < mb {
+			if ai < ma && bi < mb {
+				ptr.appendIndex(ai)
+				if d.opts.rationalize {
+					d.diff(ptr, src[ai], tgt[bi], findIndex(doc, ptr.base.idx))
+				} else {
+					d.diff(ptr, src[ai], tgt[bi], doc)
+				}
+				ptr.rewind()
+				ai++
+				bi++
+			} else if ai < ma {
+				ptr.appendIndex(ai)
+
+				if !d.isIgnored(ptr) {
+					d.remove(ptr.copy(), src[ai])
+				}
+				ptr.rewind()
+				ai++
+			} else {
+				ptr.appendIndex(bi)
+				if !d.isIgnored(ptr) {
+					d.add(ptr.copy(), tgt[bi], doc)
+				}
+				ptr.rewind()
+				bi++
+			}
+		}
+		// src[ai] == tgt[bi]
+		ai++
+		bi++
+	}
+	for ai < len(src) || bi < len(tgt) {
+		if ai < len(src) && bi < len(tgt) {
+			ptr.appendIndex(ai)
+			if d.opts.rationalize {
+				d.diff(ptr, src[ai], tgt[bi], findIndex(doc, ptr.base.idx))
+			} else {
+				d.diff(ptr, src[ai], tgt[bi], doc)
+			}
+			ptr.rewind()
+			ai++
+			bi++
+		} else if ai < len(src) {
+			ptr.appendIndex(ai)
+
+			if !d.isIgnored(ptr) {
+				d.remove(ptr.copy(), src[ai])
+			}
+			ptr.rewind()
+			ai++
+		} else { // bi < len(tgt)
+			ptr.appendIndex(bi)
+			if !d.isIgnored(ptr) {
+				d.add(ptr.copy(), tgt[bi], doc)
+			}
+			ptr.rewind()
+			bi++
 		}
 	}
 }
@@ -438,18 +513,4 @@ func insertionSort(v []string) {
 
 func b2s(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
-}
-
-func min(i, j int) int {
-	if i < j {
-		return i
-	}
-	return j
-}
-
-func max(i, j int) int {
-	if i > j {
-		return i
-	}
-	return j
 }

@@ -99,7 +99,7 @@ func ExampleCompareJSON() {
 		Age       int     `json:"age"`
 		Phones    []Phone `json:"phoneNumbers"`
 	}
-	source, err := os.ReadFile("testdata/examples/john.json")
+	source, err := os.ReadFile("testdata/examples/person.json")
 	if err != nil {
 		log.Fatal(err)
 	}

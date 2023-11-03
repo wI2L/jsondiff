@@ -26,6 +26,7 @@ func TestDiffer_applyOpts(t *testing.T) {
 		SkipCompact(),
 		InPlaceCompaction(),
 		Ignores(ignoredPaths...),
+		LCS(),
 	)
 	if d.opts.factorize != true {
 		t.Errorf("factorize option is not enabled")
@@ -57,6 +58,9 @@ func TestDiffer_applyOpts(t *testing.T) {
 		if len(d.opts.ignores) != len(ignoredPaths) {
 			t.Errorf("ignored paths map length mismatch input")
 		}
+	}
+	if d.opts.lcs != true {
+		t.Errorf("lcs option is not enabled")
 	}
 }
 
