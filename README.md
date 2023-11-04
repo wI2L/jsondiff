@@ -24,8 +24,6 @@ $ go get github.com/wI2L/jsondiff@latest
 
 :warning: Requires Go1.21+, due to the usage of the [`hash/maphash`](https://golang.org/pkg/hash/maphash/) package, and the `any/min/max` keyword/builtins.
 
-[**Skip examples, Go to documentation**](#diff-options)
-
 ### Example use cases
 
 #### Kubernetes Dynamic Admission Controller
@@ -138,7 +136,7 @@ There's also one other downside to the above example. If your webhook does not h
 
 For example, if your webhook mutate `Service` resources, a user could set the field `.spec.allocateLoadBalancerNodePort` in Kubernetes 1.20 to disable allocating a node port for services with `Type=LoadBalancer`. However, if the webhook is still using the v1.19.x version of the `k8s.io/api/core/v1` package that define the `Service` type, instead of simply ignoring this field, a `remove` operation will be generated for it.
 
-### Diff options
+### Options
 
 If more control over the diff behaviour is required, you can pass a variadic list of functional options as the third argument of the `Compare` and `CompareJSON` functions.
 
@@ -319,11 +317,19 @@ The root arrays of each document are not equal because the values differ at each
 
 For such situations, you can use the `Equivalent()` option to instruct the diff generator to skip the generation of operations that would otherwise be added to the patch to represent the differences between the two arrays.
 
+#### LCS (Longest Common Subsequence)
+
+:construction: *This is an new/experimental option, which might be promoted as the default behavior in the future*.
+
+:warning: **Do not use in conjunction with the `Factorize()` option, it will lead to unexpected results**.
+
+The default algorithm used to compare arrays is naive and can generate a lot of operations. For example, if a single element located *in the middle* of the array is deleted, all items to its right will be shifted one position to the left, generating one `replace` operation per item.
+
+The `LCS()` option instruct the diff generator to compute the [Longest common subsequence](https://en.wikipedia.org/wiki/Longest_common_subsequence) of the source and target arrays, and use it to generate a list of operations that is more succinct and more faithfully represents the differences.
+
 #### Ignores
 
 :construction: *This option is experimental and might be revised in the future.*
-<br/>
-<br/>
 
 The `Ignores()` option allows to exclude one or more JSON fields/values from the *generated diff*. The fields must be identified using the JSON Pointer (RFC6901) string syntax.
 
