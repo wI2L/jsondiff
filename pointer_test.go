@@ -1,6 +1,7 @@
 package jsondiff
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 )
@@ -153,16 +154,14 @@ func Test_parsePointer(t *testing.T) {
 		if !tt.valid {
 			if err == nil {
 				t.Errorf("expected error, got none")
-			} else if err != tt.err {
+			} else if !errors.Is(err, tt.err) {
 				t.Errorf("error mismtahc, got %q, want %q", err, tt.err)
 			}
 		}
 		if l := len(tokens); l != tt.count {
 			t.Errorf("got %d tokens, want %d: %q", l, tt.count, tt.ptr)
-		} else {
-			if !reflect.DeepEqual(tokens, tt.tokens) {
-				t.Errorf("tokens mismatch, got %v, want %v", tokens, tt.tokens)
-			}
+		} else if !reflect.DeepEqual(tokens, tt.tokens) {
+			t.Errorf("tokens mismatch, got %v, want %v", tokens, tt.tokens)
 		}
 	}
 }

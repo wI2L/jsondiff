@@ -54,10 +54,8 @@ func TestDiffer_applyOpts(t *testing.T) {
 	}
 	if d.opts.hasIgnore != true {
 		t.Errorf("differ has no ignored paths")
-	} else {
-		if len(d.opts.ignores) != len(ignoredPaths) {
-			t.Errorf("ignored paths map length mismatch input")
-		}
+	} else if len(d.opts.ignores) != len(ignoredPaths) {
+		t.Errorf("ignored paths map length mismatch input")
 	}
 	if d.opts.lcs != true {
 		t.Errorf("lcs option is not enabled")

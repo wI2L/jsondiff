@@ -59,8 +59,7 @@ func TestOperation_MarshalJSON(t *testing.T) {
 			`{"value":null,"op":"add","path":""}`,
 		},
 		{
-			// Remove operation should NEVER be marshaled with
-			// a value.
+			// Remove operation should NEVER be marshaled with a value.
 			Operation{
 				Type:  OperationRemove,
 				Path:  "/foo/bar",
@@ -69,8 +68,7 @@ func TestOperation_MarshalJSON(t *testing.T) {
 			`{"op":"remove","path":"/foo/bar"}`,
 		},
 		{
-			// Copy operation should NEVER be marshaled with
-			// a value.
+			// Copy operation should NEVER be marshaled with a value.
 			Operation{
 				Type:  OperationCopy,
 				From:  "/bar",
@@ -80,8 +78,7 @@ func TestOperation_MarshalJSON(t *testing.T) {
 			`{"op":"copy","from":"/bar","path":"/baz"}`,
 		},
 		{
-			// Move operation should NEVER be marshaled with
-			// a value.
+			// Move operation should NEVER be marshaled with a value.
 			Operation{
 				Type:  OperationMove,
 				From:  "/bar",

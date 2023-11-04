@@ -337,7 +337,8 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 		ma, mb := pairs[p][0], pairs[p][1]
 
 		for ai < ma || bi < mb {
-			if ai < ma && bi < mb {
+			switch {
+			case ai < ma && bi < mb:
 				ptr.appendIndex(ai)
 				if d.opts.rationalize {
 					d.diff(ptr, src[ai], tgt[bi], findIndex(doc, ptr.base.idx))
@@ -347,7 +348,7 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 				ptr.rewind()
 				ai++
 				bi++
-			} else if ai < ma {
+			case ai < ma:
 				ptr.appendIndex(ai)
 
 				if !d.isIgnored(ptr) {
@@ -355,7 +356,7 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 				}
 				ptr.rewind()
 				ai++
-			} else {
+			default: // bi < mb
 				ptr.appendIndex(bi)
 				if !d.isIgnored(ptr) {
 					d.add(ptr.copy(), tgt[bi], doc)
@@ -369,7 +370,8 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 		bi++
 	}
 	for ai < len(src) || bi < len(tgt) {
-		if ai < len(src) && bi < len(tgt) {
+		switch {
+		case ai < len(src) && bi < len(tgt):
 			ptr.appendIndex(ai)
 			if d.opts.rationalize {
 				d.diff(ptr, src[ai], tgt[bi], findIndex(doc, ptr.base.idx))
@@ -379,7 +381,7 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 			ptr.rewind()
 			ai++
 			bi++
-		} else if ai < len(src) {
+		case ai < len(src):
 			ptr.appendIndex(ai)
 
 			if !d.isIgnored(ptr) {
@@ -387,7 +389,7 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 			}
 			ptr.rewind()
 			ai++
-		} else { // bi < len(tgt)
+		default: //  bi < len(tgt)
 			ptr.appendIndex(bi)
 			if !d.isIgnored(ptr) {
 				d.add(ptr.copy(), tgt[bi], doc)

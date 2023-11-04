@@ -13,6 +13,8 @@ func BenchmarkSmall(b *testing.B)  { benchmark(b, "small") }
 func BenchmarkMedium(b *testing.B) { benchmark(b, "medium") }
 
 func benchmark(b *testing.B, dir string) {
+	b.Helper()
+
 	src, err := os.ReadFile(filepath.Join(benchsDir, dir, "source.json"))
 	if err != nil {
 		b.Fatal(err)
@@ -29,6 +31,8 @@ func benchmark(b *testing.B, dir string) {
 }
 
 func subBenchmarks(b *testing.B, src, tgt, tgtUnordered []byte) {
+	b.Helper()
+
 	makeopts := func(opts ...Option) []Option { return opts }
 
 	for _, bb := range []struct {
@@ -70,7 +74,6 @@ func subBenchmarks(b *testing.B, src, tgt, tgtUnordered []byte) {
 				d.Compare(before, after)
 				d.Reset()
 			}
-
 		})
 		b.Run("Differ/"+bb.name, func(b *testing.B) {
 			targetBytes := compactBytes(bb.afterBytes)

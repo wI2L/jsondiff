@@ -81,6 +81,8 @@ func TestOptions(t *testing.T) {
 }
 
 func runCasesFromFile(t *testing.T, filename string, opts ...Option) {
+	t.Helper()
+
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		t.Fatal(err)
@@ -93,6 +95,8 @@ func runCasesFromFile(t *testing.T, filename string, opts ...Option) {
 }
 
 func runTestCases(t *testing.T, cases []testcase, opts ...Option) {
+	t.Helper()
+
 	for _, tc := range cases {
 		name := testNameReplacer.Replace(tc.Name)
 
@@ -103,7 +107,7 @@ func runTestCases(t *testing.T, cases []testcase, opts ...Option) {
 		})
 		if len(tc.Ignores) != 0 {
 			name = fmt.Sprintf("%s_with_ignore", name)
-			xopts := append(opts, Ignores(tc.Ignores...))
+			xopts := append(opts, Ignores(tc.Ignores...)) //nolint:gocritic
 
 			t.Run(name, func(t *testing.T) {
 				runTestCase(t, tc, func(tc *testcase) Patch {
@@ -115,6 +119,8 @@ func runTestCases(t *testing.T, cases []testcase, opts ...Option) {
 }
 
 func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
+	t.Helper()
+
 	afterBytes, err := json.Marshal(tc.After)
 	if err != nil {
 		t.Error(err)

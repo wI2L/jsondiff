@@ -22,7 +22,9 @@ First, get the latest version of the library using the following command:
 $ go get github.com/wI2L/jsondiff@latest
 ```
 
-:warning: Requires Go1.18+, due to the usage of the package [`hash/maphash`](https://golang.org/pkg/hash/maphash/), and the `any` keyword (predeclared type alias for the empty interface).
+:warning: Requires Go1.21+, due to the usage of the [`hash/maphash`](https://golang.org/pkg/hash/maphash/) package, and the `any/min/max` keyword/builtins.
+
+[**Skip examples, Go to documentation**](#diff-options)
 
 ### Example use cases
 
@@ -539,14 +541,15 @@ Medium/Differ/all-unordered-8                83.0 ± 0%
 
 ## Credits
 
-This package has been inspired by existing implementations of JSON Patch in various languages:
+This package has been inspired by existing implementations of JSON Patch/diff algorithms in various languages:
 
 - [cujojs/jiff](https://github.com/cujojs/jiff)
 - [Starcounter-Jack/JSON-Patch](https://github.com/Starcounter-Jack/JSON-Patch)
 - [java-json-tools/json-patch](https://github.com/java-json-tools/json-patch)
 - [Lattyware/elm-json-diff](https://github.com/Lattyware/elm-json-diff)
 - [espadrine/json-diff](https://github.com/espadrine/json-diff)
+- [`Algorithm::Diff`](https://metacpan.org/pod/Algorithm::Diff)
 
 ## License
 
-`jsondiff` is licensed under the **MIT** license. See the [LICENSE](LICENSE) file.
+The code is licensed under the **MIT** license. [Read this](https://www.tldrlegal.com/license/mit-license) or see the [LICENSE](LICENSE) file.
