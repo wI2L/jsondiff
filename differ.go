@@ -333,6 +333,13 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 	pairs := lcs(src, tgt)
 
 	var ai, bi int // src && tgt arrows
+	var add, remove int
+
+	adjust := func(i int) int {
+		// Adjust indice considering add and remove
+		// operations that precede.
+		return i + add - remove
+	}
 
 	// Iterate over all the indices of the LCS, which
 	// represent the position of items that are present
@@ -348,7 +355,7 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 				// Both arrows points to an item before the
 				// current match indice, which indicate an
 				// equal amount of different items.
-				ptr.appendIndex(ai)
+				ptr.appendIndex(adjust(ai))
 				if d.opts.rationalize {
 					d.diff(ptr, src[ai], tgt[bi], findIndex(doc, ptr.base.idx))
 				} else {
@@ -361,13 +368,14 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 				// The left arrow representing the source slice
 				// is lower than the current match indice, which
 				// indicate that a preceding item has been removed.
-				ptr.appendIndex(ai)
+				ptr.appendIndex(adjust(ai))
 
 				if !d.isIgnored(ptr) {
 					d.remove(ptr.copy(), src[ai])
 				}
 				ptr.rewind()
 				ai++
+				remove++
 			default: // bi < mb
 				// Opposite case of the previous condition.
 				ptr.appendIndex(bi)
@@ -376,6 +384,7 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 				}
 				ptr.rewind()
 				bi++
+				add++
 			}
 		}
 		// Both arrows reached the current match indice
@@ -391,7 +400,7 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 	for ai < len(src) || bi < len(tgt) {
 		switch {
 		case ai < len(src) && bi < len(tgt):
-			ptr.appendIndex(ai)
+			ptr.appendIndex(adjust(ai))
 			if d.opts.rationalize {
 				d.diff(ptr, src[ai], tgt[bi], findIndex(doc, ptr.base.idx))
 			} else {
@@ -401,13 +410,14 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 			ai++
 			bi++
 		case ai < len(src):
-			ptr.appendIndex(ai)
+			ptr.appendIndex(adjust(ai))
 
 			if !d.isIgnored(ptr) {
 				d.remove(ptr.copy(), src[ai])
 			}
 			ptr.rewind()
 			ai++
+			remove++
 		default: // bi < len(tgt)
 			ptr.appendIndex(bi)
 			if !d.isIgnored(ptr) {
@@ -415,6 +425,7 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 			}
 			ptr.rewind()
 			bi++
+			add++
 		}
 	}
 }

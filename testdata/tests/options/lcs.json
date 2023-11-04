@@ -1,0 +1,171 @@
+[{
+    "name": "no changes",
+    "before": [
+        "foo",
+        "bar",
+        "baz",
+        4242,
+        false
+    ],
+    "after": [
+        "foo",
+        "bar",
+        "baz",
+        4242,
+        false
+    ],
+    "patch": []
+}, {
+    "name": "additions",
+    "before": [
+        "foo",
+        "bar",
+        "baz"
+    ],
+    "after": [
+        4242,
+        "foo",
+        "bar",
+        "baz",
+        false
+    ],
+    "patch": [
+        { "op": "add", "path": "/0", "value": 4242 },
+        { "op": "add", "path": "/4", "value": false }
+    ]
+}, {
+    "name": "deletions",
+    "before": [
+        "foo",
+        "bar",
+        "baz"
+    ],
+    "after": [
+        "foo",
+        "baz"
+    ],
+    "patch": [
+        { "op": "remove", "path": "/1", "value": "bar" }
+    ]
+}, {
+    "name": "additions and deletions",
+    "before": [
+        "foo",
+        "bar",
+        "baz"
+    ],
+    "after": [
+        true,
+        "foo",
+        "baz",
+        4242
+    ],
+    "patch": [
+        { "op": "add", "path": "/0", "value": true },
+        { "op": "remove", "path": "/2", "value": "bar" },
+        { "op": "add", "path": "/3", "value": 4242 }
+    ]
+}, {
+    "name": "additions, deletions and changes",
+    "before": [
+        "a",
+        "b",
+        "c"
+    ],
+    "after": [
+        "b",
+        "e",
+        "d",
+        "f"
+    ],
+    "patch": [
+        { "op": "remove", "path": "/0", "value": "a" },
+        { "op": "replace", "path": "/1", "value": "e" },
+        { "op": "add", "path": "/2", "value": "d" },
+        { "op": "add", "path": "/3", "value": "f" }
+    ]
+}, {
+    "name": "reorder",
+    "before": [
+        "a",
+        "b",
+        "c"
+    ],
+    "after": [
+        "c",
+        "b",
+        "a"
+    ],
+    "patch": [
+        { "op": "remove", "path": "/0", "value": "c" },
+        { "op": "remove", "path": "/0", "value": "b" },
+        { "op": "add", "path": "/1", "value": "b" },
+        { "op": "add", "path": "/2", "value": "a" }
+    ]
+}, {
+    "name": "replace head",
+    "before": [
+        "a",
+        "b",
+        "c"
+    ],
+    "after": [
+        "A",
+        "b",
+        "c"
+    ],
+    "patch": [
+        { "op": "replace", "path": "/0", "value": "A" }
+    ]
+}, {
+    "name": "replace tail",
+    "before": [
+        "a",
+        "b",
+        "c"
+    ],
+    "after": [
+        "a",
+        "b",
+        "C"
+    ],
+    "patch": [
+        { "op": "replace", "path": "/2", "value": "C" }
+    ]
+}, {
+    "name": "remove head",
+    "before": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e"
+    ],
+    "after": [
+        "c",
+        "d",
+        "e"
+    ],
+    "patch": [
+        { "op": "remove", "path": "/0", "value": "a" },
+        { "op": "remove", "path": "/0", "value": "b" }
+    ]
+}, {
+    "name": "remove tail",
+    "before": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e"
+    ],
+    "after": [
+        "a",
+        "b",
+        "c"
+    ],
+    "patch": [
+        { "op": "remove", "path": "/3", "value": "d" },
+        { "op": "remove", "path": "/3", "value": "e" }
+    ]
+}]

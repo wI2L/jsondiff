@@ -14,12 +14,12 @@ import (
 var testNameReplacer = strings.NewReplacer(",", "", "(", "", ")", "")
 
 type testcase struct {
-	Name            string      `json:"name"`
-	Before          interface{} `json:"before"`
-	After           interface{} `json:"after"`
-	Patch           Patch       `json:"patch"`
-	IncompletePatch Patch       `json:"incomplete_patch"`
-	Ignores         []string    `json:"ignores"`
+	Name         string      `json:"name"`
+	Before       interface{} `json:"before"`
+	After        interface{} `json:"after"`
+	Patch        Patch       `json:"patch"`
+	PartialPatch Patch       `json:"partial_patch"`
+	Ignores      []string    `json:"ignores"`
 }
 
 type patchGetter func(tc *testcase) Patch
@@ -67,6 +67,7 @@ func TestOptions(t *testing.T) {
 		{"testdata/tests/options/rationalization.json", makeopts(Rationalize())},
 		{"testdata/tests/options/equivalence.json", makeopts(Equivalent())},
 		{"testdata/tests/options/ignore.json", makeopts()},
+		{"testdata/tests/options/lcs.json", makeopts(LCS())},
 		{"testdata/tests/options/all.json", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent())},
 	} {
 		var (
@@ -111,7 +112,7 @@ func runTestCases(t *testing.T, cases []testcase, opts ...Option) {
 
 			t.Run(name, func(t *testing.T) {
 				runTestCase(t, tc, func(tc *testcase) Patch {
-					return tc.IncompletePatch
+					return tc.PartialPatch
 				}, xopts...)
 			})
 		}

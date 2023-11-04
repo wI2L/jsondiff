@@ -56,6 +56,24 @@ func Test_lcs(t *testing.T) {
 				{5, 4},
 			},
 		},
+		{
+			name:  "all deletions",
+			src:   []interface{}{"a", "b", "c", "d"},
+			tgt:   []interface{}{},
+			pairs: [][2]int{},
+		},
+		{
+			name:  "all additions",
+			src:   []interface{}{},
+			tgt:   []interface{}{"a", "b", "c", "d"},
+			pairs: [][2]int{},
+		},
+		{
+			name:  "all deletions and additions",
+			src:   []interface{}{"a", "b", "c", "d"},
+			tgt:   []interface{}{"e", "f", "g", "h"},
+			pairs: [][2]int{},
+		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			pairs := lcs(tt.src, tt.tgt)

@@ -32,9 +32,9 @@
         { "d": "DD" }
     ],
     "patch": [
-        { "op" : "remove", "path" : "/0/a" },
-        { "op" : "add", "path" : "/0/c", "value" : "CC" },
-        { "op" : "remove", "path" : "/1/b" },
-        { "op" : "add", "path" : "/1/d", "value" : "DD" }
+        { "op": "remove", "path": "/0/a" },
+        { "op": "add", "path": "/0/c", "value": "CC" },
+        { "op": "remove", "path": "/1/b" },
+        { "op": "add", "path": "/1/d", "value": "DD" }
     ]
 }]

@@ -103,9 +103,9 @@
         "a~1b": "BA"
     },
     "patch": [
-        { "op": "replace", "path": "/a~1b", "value" : "BA"},
-        { "op": "replace", "path": "/a~00b", "value" : "BA"},
-        { "op": "replace", "path": "/a~01b", "value" : "BA"},
-        { "op": "replace", "path": "/a~0b", "value" : "BA"}
+        { "op": "replace", "path": "/a~1b", "value": "BA" },
+        { "op": "replace", "path": "/a~00b", "value": "BA" },
+        { "op": "replace", "path": "/a~01b", "value": "BA" },
+        { "op": "replace", "path": "/a~0b", "value": "BA" }
     ]
 }]

@@ -15,7 +15,7 @@
         { "op": "replace", "path": "/3", "value": "y" },
         { "op": "replace", "path": "/4", "value": "z" }
     ],
-    "incomplete_patch": [
+    "partial_patch": [
         { "op": "replace", "path": "/4", "value": "z" }
     ]
 }, {
@@ -33,7 +33,7 @@
         { "op": "add", "path": "/-", "value": "d" },
         { "op": "add", "path": "/-", "value": "e" }
     ],
-    "incomplete_patch": [
+    "partial_patch": [
         { "op": "add", "path": "/-", "value": "e" }
     ]
 }, {
@@ -51,7 +51,7 @@
         { "op": "remove", "path": "/3" },
         { "op": "remove", "path": "/3" }
     ],
-    "incomplete_patch": [
+    "partial_patch": [
         { "op": "remove", "path": "/3" }
     ]
 },{
@@ -74,7 +74,7 @@
         { "op": "replace", "path": "/b", "value": "AAA" },
         { "op": "replace", "path": "/c", "value": "DDD" }
     ],
-    "incomplete_patch": [
+    "partial_patch": [
         { "op": "replace", "path": "/b", "value": "AAA" },
         { "op": "replace", "path": "/c", "value": "DDD" }
     ]
@@ -99,7 +99,7 @@
         { "op": "add", "path": "/d", "value": "DDD" },
         { "op": "add", "path": "/e", "value": "EEE" }
     ],
-    "incomplete_patch": [
+    "partial_patch": [
         { "op": "add", "path": "/e", "value": "EEE" }
     ]
 },{
@@ -123,7 +123,7 @@
         { "op": "remove", "path": "/a" },
         { "op": "remove", "path": "/c" }
     ],
-    "incomplete_patch": [
+    "partial_patch": [
         { "op": "remove", "path": "/c" }
     ]
 }, {
@@ -152,7 +152,7 @@
     "patch": [
         { "op": "replace", "path": "/a/b/c/1", "value": "Y" }
     ],
-    "incomplete_patch": null
+    "partial_patch": null
 }, {
     "name": "ignore embedded object keys in array",
     "before": [
@@ -175,5 +175,5 @@
     "patch": [
         { "op": "replace", "path": "/0/a/b", "value": "d" }
     ],
-    "incomplete_patch": null
+    "partial_patch": null
 }]
