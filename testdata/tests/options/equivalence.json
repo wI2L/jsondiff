@@ -20,7 +20,8 @@
     "after": [
         "a", "b", "c", "d", "e"
     ],
-    "patch": []
+    "patch": [],
+    "skip_apply_test": true
 }, {
     "name": "unequal content",
     "before": [

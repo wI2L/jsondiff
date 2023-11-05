@@ -9,24 +9,31 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	jsonpatch "github.com/evanphx/json-patch/v5"
 )
 
 var testNameReplacer = strings.NewReplacer(",", "", "(", "", ")", "")
 
 type testcase struct {
-	Name         string      `json:"name"`
-	Before       interface{} `json:"before"`
-	After        interface{} `json:"after"`
-	Patch        Patch       `json:"patch"`
-	PartialPatch Patch       `json:"partial_patch"`
-	Ignores      []string    `json:"ignores"`
+	Name          string      `json:"name"`
+	Before        interface{} `json:"before"`
+	After         interface{} `json:"after"`
+	Patch         Patch       `json:"patch"`
+	PartialPatch  Patch       `json:"partial_patch"`
+	Ignores       []string    `json:"ignores"`
+	SkipApplyTest bool        `json:"skip_apply_test"`
 }
 
 type patchGetter func(tc *testcase) Patch
 
+func skipApplyTest() Option {
+	return func(o *Differ) { o.opts.skipApplyTest = true }
+}
+
 func TestArrayCases(t *testing.T)  { runCasesFromFile(t, "testdata/tests/array.json") }
 func TestObjectCases(t *testing.T) { runCasesFromFile(t, "testdata/tests/object.json") }
-func TestRootCases(t *testing.T)   { runCasesFromFile(t, "testdata/tests/root.json") }
+func TestRootCases(t *testing.T)   { runCasesFromFile(t, "testdata/tests/root.json", skipApplyTest()) }
 
 func TestDiffer_Reset(t *testing.T) {
 	d := &Differ{
@@ -122,6 +129,9 @@ func runTestCases(t *testing.T, cases []testcase, opts ...Option) {
 func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 	t.Helper()
 
+	jsonpatch.SupportNegativeIndices = false
+	jsonpatch.AccumulatedCopySizeLimit = 0
+
 	afterBytes, err := json.Marshal(tc.After)
 	if err != nil {
 		t.Error(err)
@@ -139,7 +149,7 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 		t.Logf("\n%s", patch)
 	}
 	if len(patch) != len(wantPatch) {
-		t.Errorf("got %d patches, want %d", len(patch), len(wantPatch))
+		t.Errorf("got %d operations, want %d", len(patch), len(wantPatch))
 		return
 	}
 	for i, op := range patch {
@@ -160,6 +170,35 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 				t.Errorf("op #%d mismatch: value: unequal", i)
 			}
 		}
+	}
+	// Unsupported cases of patch application test:
+	//  * the Ignores() option is enabled
+	//  * explicitly disabled for test cases file
+	//  * explicitly disabled for individual test case
+	if d.opts.ignores != nil || d.opts.skipApplyTest || tc.SkipApplyTest {
+		return
+	}
+	mustMarshal := func(v any) []byte {
+		t.Helper()
+		b, err := json.Marshal(v)
+		if err != nil {
+			t.Errorf("marshaling error: %s", err)
+		}
+		return b
+	}
+	// Validate that the patch is fundamentally correct by
+	// applying it to the source document, and compare the
+	// result with the expected document.
+	patchObj, err := jsonpatch.DecodePatch(mustMarshal(patch))
+	if err != nil {
+		t.Errorf("failed to decode patch: %s", err)
+	}
+	b, err := patchObj.Apply(mustMarshal(tc.Before))
+	if err != nil {
+		t.Errorf("failed to apply patch: %s", err)
+	}
+	if !jsonpatch.Equal(b, mustMarshal(tc.After)) {
+		t.Errorf("patch does not produce the expected changes")
 	}
 }
 

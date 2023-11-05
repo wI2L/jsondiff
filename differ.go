@@ -25,15 +25,16 @@ type (
 )
 
 type options struct {
-	ignores     map[string]struct{}
-	marshal     marshalFunc
-	unmarshal   unmarshalFunc
-	hasIgnore   bool
-	factorize   bool
-	rationalize bool
-	invertible  bool
-	equivalent  bool
-	lcs         bool
+	ignores       map[string]struct{}
+	marshal       marshalFunc
+	unmarshal     unmarshalFunc
+	hasIgnore     bool
+	factorize     bool
+	rationalize   bool
+	invertible    bool
+	equivalent    bool
+	lcs           bool
+	skipApplyTest bool // used by tests
 }
 
 type jsonNode struct {
