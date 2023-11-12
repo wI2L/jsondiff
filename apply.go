@@ -50,6 +50,9 @@ func (p Patch) apply(src []byte, valid bool) ([]byte, error) {
 			// source value must be deleted.
 			if op.Type == OperationMove {
 				tgt, err = sjson.DeleteBytes(tgt, fp)
+				if err != nil {
+					break
+				}
 			}
 		case OperationTest:
 			r := gjson.GetBytes(tgt, dp)
@@ -131,7 +134,8 @@ func toDotPath(path string, src []byte) (string, error) {
 
 	for i, f := range fragments {
 		var key string
-		if len(f) != 0 && unicode.IsDigit(rune(f[0])) {
+		switch {
+		case len(f) != 0 && unicode.IsDigit(rune(f[0])):
 			// The fragment starts with a digit, which
 			// indicate that it might be a number.
 			if _, err := strconv.ParseInt(f, 10, 64); err == nil {
@@ -157,14 +161,14 @@ func toDotPath(path string, src []byte) (string, error) {
 					return "", fmt.Errorf("unexpected value type at path: %s", sb.String())
 				}
 			}
-		} else if f == "-" && i == len(fragments)-1 {
+		case f == "-" && i == len(fragments)-1:
 			// If the last fragment is the "-" character,
 			// it indicates that the value is a nonexistent
 			// element to append to the array.
 			key = "-1"
-		} else {
+		default:
 			key = rfc6901Unescaper.Replace(f)
-			key = strings.Replace(key, ".", `\.`, -1)
+			key = strings.ReplaceAll(key, ".", `\.`)
 		}
 		if i != 0 {
 			// Add separator character
