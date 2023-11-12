@@ -29,7 +29,7 @@ func BenchmarkGetType(b *testing.B) {
 }
 
 func Test_jsonTypeSwitch(t *testing.T) {
-	for _, tt := range []struct {
+	for _, tc := range []struct {
 		val   any
 		valid bool
 		kind  jsonValueType
@@ -85,15 +85,15 @@ func Test_jsonTypeSwitch(t *testing.T) {
 			jsonObject,
 		},
 	} {
-		k := jsonTypeSwitch(tt.val)
-		if k != tt.kind {
-			t.Errorf("got %s, want %s", k, tt.kind)
+		k := jsonTypeSwitch(tc.val)
+		if k != tc.kind {
+			t.Errorf("got %s, want %s", k, tc.kind)
 		}
 	}
 }
 
 func Test_deepEqualValue(t *testing.T) {
-	for _, tt := range []struct {
+	for _, tc := range []struct {
 		src, tgt interface{}
 		equal    bool
 	}{
@@ -123,9 +123,9 @@ func Test_deepEqualValue(t *testing.T) {
 			false,
 		},
 	} {
-		ok := deepEqualValue(tt.src, tt.tgt)
-		if ok != tt.equal {
-			t.Errorf("got %t, want %t", ok, tt.equal)
+		ok := deepEqualValue(tc.src, tc.tgt)
+		if ok != tc.equal {
+			t.Errorf("got %t, want %t", ok, tc.equal)
 		}
 	}
 }

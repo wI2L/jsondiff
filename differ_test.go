@@ -60,7 +60,7 @@ func TestDiffer_Reset(t *testing.T) {
 func TestOptions(t *testing.T) {
 	makeopts := func(opts ...Option) []Option { return opts }
 
-	for _, tt := range []struct {
+	for _, tc := range []struct {
 		testfile string
 		options  []Option
 	}{
@@ -73,12 +73,12 @@ func TestOptions(t *testing.T) {
 		{"testdata/tests/options/all.json", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent())},
 	} {
 		var (
-			ext  = filepath.Ext(tt.testfile)
-			base = filepath.Base(tt.testfile)
+			ext  = filepath.Ext(tc.testfile)
+			base = filepath.Base(tc.testfile)
 			name = strings.TrimSuffix(base, ext)
 		)
 		t.Run(name, func(t *testing.T) {
-			runCasesFromFile(t, tt.testfile, tt.options...)
+			runCasesFromFile(t, tc.testfile, tc.options...)
 		})
 	}
 }
@@ -191,7 +191,7 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 }
 
 func TestDiffer_unorderedDeepEqualSlice(t *testing.T) {
-	for _, tt := range []struct {
+	for _, tc := range []struct {
 		src, tgt []interface{}
 		equal    bool
 	}{
@@ -224,9 +224,9 @@ func TestDiffer_unorderedDeepEqualSlice(t *testing.T) {
 		},
 	} {
 		d := Differ{}
-		eq := d.unorderedDeepEqualSlice(tt.src, tt.tgt)
-		if eq != tt.equal {
-			t.Errorf("equality mismatch, got %t, want %t", eq, tt.equal)
+		eq := d.unorderedDeepEqualSlice(tc.src, tc.tgt)
+		if eq != tc.equal {
+			t.Errorf("equality mismatch, got %t, want %t", eq, tc.equal)
 		}
 	}
 }

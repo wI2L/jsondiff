@@ -6,7 +6,7 @@ import (
 )
 
 func Test_lcs(t *testing.T) {
-	for _, tt := range []struct {
+	for _, tc := range []struct {
 		name  string
 		src   []interface{}
 		tgt   []interface{}
@@ -75,10 +75,10 @@ func Test_lcs(t *testing.T) {
 			pairs: [][2]int{},
 		},
 	} {
-		t.Run(tt.name, func(t *testing.T) {
-			pairs := lcs(tt.src, tt.tgt)
-			if !reflect.DeepEqual(pairs, tt.pairs) {
-				t.Errorf("got %v, want %v", pairs, tt.pairs)
+		t.Run(tc.name, func(t *testing.T) {
+			pairs := lcs(tc.src, tc.tgt)
+			if !reflect.DeepEqual(pairs, tc.pairs) {
+				t.Errorf("got %v, want %v", pairs, tc.pairs)
 			}
 		})
 	}

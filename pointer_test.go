@@ -7,7 +7,7 @@ import (
 )
 
 func Test_parsePointer(t *testing.T) {
-	for _, tt := range []struct {
+	for _, tc := range []struct {
 		ptr    string
 		valid  bool
 		err    error
@@ -147,27 +147,27 @@ func Test_parsePointer(t *testing.T) {
 			nil,
 		},
 	} {
-		tokens, err := parsePointer(tt.ptr)
-		if tt.valid && err != nil {
+		tokens, err := parsePointer(tc.ptr)
+		if tc.valid && err != nil {
 			t.Errorf("expected valid pointer, got error: %q", err)
 		}
-		if !tt.valid {
+		if !tc.valid {
 			if err == nil {
 				t.Errorf("expected error, got none")
-			} else if !errors.Is(err, tt.err) {
-				t.Errorf("error mismtahc, got %q, want %q", err, tt.err)
+			} else if !errors.Is(err, tc.err) {
+				t.Errorf("error mismtahc, got %q, want %q", err, tc.err)
 			}
 		}
-		if l := len(tokens); l != tt.count {
-			t.Errorf("got %d tokens, want %d: %q", l, tt.count, tt.ptr)
-		} else if !reflect.DeepEqual(tokens, tt.tokens) {
-			t.Errorf("tokens mismatch, got %v, want %v", tokens, tt.tokens)
+		if l := len(tokens); l != tc.count {
+			t.Errorf("got %d tokens, want %d: %q", l, tc.count, tc.ptr)
+		} else if !reflect.DeepEqual(tokens, tc.tokens) {
+			t.Errorf("tokens mismatch, got %v, want %v", tokens, tc.tokens)
 		}
 	}
 }
 
 func TestPointer_escapeKey(t *testing.T) {
-	for _, tt := range []struct {
+	for _, tc := range []struct {
 		key string
 		esc string
 	}{
@@ -181,11 +181,11 @@ func TestPointer_escapeKey(t *testing.T) {
 		},
 	} {
 		p := pointer{
-			buf: make([]byte, 0, len(tt.key)*2),
+			buf: make([]byte, 0, len(tc.key)*2),
 		}
-		p.appendEscapeKey(tt.key)
-		if s := p.copy(); s != tt.esc {
-			t.Errorf("got %q, want %q", s, tt.esc)
+		p.appendEscapeKey(tc.key)
+		if s := p.copy(); s != tc.esc {
+			t.Errorf("got %q, want %q", s, tc.esc)
 		}
 	}
 }

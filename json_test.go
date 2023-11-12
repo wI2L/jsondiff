@@ -7,7 +7,7 @@ import (
 )
 
 func Test_findKey(t *testing.T) {
-	for _, tt := range []struct {
+	for _, tc := range []struct {
 		json string
 		key  string
 		want string
@@ -34,21 +34,21 @@ func Test_findKey(t *testing.T) {
 		},
 	} {
 		// Valid JSON input and result.
-		if len(tt.json) != 0 && !json.Valid([]byte(tt.json)) {
-			t.Errorf("invalid JSON input: %q", tt.json)
+		if len(tc.json) != 0 && !json.Valid([]byte(tc.json)) {
+			t.Errorf("invalid JSON input: %q", tc.json)
 		}
-		if len(tt.want) != 0 && !json.Valid([]byte(tt.want)) {
-			t.Errorf("invalid JSON result: %q", tt.want)
+		if len(tc.want) != 0 && !json.Valid([]byte(tc.want)) {
+			t.Errorf("invalid JSON result: %q", tc.want)
 		}
-		s := findKey(tt.json, tt.key)
-		if s != tt.want {
-			t.Errorf("got %q, want %q", s, tt.want)
+		s := findKey(tc.json, tc.key)
+		if s != tc.want {
+			t.Errorf("got %q, want %q", s, tc.want)
 		}
 	}
 }
 
 func Test_findIndex(t *testing.T) {
-	for _, tt := range []struct {
+	for _, tc := range []struct {
 		json  string
 		index int
 		want  string
@@ -130,25 +130,25 @@ func Test_findIndex(t *testing.T) {
 		},
 	} {
 		// Valid JSON input and result.
-		if len(tt.json) != 0 && !json.Valid([]byte(tt.json)) {
-			t.Errorf("invalid JSON input: %q", tt.json)
+		if len(tc.json) != 0 && !json.Valid([]byte(tc.json)) {
+			t.Errorf("invalid JSON input: %q", tc.json)
 		}
-		if len(tt.want) != 0 && !json.Valid([]byte(tt.want)) {
-			t.Errorf("invalid JSON result: %q", tt.want)
+		if len(tc.want) != 0 && !json.Valid([]byte(tc.want)) {
+			t.Errorf("invalid JSON result: %q", tc.want)
 		}
-		s := findIndex(tt.json, tt.index)
-		if s != tt.want {
-			t.Errorf("got %q, want %q", s, tt.want)
+		s := findIndex(tc.json, tc.index)
+		if s != tc.want {
+			t.Errorf("got %q, want %q", s, tc.want)
 		}
 	}
 }
 
-func Test__compact(t *testing.T) {
+func Test_compactInPlace(t *testing.T) {
 	small, err := os.ReadFile("testdata/benchs/small/source.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	b := _compact(small, small)
+	b := compactInPlace(small)
 
 	const want = `{"pine":true,"silence":{"feathers":"could","lion":false,"provide":["lake",1886677335,"research",false],"ate":"nearest"},"already":true,"it":false}`
 

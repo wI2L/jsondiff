@@ -187,5 +187,8 @@
     "ignores": [],
     "patch": [
         { "op": "replace", "path": "/2", "value": "d" }
+    ],
+    "partial_patch": [
+        { "op": "replace", "path": "/2", "value": "d" }
     ]
 }]
