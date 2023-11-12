@@ -14,10 +14,15 @@ const (
 	emptyPointer = ""
 )
 
-// rfc6901Escaper is a replacer that escapes a JSON Pointer string
-// in compliance with the JavaScript Object Notation Pointer syntax.
-// https://tools.ietf.org/html/rfc6901
-var rfc6901Escaper = strings.NewReplacer("~", escapeTilde, "/", escapeSlash)
+var (
+	// rfc6901Escaper is a replacer that escapes a JSON Pointer string
+	// in compliance with the JavaScript Object Notation Pointer syntax.
+	// https://tools.ietf.org/html/rfc6901
+	rfc6901Escaper = strings.NewReplacer("~", escapeTilde, "/", escapeSlash)
+
+	// rfc6901Unescaper is a replacer that unescape a JSON Pointer string.
+	rfc6901Unescaper = strings.NewReplacer(escapeTilde, "~", escapeSlash, "/")
+)
 
 type segment struct {
 	key string

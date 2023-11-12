@@ -1,6 +1,7 @@
 package jsondiff
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -9,8 +10,6 @@ import (
 	"sort"
 	"strings"
 	"testing"
-
-	jsonpatch "github.com/evanphx/json-patch/v5"
 )
 
 var testNameReplacer = strings.NewReplacer(",", "", "(", "", ")", "")
@@ -27,13 +26,9 @@ type testcase struct {
 
 type patchGetter func(tc *testcase) Patch
 
-func skipApplyTest() Option {
-	return func(o *Differ) { o.opts.skipApplyTest = true }
-}
-
 func TestArrayCases(t *testing.T)  { runCasesFromFile(t, "testdata/tests/array.json") }
 func TestObjectCases(t *testing.T) { runCasesFromFile(t, "testdata/tests/object.json") }
-func TestRootCases(t *testing.T)   { runCasesFromFile(t, "testdata/tests/root.json", skipApplyTest()) }
+func TestRootCases(t *testing.T)   { runCasesFromFile(t, "testdata/tests/root.json") }
 
 func TestDiffer_Reset(t *testing.T) {
 	d := &Differ{
@@ -113,7 +108,7 @@ func runTestCases(t *testing.T, cases []testcase, opts ...Option) {
 				return tc.Patch
 			}, opts...)
 		})
-		if len(tc.Ignores) != 0 {
+		if tc.Ignores != nil {
 			name = fmt.Sprintf("%s_with_ignore", name)
 			xopts := append(opts, Ignores(tc.Ignores...)) //nolint:gocritic
 
@@ -129,9 +124,6 @@ func runTestCases(t *testing.T, cases []testcase, opts ...Option) {
 func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 	t.Helper()
 
-	jsonpatch.SupportNegativeIndices = false
-	jsonpatch.AccumulatedCopySizeLimit = 0
-
 	afterBytes, err := json.Marshal(tc.After)
 	if err != nil {
 		t.Error(err)
@@ -142,8 +134,7 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 	d = d.WithOpts(opts...)
 	d.Compare(tc.Before, tc.After)
 
-	patch := d.Patch()
-	wantPatch := pc(&tc)
+	patch, wantPatch := d.Patch(), pc(&tc)
 
 	if patch != nil {
 		t.Logf("\n%s", patch)
@@ -171,11 +162,10 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 			}
 		}
 	}
-	// Unsupported cases of patch application test:
+	// Unsupported cases:
 	//  * the Ignores() option is enabled
-	//  * explicitly disabled for test cases file
 	//  * explicitly disabled for individual test case
-	if d.opts.ignores != nil || d.opts.skipApplyTest || tc.SkipApplyTest {
+	if d.opts.ignores != nil || tc.SkipApplyTest {
 		return
 	}
 	mustMarshal := func(v any) []byte {
@@ -189,16 +179,14 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 	// Validate that the patch is fundamentally correct by
 	// applying it to the source document, and compare the
 	// result with the expected document.
-	patchObj, err := jsonpatch.DecodePatch(mustMarshal(patch))
-	if err != nil {
-		t.Errorf("failed to decode patch: %s", err)
-	}
-	b, err := patchObj.Apply(mustMarshal(tc.Before))
+	b, err := patch.apply(mustMarshal(tc.Before), false)
 	if err != nil {
 		t.Errorf("failed to apply patch: %s", err)
 	}
-	if !jsonpatch.Equal(b, mustMarshal(tc.After)) {
+	if !bytes.Equal(b, mustMarshal(tc.After)) {
 		t.Errorf("patch does not produce the expected changes")
+		t.Logf("got: %s", string(b))
+		t.Logf("want: %s", string(mustMarshal(tc.After)))
 	}
 }
 

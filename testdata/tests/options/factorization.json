@@ -1,16 +1,14 @@
 [{
     "name": "null values",
     "before": null,
-    "after": null,
-    "skip_apply_test": true
+    "after": null
 },{
     "name": "comparable, unequal values",
     "before": 42,
     "after": "82",
     "patch": [
         { "op": "add", "path": "", "value": "82" }
-    ],
-    "skip_apply_test": true
+    ]
 },{
     "name": "incomparable values, unequal values",
     "before": [
@@ -23,8 +21,7 @@
     },
     "patch": [
         { "op": "add", "path": "", "value": { "a": "AAA", "b": "BBB" } }
-    ],
-    "skip_apply_test": true
+    ]
 },{
     "name": "similar element is copied instead of added (object key)",
     "before": {

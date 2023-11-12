@@ -369,7 +369,7 @@ Using the option with the following pointers list, we can ignore some of the fie
 jsondiff.Ignores("/A", "/B", "/C")
 ```
 
-The resulting patch is empty, because all changes and ignored.
+The resulting patch is empty, because all changes are ignored.
 
 [Run this example](https://pkg.go.dev/github.com/wI2L/jsondiff#example-Ignores).
 

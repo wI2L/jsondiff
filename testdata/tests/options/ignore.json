@@ -176,4 +176,16 @@
         { "op": "replace", "path": "/0/a/b", "value": "d" }
     ],
     "partial_patch": null
+}, {
+    "name": "no ignores",
+    "before": [
+        "a", "b", "c"
+    ],
+    "after": [
+        "a", "b", "d"
+    ],
+    "ignores": [],
+    "patch": [
+        { "op": "replace", "path": "/2", "value": "d" }
+    ]
 }]
