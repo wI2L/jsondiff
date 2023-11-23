@@ -140,7 +140,17 @@ For example, if your webhook mutate `Service` resources, a user could set the fi
 
 If more control over the diff behaviour is required, you can pass a variadic list of functional options as the third argument of the `Compare` and `CompareJSON` functions.
 
-Note that any combination of options can be used without issues.
+Note that any combination of options can be used without issues, ***unless specified***.
+
+**Table of contents**
+
+- [Factorization](#operations-factorization)
+- [Rationalization](#operations-rationalization)
+- [Invertible patch](#invertible-patch)
+- [Equivalence](#equivalence)
+- [LCS (array comparison)](#lcs-longest-common-subsequence)
+- [Ignores](#ignores)
+- [Marshal/Unmarshal functions](#marshalfunc--unmarshalfunc)
 
 #### Operations factorization
 
@@ -245,7 +255,7 @@ When the `Rationalize()` option is enabled, the package pre-process the JSON inp
 
 ##### In-place compaction
 
-By default, the package will not modify the JSON documents given to the `CompareJSON` function. Instead, a copy of the `target` byte slice argument is created and then compacted to remove insignificant spaces.
+By default, the package will not modify the JSON documents given to the `CompareJSON*` function. Instead, a copy of the `target` byte slice argument is created and then compacted to remove insignificant spaces.
 
 To avoid an extra allocation, you can use the `InPlaceCompaction()` option to allow the package to *take ownership* of the `target` byte slice and modify it directly. **Note that you should not update it concurrently with a call to the `CompareJSON*` functions.**
 
