@@ -26,6 +26,7 @@ type testcase struct {
 
 type patchGetter func(tc *testcase) Patch
 
+func TestRFCCases(t *testing.T)    { runCasesFromFile(t, "testdata/tests/rfc.json", Factorize(), LCS()) } // https://datatracker.ietf.org/doc/html/rfc6902#appendix-A
 func TestArrayCases(t *testing.T)  { runCasesFromFile(t, "testdata/tests/array.json") }
 func TestObjectCases(t *testing.T) { runCasesFromFile(t, "testdata/tests/object.json") }
 func TestRootCases(t *testing.T)   { runCasesFromFile(t, "testdata/tests/root.json") }
@@ -183,10 +184,15 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 	if err != nil {
 		t.Errorf("failed to apply patch: %s", err)
 	}
-	if !bytes.Equal(b, mustMarshal(tc.After)) {
+	// Re-marshal the patched document to ensure it follows
+	// the Golang JSON convention of ordering map keys, and
+	// can be compared to the target document.
+	before, after := unmarshalMarshal(t, b), mustMarshal(tc.After)
+
+	if !bytes.Equal(before, after) {
 		t.Errorf("patch does not produce the expected changes")
-		t.Logf("got: %s", string(b))
-		t.Logf("want: %s", string(mustMarshal(tc.After)))
+		t.Logf("got: %s", string(before))
+		t.Logf("want: %s", string(after))
 	}
 }
 
@@ -396,4 +402,18 @@ func Benchmark_sortStrings(b *testing.B) {
 			}
 		})
 	}
+}
+
+func unmarshalMarshal(t *testing.T, b []byte) []byte {
+	t.Helper()
+
+	var i interface{}
+	if err := json.Unmarshal(b, &i); err != nil {
+		t.Error(err)
+	}
+	b2, err := json.Marshal(i)
+	if err != nil {
+		t.Error(err)
+	}
+	return b2
 }

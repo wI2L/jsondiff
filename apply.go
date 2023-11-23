@@ -42,17 +42,18 @@ func (p Patch) apply(src []byte, valid bool) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			tgt, err = add(tgt, dp, op.Value)
-			if err != nil {
-				break // bail out to interpret error
-			}
-			// Finally, if the operation was a move, the
-			// source value must be deleted.
+			// If the operation is a move, delete the
+			// source value before adding it at its new
+			// position, to preserve array index position.
 			if op.Type == OperationMove {
 				tgt, err = sjson.DeleteBytes(tgt, fp)
 				if err != nil {
 					break
 				}
+			}
+			tgt, err = add(tgt, dp, op.Value)
+			if err != nil {
+				break // bail out to interpret error
 			}
 		case OperationTest:
 			r := gjson.GetBytes(tgt, dp)
