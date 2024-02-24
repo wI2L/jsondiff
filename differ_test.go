@@ -70,7 +70,7 @@ func TestOptions(t *testing.T) {
 		{"testdata/tests/options/rationalization.json", makeopts(Rationalize())},
 		{"testdata/tests/options/equivalence.json", makeopts(Equivalent())},
 		{"testdata/tests/options/ignore.json", makeopts()},
-		{"testdata/tests/options/lcs.json", makeopts(LCS())},
+		{"testdata/tests/options/lcs.json", makeopts(LCS(), Factorize())},
 		{"testdata/tests/options/all.json", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent())},
 	} {
 		var (

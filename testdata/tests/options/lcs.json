@@ -85,7 +85,7 @@
         { "op": "add", "path": "/3", "value": "f" }
     ]
 }, {
-    "name": "reorder",
+    "name": "reorder bottom-up",
     "before": [
         "a",
         "b",
@@ -97,10 +97,86 @@
         "a"
     ],
     "patch": [
-        { "op": "remove", "path": "/0", "value": "c" },
-        { "op": "remove", "path": "/0", "value": "b" },
-        { "op": "add", "path": "/1", "value": "b" },
-        { "op": "add", "path": "/2", "value": "a" }
+        { "op": "move", "from": "/0", "path": "/2" },
+        { "op": "move", "from": "/0", "path": "/1" }
+    ]
+}, {
+    "name": "reorder top-down",
+    "before": [
+        "c",
+        "b",
+        "a"
+    ],
+    "after": [
+        "a",
+        "b",
+        "c"
+    ],
+    "patch": [
+        { "op": "move", "from": "/0", "path": "/2" },
+        { "op": "move", "from": "/0", "path": "/1" }
+    ]
+}, {
+    "name": "reorder middle",
+    "before": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f"
+    ],
+    "after": [
+        "a",
+        "e",
+        "d",
+        "c",
+        "b",
+        "f"
+    ],
+    "patch": [
+        { "op": "move", "from": "/1", "path": "/4" },
+        { "op": "move", "from": "/1", "path": "/3" },
+        { "op": "move", "from": "/1", "path": "/2" }
+    ]
+}, {
+    "name": "reorder shuffle",
+    "before": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k"
+    ],
+    "after": [
+        "f",
+        "i",
+        "b",
+        "d",
+        "a",
+        "k",
+        "c",
+        "h",
+        "g",
+        "e",
+        "j"
+    ],
+    "patch": [
+        { "op": "replace", "path": "/0", "value": "f" },
+        { "op": "add", "path": "/1", "value": "i" },
+        { "op": "remove", "path": "/3" },
+        { "op": "replace", "path": "/4", "value": "a" },
+        { "op": "replace", "path": "/5", "value": "k" },
+        { "op": "replace", "path": "/6", "value": "c" },
+        { "op": "replace", "path": "/8", "value": "g" },
+        { "op": "add", "path": "/9", "value": "e" },
+        { "op": "remove", "path": "/11" }
     ]
 }, {
     "name": "replace head",
