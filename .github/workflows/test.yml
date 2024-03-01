@@ -20,21 +20,22 @@ jobs:
       fail-fast: false
       matrix:
         go:
-          - "1.21.x"
+          - "1.22.x"
         os:
           - ubuntu-latest
           - macos-latest
     steps:
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
           cache: false
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: coverage.txt
+          token: ${{ secrets.CODECOV_TOKEN }}
