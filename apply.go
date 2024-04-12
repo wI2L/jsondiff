@@ -49,7 +49,7 @@ func (p Patch) apply(src []byte, valid bool) ([]byte, error) {
 			// position, to preserve array index position.
 			if op.Type == OperationMove {
 				r := gjson.GetBytes(tgt, fp)
-				if err != nil {
+				if !r.Exists() {
 					break
 				}
 				if r.Exists() {
