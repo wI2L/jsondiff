@@ -137,7 +137,10 @@ func Test_deepEqual_invalid_type(t *testing.T) {
 		}
 	}()
 	fn := func() {}
-	deepEqual(fn, fn)
+	type foo struct{}
+
+	deepEqual(nil, fn)
+	deepEqual(foo{}, nil)
 }
 
 func Test_jsonValueType_String(t *testing.T) {

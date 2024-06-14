@@ -14,7 +14,7 @@ func Test_marshalUnmarshal_invalid_JSON(t *testing.T) {
 			marshal:   func(any) ([]byte, error) { return nil, e },
 			unmarshal: json.Unmarshal,
 		})
-		if err != e {
+		if !errors.Is(err, e) {
 			t.Errorf("expected non-nil error")
 		}
 	})
@@ -25,8 +25,20 @@ func Test_marshalUnmarshal_invalid_JSON(t *testing.T) {
 			marshal:   json.Marshal,
 			unmarshal: func([]byte, any) error { return e },
 		})
-		if err != e {
+		if !errors.Is(err, e) {
 			t.Errorf("expected non-nil error")
 		}
 	})
+}
+
+func TestCompareWithoutMarshal(t *testing.T) {
+	type custom struct {
+		foo string
+		bar int
+	}
+	_, err := CompareWithoutMarshal(custom{"a", 1}, custom{"b", 2})
+	if err == nil {
+		t.Errorf("expected non-nil error")
+	}
+	t.Log(err)
 }

@@ -2,8 +2,17 @@ package jsondiff
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 )
+
+type invalidJSONTypeError struct {
+	t any
+}
+
+func (e invalidJSONTypeError) Error() string {
+	return fmt.Sprintf("jsondiff: invalid json type: %T", e.t)
+}
 
 // jsonValueType represents the type of JSON value.
 // It follows the types of values stored by json.Unmarshal
@@ -60,11 +69,18 @@ func deepEqual(src, tgt interface{}) bool {
 }
 
 func deepEqualValue(src, tgt interface{}) bool {
-	typ := jsonTypeSwitch(src)
-	if typ != jsonTypeSwitch(tgt) {
+	st := jsonTypeSwitch(src)
+	if st == jsonInvalid {
+		panic(invalidJSONTypeError{t: src})
+	}
+	tt := jsonTypeSwitch(tgt)
+	if tt == jsonInvalid {
+		panic(invalidJSONTypeError{t: tgt})
+	}
+	if st != tt {
 		return false
 	}
-	switch typ {
+	switch st {
 	case jsonNull:
 		return true
 	case jsonString:
@@ -106,9 +122,8 @@ func deepEqualValue(src, tgt interface{}) bool {
 			}
 		}
 		return true
-	default:
-		panic("invalid json type")
 	}
+	return false
 }
 
 var jsonTypeNames = []string{
