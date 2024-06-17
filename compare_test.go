@@ -1,6 +1,7 @@
 package jsondiff
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"testing"
@@ -31,7 +32,7 @@ func Test_marshalUnmarshal_invalid_JSON(t *testing.T) {
 	})
 }
 
-func TestCompareWithoutMarshal(t *testing.T) {
+func TestCompareWithoutMarshal_error(t *testing.T) {
 	type custom struct {
 		foo string
 		bar int
@@ -41,4 +42,50 @@ func TestCompareWithoutMarshal(t *testing.T) {
 		t.Errorf("expected non-nil error")
 	}
 	t.Log(err)
+}
+
+type skip struct{}
+
+var skipBytes = []byte("skip")
+
+func Test_compare_marshaling_error(t *testing.T) {
+	e := errors.New("")
+
+	d := Differ{opts: options{
+		marshal: func(a any) ([]byte, error) {
+			if _, ok := a.(skip); ok {
+				return skipBytes, nil
+			}
+			return nil, e
+		},
+		unmarshal: func(b []byte, _ any) error {
+			if bytes.Equal(b, skipBytes) {
+				return nil
+			}
+			return e
+		},
+	}}
+	if _, err := compare(&d, nil, nil); !errors.Is(err, e) {
+		t.Errorf("expected non-nil error")
+	}
+	if _, err := compare(&d, skip{}, nil); !errors.Is(err, e) {
+		t.Errorf("expected non-nil error")
+	}
+}
+
+func Test_compareJSON_marshaling_error(t *testing.T) {
+	e := errors.New("")
+
+	unmarshalFn := func(b []byte, _ any) error {
+		if bytes.Equal(b, skipBytes) {
+			return nil
+		}
+		return e
+	}
+	if _, err := compareJSON(nil, nil, nil, unmarshalFn); !errors.Is(err, e) {
+		t.Errorf("expected non-nil error")
+	}
+	if _, err := compareJSON(nil, []byte("skip"), nil, unmarshalFn); !errors.Is(err, e) {
+		t.Errorf("expected non-nil error")
+	}
 }

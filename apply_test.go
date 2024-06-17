@@ -1,6 +1,8 @@
 package jsondiff
 
-import "testing"
+import (
+	"testing"
+)
 
 func Test_toDotPath(t *testing.T) {
 	for _, tc := range []struct {
@@ -78,5 +80,14 @@ func Test_isArrayIndex(t *testing.T) {
 		if !tc.isIndex && b {
 			t.Errorf("expected path %q to not be an array index", tc.path)
 		}
+	}
+}
+
+func TestPatch_apply_invalidJSON(t *testing.T) {
+	badJSON := []byte(`{"example":2:]}}`)
+
+	var p Patch
+	if _, err := p.apply(badJSON, true); err == nil {
+		t.Errorf("expected non-nil error")
 	}
 }

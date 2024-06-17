@@ -2,16 +2,11 @@ package jsondiff
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 )
 
 type invalidJSONTypeError struct {
 	t any
-}
-
-func (e invalidJSONTypeError) Error() string {
-	return fmt.Sprintf("jsondiff: invalid json type: %T", e.t)
 }
 
 // jsonValueType represents the type of JSON value.
@@ -122,8 +117,9 @@ func deepEqualValue(src, tgt interface{}) bool {
 			}
 		}
 		return true
+	default:
+		panic("unexpected json type")
 	}
-	return false
 }
 
 var jsonTypeNames = []string{

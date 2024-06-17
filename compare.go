@@ -34,11 +34,8 @@ func CompareWithoutMarshal(source, target interface{}, opts ...Option) (patch Pa
 
 	defer func() {
 		if r := recover(); r != nil {
-			if e, ok := r.(invalidJSONTypeError); ok {
-				err = e
-			} else {
-				err = fmt.Errorf("recovered from panic: %q", r)
-			}
+			e := r.(invalidJSONTypeError)
+			err = fmt.Errorf("jsondiff: invalid json type: %T", e.t)
 			patch = nil
 		}
 	}()
