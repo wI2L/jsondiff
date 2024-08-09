@@ -127,6 +127,9 @@ func (p *Patch) prepend(startIdx int, typ string, from, path string, src, tgt in
 		Value:    tgt,
 		valueLen: vl,
 	}
+	if startIdx > len(*p) {
+		*p = append(*p, Operation{})
+	}
 	return append((*p)[:startIdx], append([]Operation{op}, (*p)[startIdx:]...)...)
 }
 
