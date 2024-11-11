@@ -1,4 +1,4 @@
-name: test
+name: ci
 
 on:
   push:
@@ -13,6 +13,21 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
   test:
     name: Tests
     runs-on: ${{ matrix.os }}
@@ -20,7 +35,7 @@ jobs:
       fail-fast: false
       matrix:
         go:
-          - "1.22.x"
+          - "1.23.x"
         os:
           - ubuntu-latest
           - macos-latest
@@ -29,7 +44,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
-          cache: false
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Run tests
@@ -38,4 +52,5 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           files: coverage.txt
+          flags: unittests
           token: ${{ secrets.CODECOV_TOKEN }}
