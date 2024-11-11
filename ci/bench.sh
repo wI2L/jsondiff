@@ -4,9 +4,9 @@ set -e
 
 rm -f .benchruns
 
-echo "Starting benchmark..."
+echo "Starting benchmarks..."
 
-# Execute benchmarks multiple times.
+# Execute benchmark multiple times.
 for i in {1..10}
 do
    echo " + run #$i"

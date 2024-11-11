@@ -26,8 +26,8 @@ func Test_digestValue(t *testing.T) {
 	}
 	h := hasher{}
 
-	n1 := h.digest(data)
-	n2 := h.digest(data)
+	n1 := h.digest(data, false)
+	n2 := h.digest(data, false)
 
 	if n1 != n2 {
 		t.Errorf("expected hash sums to be equal: %d != %d", n1, n2)
@@ -45,7 +45,7 @@ func BenchmarkHashing(b *testing.B) {
 	b.Run("hasher-digestValue", func(b *testing.B) {
 		h := hasher{}
 		for i := 0; i < b.N; i++ {
-			_ = h.digest(data)
+			_ = h.digest(data, false)
 		}
 	})
 	b.Run("json.Marshal+hash", func(b *testing.B) {

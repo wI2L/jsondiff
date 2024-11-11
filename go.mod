@@ -3,7 +3,7 @@ module github.com/wI2L/jsondiff
 go 1.21
 
 require (
-	github.com/tidwall/gjson v1.17.1
+	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
 )
 

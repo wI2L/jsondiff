@@ -295,21 +295,50 @@ func Test_issue17(t *testing.T) {
 	t.Logf("%s", string(b))
 }
 
+func Test_issue29(t *testing.T) {
+	src := []byte(`{"a":{"b":[{"c":[4,5]},2,1]}}`)
+	tgt := []byte(`{"a":{"b":[{"c":[5,4]},1,2]}}`)
+
+	patch, err := CompareJSON(src, tgt, Equivalent())
+	if err != nil {
+		t.Error(err)
+	}
+	if len(patch) != 0 {
+		t.Errorf("expected 0 operations, got %d", len(patch))
+	}
+	t.Log(patch)
+}
+
+func Test_issue29_alt(t *testing.T) {
+	src := []byte(`{"a":{"b":[[7,6],2,[42,84]]}}`)
+	tgt := []byte(`{"a":{"b":[[6,7],1,[84,42]]}}`)
+
+	patch, err := CompareJSON(src, tgt, Equivalent())
+	if err != nil {
+		t.Error(err)
+	}
+	if len(patch) != 1 {
+		t.Errorf("expected 1 operations, got %d", len(patch))
+		t.Log(patch)
+	}
+	if op := patch[0]; op.Path != "/a/b/1" && op.Type != OperationReplace {
+		t.Errorf("expected replace operation at path /a/b/1, got %s at %s", op.Type, op.Path)
+	}
+}
+
 func Benchmark_sortStrings(b *testing.B) {
 	if testing.Short() {
 		b.Skip()
 	}
 	for _, v := range [][]string{
-		// 5
-		{
+		{ // 5
 			"medieval",
 			"bike",
 			"trust",
 			"sodium",
 			"hemisphere",
 		},
-		// 10
-		{
+		{ // 10
 			"general",
 			"lamp",
 			"journal",
@@ -321,8 +350,7 @@ func Benchmark_sortStrings(b *testing.B) {
 			"shoulder",
 			"certain",
 		},
-		// 15
-		{
+		{ // 15
 			"plant",
 			"instinct",
 			"infect",
@@ -339,8 +367,7 @@ func Benchmark_sortStrings(b *testing.B) {
 			"master",
 			"want",
 		},
-		// 20
-		{
+		{ // 20
 			"absorption",
 			"ditch",
 			"gradual",
@@ -362,8 +389,7 @@ func Benchmark_sortStrings(b *testing.B) {
 			"plug",
 			"notice",
 		},
-		// 25
-		{
+		{ // 25
 			"flesh",
 			"kidney",
 			"hard",

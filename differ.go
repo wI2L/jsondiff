@@ -159,7 +159,7 @@ func (d *Differ) prepare(ptr pointer, src, tgt interface{}) {
 	if !areComparable(src, tgt) {
 		return
 	} else if deepEqual(src, tgt) {
-		k := d.hasher.digest(tgt)
+		k := d.hasher.digest(tgt, false)
 		if d.hashmap == nil {
 			d.hashmap = make(map[uint64]jsonNode)
 		}
@@ -259,11 +259,11 @@ func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]interface{}, do
 			} else {
 				d.diff(ptr, src[k], tgt[k], doc)
 			}
-		case inOld && !inNew:
+		case inOld:
 			if !d.isIgnored(ptr) {
 				d.remove(ptr.copy(), src[k])
 			}
-		case !inOld && inNew:
+		case inNew:
 			if !d.isIgnored(ptr) {
 				d.add(ptr.copy(), tgt[k], doc, false)
 			}
@@ -440,13 +440,13 @@ func (d *Differ) unorderedDeepEqualSlice(src, tgt []interface{}) bool {
 	count := 0
 
 	for _, v := range src {
-		k := d.hasher.digest(v)
+		k := d.hasher.digest(v, d.opts.equivalent)
 		diff[k] = struct{}{}
 		count++
 	}
 	for _, v := range tgt {
-		k := d.hasher.digest(v)
-		// If the digest hash is not in the compare,
+		k := d.hasher.digest(v, d.opts.equivalent)
+		// If the digest hash is not in the comparison set,
 		// return early.
 		if _, ok := diff[k]; !ok {
 			return false
@@ -506,7 +506,7 @@ func (d *Differ) remove(path string, v interface{}) {
 
 func (d *Differ) findUnchanged(v interface{}) string {
 	if d.hashmap != nil {
-		k := d.hasher.digest(v)
+		k := d.hasher.digest(v, false)
 		node, ok := d.hashmap[k]
 		if ok {
 			return node.ptr
