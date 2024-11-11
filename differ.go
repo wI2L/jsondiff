@@ -339,7 +339,7 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 
 	adjust := func(i int) int {
 		// Adjust indice considering add and remove
-		// operations that precede.
+		// operations that precede it.
 		return i + add - remove
 	}
 
@@ -483,7 +483,7 @@ func (d *Differ) add(path string, v interface{}, doc string, lcs bool) {
 			if !lcs {
 				d.patch = d.patch.append(OperationMove, op.Path, path, v, v, 0)
 			} else {
-				d.patch = d.patch.prepend(d.snapshotPatchLen, OperationMove, op.Path, path, v, v, 0)
+				d.patch = d.patch.insert(d.snapshotPatchLen, OperationMove, op.Path, path, v, v, 0)
 			}
 		}
 		return

@@ -73,8 +73,7 @@ func (h *hasher) sortArray(a []interface{}) {
 			return 1
 		} else if d1 < d2 {
 			return -1
-		} else {
-			return 0
 		}
+		return 0
 	})
 }
