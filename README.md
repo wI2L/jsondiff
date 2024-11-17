@@ -426,7 +426,6 @@ The benchmarks were run 10x (statistics computed with [benchstat](https://pkg.go
 ```
 OS : macOS Sequoia (15.1)
 CPU: Apple M1 Max
-Mem: 64GB
 Go : go version go1.23.2 darwin/arm64
 ```
 

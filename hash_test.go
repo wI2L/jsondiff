@@ -42,7 +42,7 @@ func BenchmarkHashing(b *testing.B) {
 	if err != nil {
 		b.Error(err)
 	}
-	b.Run("hasher-digestValue", func(b *testing.B) {
+	b.Run("hasher-digest", func(b *testing.B) {
 		h := hasher{}
 		for i := 0; i < b.N; i++ {
 			_ = h.digest(data, false)

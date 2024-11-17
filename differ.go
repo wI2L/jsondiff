@@ -1,7 +1,7 @@
 package jsondiff
 
 import (
-	"sort"
+	"slices"
 	"strings"
 	"unsafe"
 )
@@ -537,7 +537,7 @@ func sortStrings(v []string) {
 	if len(v) <= 20 {
 		insertionSort(v)
 	} else {
-		sort.Strings(v)
+		slices.Sort(v)
 	}
 }
 
