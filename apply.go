@@ -15,6 +15,11 @@ import (
 // apply applies the patch to the given source document.
 // If valid is true, the document is validated prior to
 // the application of the patch.
+//
+// Note for readers, this method will **NEVER** be exported,
+// as it is only used for internal tests, and is feature-wise
+// out of scope of the project.
+// See https://github.com/wI2L/jsondiff/issues/28#issuecomment-2360883098
 func (p Patch) apply(src []byte, valid bool) ([]byte, error) {
 	if valid && !json.Valid(src) {
 		return nil, fmt.Errorf("invalid source document")
