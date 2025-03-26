@@ -26,7 +26,7 @@ jobs:
         with:
           go-version: stable
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           version: latest
   test:
@@ -37,6 +37,7 @@ jobs:
       matrix:
         go:
           - "1.23.x"
+          - "1.24.x"
         os:
           - ubuntu-latest
           - macos-latest

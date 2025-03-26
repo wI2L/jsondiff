@@ -159,7 +159,7 @@ func Test_issue26(_ *testing.T) {
 
 func typeNilIface() interface{} {
 	var i *int
-	var p interface{}
+	var p interface{} //nolint:staticcheck
 
 	p = i
 
