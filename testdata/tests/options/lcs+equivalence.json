@@ -1,0 +1,79 @@
+[{
+    "name": "reorder bottom-up",
+    "before": [
+        "a",
+        "b",
+        "c"
+    ],
+    "after": [
+        "c",
+        "b",
+        "a"
+    ],
+    "patch": [],
+    "skip_apply_test": true
+}, {
+    "name": "reorder top-down",
+    "before": [
+        "c",
+        "b",
+        "a"
+    ],
+    "after": [
+        "a",
+        "b",
+        "c"
+    ],
+    "patch": [],
+    "skip_apply_test": true
+}, {
+    "name": "reorder middle",
+    "before": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f"
+    ],
+    "after": [
+        "a",
+        "e",
+        "d",
+        "c",
+        "b",
+        "f"
+    ],
+    "patch": [],
+    "skip_apply_test": true
+}, {
+    "name": "reorder shuffle",
+    "before": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k"
+    ],
+    "after": [
+        "f",
+        "i",
+        "b",
+        "d",
+        "a",
+        "k",
+        "c",
+        "h",
+        "g",
+        "e",
+        "j"
+    ],
+    "patch": [],
+    "skip_apply_test": true
+}]

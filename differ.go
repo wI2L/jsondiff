@@ -330,6 +330,11 @@ comparisons:
 }
 
 func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc string) {
+	if len(src) == len(tgt) {
+		if d.opts.equivalent && d.unorderedDeepEqualSlice(src, tgt) {
+			return
+		}
+	}
 	ptr.snapshot()
 	pairs := lcs(src, tgt)
 	d.snapshotPatchLen = len(d.patch)
