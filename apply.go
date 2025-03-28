@@ -69,6 +69,12 @@ func (p Patch) apply(src []byte, valid bool) ([]byte, error) {
 				break // bail out to interpret error
 			}
 		case OperationTest:
+			if strings.HasSuffix(dp, "-1") {
+				// Special case when the path inserts an
+				// element at the end of an array, we revert
+				// the array and test the first element.
+				dp = strings.TrimSuffix(dp, "-1") + "@reverse.0"
+			}
 			r := gjson.GetBytes(tgt, dp)
 			if !r.Exists() {
 				return nil, fmt.Errorf("invalid patch: %q value is not set", op.Path)
@@ -131,9 +137,9 @@ func isArrayIndex(path string) bool {
 }
 
 // dotPath converts the given JSON Pointer string to the
-// dot-path notation used by tidwall/sjson package.
+// dot-path notation used by sjson package.
 // The source document is required in order to distinguish
-// // numeric object keys from array indices
+// numeric object keys from array indices
 func toDotPath(path string, src []byte) (string, error) {
 	if path == "" {
 		// @this returns the current element.

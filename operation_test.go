@@ -1,6 +1,8 @@
 package jsondiff
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestOperation_MarshalJSON(t *testing.T) {
 	for _, tc := range []struct {
