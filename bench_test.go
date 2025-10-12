@@ -70,7 +70,7 @@ func subBenchmarks(b *testing.B, src, tgt, tgtUnordered []byte) {
 			b.ReportAllocs()
 			b.ResetTimer()
 
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				d.Compare(before, after)
 				d.Reset()
 			}
@@ -80,7 +80,7 @@ func subBenchmarks(b *testing.B, src, tgt, tgtUnordered []byte) {
 			b.ReportAllocs()
 			b.ResetTimer()
 
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				d := Differ{
 					targetBytes: targetBytes,
 					isCompact:   true,
@@ -95,7 +95,7 @@ func subBenchmarks(b *testing.B, src, tgt, tgtUnordered []byte) {
 			if testing.Short() {
 				b.Skip()
 			}
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				patch, err := CompareJSON(src, bb.afterBytes, bb.opts...)
 				if err != nil {
 					b.Error(err)
@@ -107,7 +107,7 @@ func subBenchmarks(b *testing.B, src, tgt, tgtUnordered []byte) {
 			if testing.Short() {
 				b.Skip()
 			}
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				patch, err := Compare(before, after, bb.opts...)
 				if err != nil {
 					b.Error(err)

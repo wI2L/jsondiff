@@ -198,14 +198,14 @@ func BenchmarkEscapeKey(b *testing.B) {
 
 	b.Run("strings.Replacer", func(b *testing.B) {
 		p := pointer{buf: make([]byte, 0, len(key)*2)}
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			p.buf = append(p.buf, rfc6901Escaper.Replace(key)...)
 			p.buf = p.buf[:0]
 		}
 	})
 	b.Run("appendEscapeKey", func(b *testing.B) {
 		p := pointer{buf: make([]byte, 0, len(key)*2)}
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			p.appendEscapeKey(key)
 			p.buf = p.buf[:0]
 		}

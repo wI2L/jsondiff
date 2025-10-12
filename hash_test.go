@@ -44,12 +44,12 @@ func BenchmarkHashing(b *testing.B) {
 	}
 	b.Run("hasher-digest", func(b *testing.B) {
 		h := hasher{}
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			_ = h.digest(data, false)
 		}
 	})
 	b.Run("json.Marshal+hash", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			bts, err := json.Marshal(data)
 			if err != nil {
 				b.Error(err)

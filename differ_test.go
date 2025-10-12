@@ -419,12 +419,12 @@ func Benchmark_sortStrings(b *testing.B) {
 		},
 	} {
 		b.Run(fmt.Sprintf("sort.Strings-%d", len(v)), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				sort.Strings(v)
 			}
 		})
 		b.Run(fmt.Sprintf("sortStrings-%d", len(v)), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				sortStrings(v)
 			}
 		})

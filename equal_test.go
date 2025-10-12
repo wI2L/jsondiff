@@ -17,12 +17,12 @@ func BenchmarkGetType(b *testing.B) {
 	m := map[string]interface{}{}
 
 	b.Run("reflect", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			_ = reflectKind(m)
 		}
 	})
 	b.Run("typeSwitch", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			_ = jsonTypeSwitch(m)
 		}
 	})
