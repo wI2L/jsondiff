@@ -244,3 +244,35 @@ func ExampleUnmarshalFunc() {
 	// {"value":3.14159,"op":"replace","path":"/B"}
 	// {"value":true,"op":"replace","path":"/C"}
 }
+
+func ExampleMergePatch() {
+	src := map[string]interface{}{
+		"foo": "baz",
+		"bar": []string{"a", "b", "c"},
+		"baz": 3.14159,
+	}
+	tgt := map[string]interface{}{
+		"foo": "bar",
+		"bar": []string{"y", "y", "z"},
+	}
+	patch, err := jsondiff.MergePatch(src, tgt)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(patch))
+	// Output:
+	// {"bar":["y","y","z"],"baz":null,"foo":"bar"}
+}
+
+func ExampleMergePatchJSON() {
+	src := `{"a":[1,2,3],"b":{"foo":"bar"}}`
+	tgt := `{"a":[1,2,3],"c":[1,2,3],"d":{"foo":"bar"}}`
+
+	patch, err := jsondiff.MergePatchJSON([]byte(src), []byte(tgt))
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(patch))
+	// Output:
+	// {"b":null,"c":[1,2,3],"d":{"foo":"bar"}}
+}

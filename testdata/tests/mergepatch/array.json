@@ -1,0 +1,57 @@
+[
+  {
+    "name": "empty arrays",
+    "before": [],
+    "after": [],
+    "patch": []
+  },
+  {
+    "name": "unequal arrays of similar length",
+    "before": [
+      "a",
+      "b",
+      "c"
+    ],
+    "after": [
+      "d",
+      "e",
+      "f"
+    ],
+    "patch": [
+      "d",
+      "e",
+      "f"
+    ]
+  },
+  {
+    "name": "equal arrays of similar length",
+    "before": [
+      "a",
+      "b",
+      "c"
+    ],
+    "after": [
+      "a",
+      "b",
+      "c"
+    ],
+    "patch": [
+      "a",
+      "b",
+      "c"
+    ]
+  },
+  {
+    "name": "arrays of unequal lengths",
+    "before": [
+      "foo",
+      "bar"
+    ],
+    "after": [
+      "baz"
+    ],
+    "patch": [
+      "baz"
+    ]
+  }
+]

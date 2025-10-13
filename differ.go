@@ -238,7 +238,6 @@ func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]interface{}, do
 		cmpSet[k] |= 1 << 1
 	}
 	keys := make([]string, 0, len(cmpSet))
-
 	for k := range cmpSet {
 		keys = append(keys, k)
 	}

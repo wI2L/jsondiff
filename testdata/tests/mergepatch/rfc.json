@@ -1,0 +1,201 @@
+[
+  {
+    "name": "#1",
+    "before": {
+      "a": "b"
+    },
+    "after": {
+      "a": "c"
+    },
+    "patch": {
+      "a": "c"
+    }
+  },
+  {
+    "name": "#2",
+    "before": {
+      "a": "b"
+    },
+    "after": {
+      "a": "b",
+      "b": "c"
+    },
+    "patch": {
+      "b": "c"
+    }
+  },
+  {
+    "name": "#3",
+    "before": {
+      "a": "b"
+    },
+    "after": {},
+    "patch": {
+      "a": null
+    }
+  },
+  {
+    "name": "#4",
+    "before": {
+      "a": "b",
+      "b": "c"
+    },
+    "after": {
+      "b": "c"
+    },
+    "patch": {
+      "a": null
+    }
+  },
+  {
+    "name": "#5",
+    "before": {
+      "a": [
+        "b"
+      ]
+    },
+    "after": {
+      "a": "c"
+    },
+    "patch": {
+      "a": "c"
+    }
+  },
+  {
+    "name": "#6",
+    "before": {
+      "a": "c"
+    },
+    "after": {
+      "a": [
+        "b"
+      ]
+    },
+    "patch": {
+      "a": [
+        "b"
+      ]
+    }
+  },
+  {
+    "name": "#7",
+    "before": {
+      "a": {
+        "b": "c"
+      }
+    },
+    "after": {
+      "a": {
+        "b": "d"
+      }
+    },
+    "patch": {
+      "a": {
+        "b": "d"
+      }
+    }
+  },
+  {
+    "name": "#8",
+    "before": {
+      "a": [
+        {
+          "b": "c"
+        }
+      ]
+    },
+    "after": {
+      "a": [
+        1
+      ]
+    },
+    "patch": {
+      "a": [
+        1
+      ]
+    }
+  },
+  {
+    "name": "#9",
+    "before": [
+      "a",
+      "b"
+    ],
+    "after": [
+      "c",
+      "d"
+    ],
+    "patch": [
+      "c",
+      "d"
+    ]
+  },
+  {
+    "name": "#10",
+    "before": {
+      "a": "b"
+    },
+    "after": [
+      "c"
+    ],
+    "patch": [
+      "c"
+    ]
+  },
+  {
+    "name": "#11",
+    "before": {
+      "a": "foo"
+    },
+    "after": null,
+    "patch": null
+  },
+  {
+    "name": "#12",
+    "before": {
+      "a": "foo"
+    },
+    "after": "bar",
+    "patch": "bar"
+  },
+  {
+    "name": "#13",
+    "before": {
+      "e": null
+    },
+    "after": {
+      "e": null,
+      "a": 1
+    },
+    "patch": {
+      "a": 1
+    }
+  },
+  {
+    "name": "#14",
+    "before": [
+      1,
+      2
+    ],
+    "after": {
+      "a": "b"
+    },
+    "patch": {
+      "a": "b"
+    }
+  },
+  {
+    "name": "#15",
+    "before": {},
+    "after": {
+      "a": {
+        "bb": {}
+      }
+    },
+    "patch": {
+      "a": {
+        "bb": {}
+      }
+    }
+  }
+]

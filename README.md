@@ -384,7 +384,7 @@ The resulting patch is empty, because all changes are ignored.
 
 [Run this example](https://pkg.go.dev/github.com/wI2L/jsondiff#example-Ignores).
 
-> See the actual [testcases](testdata/tests/options/ignore.json) for more examples.
+> See the actual [testcases](testdata/tests/jsonpatch/options/ignore.json) for more examples.
 
 #### MarshalFunc / UnmarshalFunc
 

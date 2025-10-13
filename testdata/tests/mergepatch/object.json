@@ -1,0 +1,24 @@
+[
+  {
+    "name": "empty objects",
+    "before": {},
+    "after": {},
+    "patch": {}
+  },
+  {
+    "name": "object with only deletions",
+    "before": {
+      "a": "bar",
+      "b": {
+        "foo": "baz"
+      },
+      "c": null
+    },
+    "after": {},
+    "patch": {
+      "a": null,
+      "b": null,
+      "c": null
+    }
+  }
+]

@@ -55,7 +55,7 @@ func TestPatch_Invert(t *testing.T) {
 		}
 	})
 	t.Run("object", func(t *testing.T) {
-		cases, err := testCasesFromFile(t, "testdata/tests/object.json")
+		cases, err := testCasesFromFile(t, "testdata/tests/jsonpatch/object.json")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -64,7 +64,7 @@ func TestPatch_Invert(t *testing.T) {
 		}
 	})
 	t.Run("array", func(t *testing.T) {
-		cases, err := testCasesFromFile(t, "testdata/tests/array.json")
+		cases, err := testCasesFromFile(t, "testdata/tests/jsonpatch/array.json")
 		if err != nil {
 			t.Fatal(err)
 		}

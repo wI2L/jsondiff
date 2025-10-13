@@ -26,10 +26,12 @@ type testcase struct {
 
 type patchGetter func(tc *testcase) Patch
 
-func TestRFCCases(t *testing.T)    { runCasesFromFile(t, "testdata/tests/rfc.json", Factorize(), LCS()) } // https://datatracker.ietf.org/doc/html/rfc6902#appendix-A
-func TestArrayCases(t *testing.T)  { runCasesFromFile(t, "testdata/tests/array.json") }
-func TestObjectCases(t *testing.T) { runCasesFromFile(t, "testdata/tests/object.json") }
-func TestRootCases(t *testing.T)   { runCasesFromFile(t, "testdata/tests/root.json") }
+func TestRFCCases(t *testing.T) {
+	runCasesFromFile(t, "testdata/tests/jsonpatch/rfc.json", Factorize(), LCS())
+}                                  // https://datatracker.ietf.org/doc/html/rfc6902#appendix-A
+func TestArrayCases(t *testing.T)  { runCasesFromFile(t, "testdata/tests/jsonpatch/array.json") }
+func TestObjectCases(t *testing.T) { runCasesFromFile(t, "testdata/tests/jsonpatch/object.json") }
+func TestRootCases(t *testing.T)   { runCasesFromFile(t, "testdata/tests/jsonpatch/root.json") }
 
 func TestDiffer_Reset(t *testing.T) {
 	d := &Differ{
@@ -59,28 +61,24 @@ func TestDiffer_Reset(t *testing.T) {
 }
 
 func TestOptions(t *testing.T) {
-	makeopts := func(opts ...Option) []Option { return opts }
+	makeOpts := func(opts ...Option) []Option { return opts }
 
 	for _, tc := range []struct {
-		testfile string
+		testFile string
 		options  []Option
 	}{
-		{"testdata/tests/options/invertible.json", makeopts(Invertible())},
-		{"testdata/tests/options/factorization.json", makeopts(Factorize())},
-		{"testdata/tests/options/rationalization.json", makeopts(Rationalize())},
-		{"testdata/tests/options/equivalence.json", makeopts(Equivalent())},
-		{"testdata/tests/options/ignore.json", makeopts()},
-		{"testdata/tests/options/lcs.json", makeopts(LCS(), Factorize())},
-		{"testdata/tests/options/all.json", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent())},
-		{"testdata/tests/options/lcs+equivalence.json", makeopts(LCS(), Equivalent())},
+		{"testdata/tests/jsonpatch/options/invertible.json", makeOpts(Invertible())},
+		{"testdata/tests/jsonpatch/options/factorization.json", makeOpts(Factorize())},
+		{"testdata/tests/jsonpatch/options/rationalization.json", makeOpts(Rationalize())},
+		{"testdata/tests/jsonpatch/options/equivalence.json", makeOpts(Equivalent())},
+		{"testdata/tests/jsonpatch/options/ignore.json", makeOpts()},
+		{"testdata/tests/jsonpatch/options/lcs.json", makeOpts(LCS(), Factorize())},
+		{"testdata/tests/jsonpatch/options/all.json", makeOpts(Factorize(), Rationalize(), Invertible(), Equivalent())},
+		{"testdata/tests/jsonpatch/options/lcs+equivalence.json", makeOpts(LCS(), Equivalent())},
 	} {
-		var (
-			ext  = filepath.Ext(tc.testfile)
-			base = filepath.Base(tc.testfile)
-			name = strings.TrimSuffix(base, ext)
-		)
+		name := strings.TrimSuffix(filepath.Base(tc.testFile), filepath.Ext(tc.testFile))
 		t.Run(name, func(t *testing.T) {
-			runCasesFromFile(t, tc.testfile, tc.options...)
+			runCasesFromFile(t, tc.testFile, tc.options...)
 		})
 	}
 }
@@ -112,12 +110,12 @@ func runTestCases(t *testing.T, cases []testcase, opts ...Option) {
 		})
 		if tc.Ignores != nil {
 			name = fmt.Sprintf("%s_with_ignore", name)
-			xopts := append(opts, Ignores(tc.Ignores...)) //nolint:gocritic
+			extendedOpts := append(opts, Ignores(tc.Ignores...)) //nolint:gocritic
 
 			t.Run(name, func(t *testing.T) {
 				runTestCase(t, tc, func(tc *testcase) Patch {
 					return tc.PartialPatch
-				}, xopts...)
+				}, extendedOpts...)
 			})
 		}
 	}
