@@ -2,12 +2,13 @@
 
 set -e
 
+RUNS="${1:-10}"
+
 rm -f .benchruns
 
-echo "Starting benchmarks..."
+echo "Starting benchmark with $RUNS runs..."
 
-# Execute benchmark multiple times.
-for i in {1..10}
+for ((i=1; i<=RUNS; i++))
 do
    echo " + run #$i"
    go test -short -bench=. >> .benchruns
