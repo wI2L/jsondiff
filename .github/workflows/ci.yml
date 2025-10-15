@@ -36,7 +36,6 @@ jobs:
       fail-fast: false
       matrix:
         go:
-          - "1.23.x"
           - "1.24.x"
           - "1.25.x"
         os:
