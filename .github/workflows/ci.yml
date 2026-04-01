@@ -26,7 +26,7 @@ jobs:
         with:
           go-version: stable
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
   test:
@@ -51,7 +51,7 @@ jobs:
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Upload coverage
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: coverage.txt
           flags: unittests
