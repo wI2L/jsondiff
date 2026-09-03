@@ -20,11 +20,7 @@ func MergePatch(src, tgt any) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	patch := mergePatch(si, ti)
-	if patch == nil {
-		return nil, nil
-	}
-	return json.Marshal(patch)
+	return json.Marshal(mergePatch(si, ti))
 }
 
 // MergePatchJSON compares the given JSON documents
@@ -38,11 +34,7 @@ func MergePatchJSON(src, tgt []byte) ([]byte, error) {
 	if err := json.Unmarshal(tgt, &ti); err != nil {
 		return nil, err
 	}
-	patch := mergePatch(si, ti)
-	if patch == nil {
-		return nil, nil
-	}
-	return json.Marshal(patch)
+	return json.Marshal(mergePatch(si, ti))
 }
 
 func mergePatch(src, tgt any) any {
