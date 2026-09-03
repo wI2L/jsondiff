@@ -44,3 +44,26 @@ func Test_mergePatch(t *testing.T) {
 		})
 	}
 }
+
+func Test_mergePatchNullTarget(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		src  string
+		tgt  string
+		want string
+	}{
+		{"rfc #11", `{"a":"foo"}`, `null`, `null`},
+		{"rfc #12", `{"a":"foo"}`, `"bar"`, `"bar"`},
+		{"null to null", `null`, `null`, `null`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			patch, err := MergePatchJSON([]byte(tc.src), []byte(tc.tgt))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(patch) != tc.want {
+				t.Errorf("got %q, want %q", string(patch), tc.want)
+			}
+		})
+	}
+}
