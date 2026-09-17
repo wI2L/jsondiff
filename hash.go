@@ -2,6 +2,7 @@ package jsondiff
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"hash/maphash"
 	"math"
 	"slices"
@@ -20,6 +21,13 @@ func (h *hasher) digest(val interface{}, sort bool) uint64 {
 
 func (h *hasher) hash(i interface{}, sort bool) {
 	switch v := i.(type) {
+	case json.Number:
+		// A json.Number holds the exact source text of the number, which is what
+		// the differ compares it by. Hashing that text keeps the digest consistent
+		// with deep equality; converting to float64 first would not, because two
+		// distinct integers above 2^53 share a float64 representation and would
+		// hash identically despite comparing as different.
+		_, _ = h.mh.WriteString(string(v))
 	case string:
 		_, _ = h.mh.WriteString(v)
 	case bool:
