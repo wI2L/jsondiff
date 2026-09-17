@@ -2,6 +2,7 @@ package jsondiff
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"hash/maphash"
 	"math"
 	"slices"
@@ -20,6 +21,8 @@ func (h *hasher) digest(val any, sort bool) uint64 {
 
 func (h *hasher) hash(i any, sort bool) {
 	switch v := i.(type) {
+	case json.Number:
+		_, _ = h.mh.WriteString(string(v))
 	case string:
 		_, _ = h.mh.WriteString(v)
 	case bool:

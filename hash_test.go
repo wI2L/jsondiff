@@ -34,6 +34,35 @@ func Test_digestValue(t *testing.T) {
 	}
 }
 
+func Test_digestValue_jsonNumber(t *testing.T) {
+	h := hasher{}
+
+	t.Run("distinct numbers hash differently", func(t *testing.T) {
+		a := map[string]any{"n": json.Number("0.80")}
+		b := map[string]any{"n": json.Number("0.62")}
+
+		if h.digest(a, false) == h.digest(b, false) {
+			t.Error("expected different hash sums for different json.Number values")
+		}
+	})
+	t.Run("equal numbers hash identically", func(t *testing.T) {
+		a := map[string]any{"n": json.Number("0.80")}
+		b := map[string]any{"n": json.Number("0.80")}
+
+		if h.digest(a, false) != h.digest(b, false) {
+			t.Error("expected equal hash sums for equal json.Number values")
+		}
+	})
+	t.Run("integers beyond float64 precision hash differently", func(t *testing.T) {
+		a := map[string]any{"id": json.Number("9007199254740992")}
+		b := map[string]any{"id": json.Number("9007199254740993")}
+
+		if h.digest(a, false) == h.digest(b, false) {
+			t.Error("expected different hash sums for integers that share a float64 representation")
+		}
+	})
+}
+
 func BenchmarkHashing(b *testing.B) {
 	if testing.Short() {
 		b.Skip("skipping benchmark in short mode")

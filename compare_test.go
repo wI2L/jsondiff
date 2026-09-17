@@ -89,3 +89,39 @@ func Test_compareJSON_marshaling_error(t *testing.T) {
 		t.Errorf("expected non-nil error")
 	}
 }
+
+func TestCompareJSONEquivalentUseNumber(t *testing.T) {
+	unmarshalUseNumber := func(b []byte, v any) error {
+		dec := json.NewDecoder(bytes.NewReader(b))
+		dec.UseNumber()
+		return dec.Decode(v)
+	}
+	src := []byte(`{"a":[{"id":1,"n":0.80}]}`)
+	tgt := []byte(`{"a":[{"id":1,"n":0.62}]}`)
+
+	patch, err := CompareJSON(src, tgt,
+		UnmarshalFunc(unmarshalUseNumber),
+		Equivalent(),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(patch) == 0 {
+		t.Error("expected a patch for an array element whose number changed, got none")
+	}
+	t.Run("a pure reordering is still equivalent", func(t *testing.T) {
+		src := []byte(`{"a":[{"id":1},{"id":2}]}`)
+		tgt := []byte(`{"a":[{"id":2},{"id":1}]}`)
+
+		patch, err := CompareJSON(src, tgt,
+			UnmarshalFunc(unmarshalUseNumber),
+			Equivalent(),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(patch) != 0 {
+			t.Errorf("expected an empty patch for a pure reordering, got %v", patch)
+		}
+	})
+}
