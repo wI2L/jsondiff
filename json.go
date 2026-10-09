@@ -68,7 +68,9 @@ func squashNumber(json string, i int) int {
 func squashString(json string, i int) int {
 	i++ // assume to be on opening quote
 	for ; i < len(json); i++ {
-		if json[i] == '"' && json[i-1] != '\\' {
+		if json[i] == '\\' {
+			i++
+		} else if json[i] == '"' {
 			break
 		}
 	}

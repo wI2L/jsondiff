@@ -4,8 +4,69 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 )
+
+func TestCompareJSON_rationalizeEscapedStrings(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		src  string
+		tgt  string
+	}{
+		{
+			"key",
+			`{"a\\":"old","b":1}`,
+			`{"a\\":"new","b":2}`,
+		},
+		{
+			"object",
+			`{"a":"old","b":1}`,
+			`{"a":"\\","b":2}`,
+		},
+		{
+			"array",
+			`["old",1]`,
+			`["\\",2]`,
+		},
+		{
+			"nested",
+			`{"a":{"value":"old","next":1},"b":1}`,
+			`{"a":{"value":"\\\\","next":2},"b":2}`,
+		},
+		{
+			"mixed",
+			`{"items":["a","a","b"],"a/b":"old"}`,
+			`{"items":["a","b","b"],"a/b":"new\\"}`,
+		},
+	} {
+		for _, opts := range []struct {
+			name string
+			opts []Option
+		}{
+			{"rationalize", []Option{Rationalize()}},
+			{"rationalize+skip_compact", []Option{Rationalize(), SkipCompact()}},
+			{"rationalize+in_place", []Option{Rationalize(), InPlaceCompaction()}},
+			{"rationalize+invertible+lcs", []Option{Rationalize(), Invertible(), LCS()}},
+		} {
+			t.Run(fmt.Sprintf("%s/%s", tc.name, opts.name), func(t *testing.T) {
+				src, tgt := []byte(tc.src), []byte(tc.tgt)
+
+				patch, err := CompareJSON(src, tgt, opts.opts...)
+				if err != nil {
+					t.Fatal(err)
+				}
+				got, err := patch.apply(src, true)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !jsonBytesEqual(t, got, tgt) {
+					t.Errorf("apply produced %s, want %s", got, tgt)
+				}
+			})
+		}
+	}
+}
 
 func Test_marshalUnmarshal_invalid_JSON(t *testing.T) {
 	t.Run("marshal", func(t *testing.T) {
@@ -117,7 +178,7 @@ func TestCompareJSONEquivalentPatchRoundTrip(t *testing.T) {
 					t.Fatalf("failed to apply patch: %v", err)
 				}
 				if !bytes.Equal(got, tgt) {
-					t.Fatalf("patch produced %s instead of %s: %s", got, tgt, patch)
+					t.Fatalf("apply produced %s instead of %s: %s", got, tgt, patch)
 				}
 			}
 		})
