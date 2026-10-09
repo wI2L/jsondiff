@@ -7,6 +7,43 @@ import (
 	"testing"
 )
 
+func TestCompareJSON_rationalizeEscapedStrings(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		source string
+		target string
+	}{
+		{"object", `{"a":"old","b":1}`, `{"a":"\\","b":2}`},
+		{"array", `["old",1]`, `["\\",2]`},
+		{"nested", `{"a":{"value":"old","next":1},"b":1}`, `{"a":{"value":"\\\\","next":2},"b":2}`},
+	} {
+		for _, mode := range []struct {
+			name string
+			opts []Option
+		}{
+			{"compact", []Option{Rationalize()}},
+			{"skip_compact", []Option{Rationalize(), SkipCompact()}},
+			{"in_place", []Option{Rationalize(), InPlaceCompaction()}},
+			{"invertible_lcs", []Option{Rationalize(), Invertible(), LCS()}},
+		} {
+			t.Run(tc.name+"/"+mode.name, func(t *testing.T) {
+				source, target := []byte(tc.source), []byte(tc.target)
+				patch, err := CompareJSON(source, target, mode.opts...)
+				if err != nil {
+					t.Fatal(err)
+				}
+				got, err := patch.apply(source, true)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !jsonBytesEqual(t, got, target) {
+					t.Errorf("patch produced %s, want %s", got, target)
+				}
+			})
+		}
+	}
+}
+
 func Test_marshalUnmarshal_invalid_JSON(t *testing.T) {
 	t.Run("marshal", func(t *testing.T) {
 		e := errors.New("marshal")
