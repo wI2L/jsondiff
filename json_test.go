@@ -6,6 +6,32 @@ import (
 	"testing"
 )
 
+func Test_squashString(t *testing.T) {
+	for _, tc := range []struct {
+		json string
+		want string
+	}{
+		{`"",0`, `""`},
+		{`"plain",0`, `"plain"`},
+		{`"\\",0`, `"\\"`},
+		{`"\\\\",0`, `"\\\\"`},
+		{`"a\\b",0`, `"a\\b"`},
+		{`"a\"b",0`, `"a\"b"`},
+		{`"a\\\"b",0`, `"a\\\"b"`},
+		{`"a\\\\",0`, `"a\\\\"`},
+		{`"\u005c",0`, `"\u005c"`},
+	} {
+		t.Run(tc.want, func(t *testing.T) {
+			if !json.Valid([]byte(tc.want)) {
+				t.Fatalf("invalid JSON string: %s", tc.want)
+			}
+			if got := squashString(tc.json, 0); got != len(tc.want) {
+				t.Errorf("got string boundary %d, want %d", got, len(tc.want))
+			}
+		})
+	}
+}
+
 func Test_findKey(t *testing.T) {
 	for _, tc := range []struct {
 		json string
