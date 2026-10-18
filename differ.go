@@ -198,6 +198,10 @@ func (d *Differ) prepare(ptr pointer, src, tgt any) {
 }
 
 func (d *Differ) rationalize(ptr pointer, src, tgt any, lastOpIdx int, doc string) {
+	if d.ignoredChange(ptr, src, tgt) {
+		// Replacing an ancestor would also replace ignored values.
+		return
+	}
 	// replaceOp represents a single operation that
 	// replace the source document with the target.
 	replaceOp := Operation{
@@ -224,6 +228,28 @@ func (d *Differ) rationalize(ptr pointer, src, tgt any, lastOpIdx int, doc strin
 		}
 		d.patch = append(d.patch, replaceOp)
 	}
+}
+
+// ignoredChange reports whether replacing the value at ptr with tgt
+// would alter an ignored path below ptr. Ignored paths that point
+// to equal values in both documents are safe to overwrite.
+func (d *Differ) ignoredChange(ptr pointer, src, tgt any) bool {
+	prefix := ptr.string() + "/"
+	for ignored := range d.opts.ignores {
+		if !strings.HasPrefix(ignored, prefix) {
+			continue
+		}
+		tokens, err := parsePointer(ignored[len(prefix)-1:])
+		if err != nil {
+			return true
+		}
+		s, sok := lookupTokens(tokens, src)
+		t, tok := lookupTokens(tokens, tgt)
+		if sok != tok || !deepEqual(s, t) {
+			return true
+		}
+	}
+	return false
 }
 
 // compareObjects generates the patch operations that

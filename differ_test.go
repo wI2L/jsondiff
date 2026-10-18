@@ -509,6 +509,168 @@ func TestHasProperPathPrefix(t *testing.T) {
 	}
 }
 
+func TestRationalizeIgnoredDescendant(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		before  string
+		after   string
+		ignored string
+		opts    []Option
+		want    string
+		wantOps int
+	}{
+		// The ignored value differs between the two documents, the
+		// replacement of an ancestor would clobber it.
+		{
+			name:    "object",
+			before:  `{"keep":0,"a":0,"b":0,"c":0}`,
+			after:   `{"keep":9,"a":1,"b":1,"c":1}`,
+			ignored: "/keep",
+			want:    `{"keep":0,"a":1,"b":1,"c":1}`,
+		},
+		{
+			name:    "nested",
+			before:  `{"a/b":{"keep":0,"a":0,"b":0,"c":0}}`,
+			after:   `{"a/b":{"keep":9,"a":1,"b":1,"c":1}}`,
+			ignored: "/a~1b/keep",
+			want:    `{"a/b":{"keep":0,"a":1,"b":1,"c":1}}`,
+		},
+		{
+			name:    "array",
+			before:  `[0,0,0,0]`,
+			after:   `[9,1,1,1]`,
+			ignored: "/0",
+			want:    `[0,1,1,1]`,
+		},
+		{
+			name:    "null-vs-value",
+			before:  `{"keep":null,"a":0}`,
+			after:   `{"keep":5,"a":1}`,
+			ignored: "/keep",
+			want:    `{"keep":null,"a":1}`,
+		},
+		// The ignored value is identical in both documents, or absent
+		// from both, so the operations can be rationalized.
+		{
+			name:    "unchanged",
+			before:  `{"keep":0,"a":0,"b":0,"c":0}`,
+			after:   `{"keep":0,"a":1,"b":1,"c":1}`,
+			ignored: "/keep",
+			want:    `{"keep":0,"a":1,"b":1,"c":1}`,
+			wantOps: 1,
+		},
+		{
+			name:    "nested unchanged",
+			before:  `{"a/b":{"keep":0,"x":0}}`,
+			after:   `{"a/b":{"keep":0,"x":1}}`,
+			ignored: "/a~1b/keep",
+			want:    `{"a/b":{"keep":0,"x":1}}`,
+			wantOps: 1,
+		},
+		{
+			name:    "array unchanged",
+			before:  `[0,{"keep":0},2]`,
+			after:   `[1,{"keep":0},3]`,
+			ignored: "/1/keep",
+			want:    `[1,{"keep":0},3]`,
+			wantOps: 1,
+		},
+		{
+			name:    "absent",
+			before:  `{"a":0,"b":0}`,
+			after:   `{"a":1,"b":1}`,
+			ignored: "/ghost",
+			want:    `{"a":1,"b":1}`,
+			wantOps: 1,
+		},
+		{
+			name:    "null equal",
+			before:  `{"keep":null,"a":0}`,
+			after:   `{"keep":null,"a":1}`,
+			ignored: "/keep",
+			want:    `{"keep":null,"a":1}`,
+			wantOps: 1,
+		},
+		{
+			name:    "numeric key",
+			before:  `{"0":0,"a":0}`,
+			after:   `{"0":0,"a":1}`,
+			ignored: "/0",
+			want:    `{"0":0,"a":1}`,
+			wantOps: 1,
+		},
+		// The ignored value exists in only one document, so the replacement
+		// of an ancestor would add or remove it.
+		{
+			name:    "target only",
+			before:  `{"a":0}`,
+			after:   `{"a":1,"keep":5}`,
+			ignored: "/keep",
+			want:    `{"a":1}`,
+		},
+		{
+			name:    "source only",
+			before:  `{"a":0,"keep":5}`,
+			after:   `{"a":1}`,
+			ignored: "/keep",
+			want:    `{"a":1,"keep":5}`,
+		},
+		// A malformed ignored pointer is treated as a difference,
+		// so the operations are kept.
+		{
+			name:    "malformed pointer",
+			before:  `{"a":0,"b":0}`,
+			after:   `{"a":1,"b":1}`,
+			ignored: "/b~",
+			want:    `{"a":1,"b":1}`,
+			wantOps: 2,
+		},
+		// The ignored value is inside an Equivalent array, so it is
+		// resolved and compared in both documents.
+		{
+			name:    "equivalent differ",
+			before:  `{"a":[1,2],"x":0,"y":0}`,
+			after:   `{"a":[2,1],"x":1,"y":1}`,
+			ignored: "/a/0",
+			opts:    []Option{Equivalent()},
+			want:    `{"a":[1,2],"x":1,"y":1}`,
+			wantOps: 2,
+		},
+		{
+			name:    "equivalent absent",
+			before:  `{"a":[1,2],"x":0,"y":0}`,
+			after:   `{"a":[2,1],"x":1,"y":1}`,
+			ignored: "/a/5",
+			opts:    []Option{Equivalent()},
+			want:    `{"a":[2,1],"x":1,"y":1}`,
+			wantOps: 1,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			opts := append([]Option{
+				Rationalize(),
+				Ignores(tc.ignored),
+			},
+				tc.opts...,
+			)
+			patch, err := CompareJSON([]byte(tc.before), []byte(tc.after), opts...)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if tc.wantOps != 0 && len(patch) != tc.wantOps {
+				t.Errorf("got %d operations, want %d", len(patch), tc.wantOps)
+			}
+			got, err := patch.apply([]byte(tc.before), true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !jsonBytesEqual(t, got, []byte(tc.want)) {
+				t.Errorf("applied patch = %s, want %s", got, tc.want)
+			}
+		})
+	}
+}
+
 func Benchmark_sortStrings(b *testing.B) {
 	if testing.Short() {
 		b.Skip()

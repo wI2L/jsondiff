@@ -137,3 +137,25 @@ func parsePointer(s string) ([]string, error) {
 	}
 	return tokens, nil
 }
+
+func lookupTokens(tokens []string, val any) (any, bool) {
+	for _, f := range tokens {
+		switch v := val.(type) {
+		case map[string]any:
+			x, ok := v[rfc6901Unescaper.Replace(f)]
+			if !ok {
+				return nil, false
+			}
+			val = x
+		case []any:
+			i, err := strconv.Atoi(f)
+			if err != nil || i < 0 || i >= len(v) {
+				return nil, false
+			}
+			val = v[i]
+		default:
+			return nil, false
+		}
+	}
+	return val, true
+}
