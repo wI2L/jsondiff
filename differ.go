@@ -198,6 +198,11 @@ func (d *Differ) prepare(ptr pointer, src, tgt interface{}) {
 }
 
 func (d *Differ) rationalize(ptr pointer, src, tgt interface{}, lastOpIdx int, doc string) {
+	for ignored := range d.opts.ignores {
+		if strings.HasPrefix(ignored, ptr.string()+"/") {
+			return // Replacing an ancestor would also replace ignored values.
+		}
+	}
 	// replaceOp represents a single operation that
 	// replace the source document with the target.
 	replaceOp := Operation{

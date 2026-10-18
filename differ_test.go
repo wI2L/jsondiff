@@ -35,6 +35,30 @@ func TestArrayCases(t *testing.T)  { runCasesFromFile(t, "testdata/tests/jsonpat
 func TestObjectCases(t *testing.T) { runCasesFromFile(t, "testdata/tests/jsonpatch/object.json") }
 func TestRootCases(t *testing.T)   { runCasesFromFile(t, "testdata/tests/jsonpatch/root.json") }
 
+func TestRationalizeIgnoredDescendant(t *testing.T) {
+	for _, tc := range []struct {
+		name, before, after, ignored, want string
+	}{
+		{"object", `{"keep":0,"a":0,"b":0,"c":0}`, `{"keep":9,"a":1,"b":1,"c":1}`, "/keep", `{"keep":0,"a":1,"b":1,"c":1}`},
+		{"nested", `{"a/b":{"keep":0,"a":0,"b":0,"c":0}}`, `{"a/b":{"keep":9,"a":1,"b":1,"c":1}}`, "/a~1b/keep", `{"a/b":{"keep":0,"a":1,"b":1,"c":1}}`},
+		{"array", `[0,0,0,0]`, `[9,1,1,1]`, "/0", `[0,1,1,1]`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			patch, err := CompareJSON([]byte(tc.before), []byte(tc.after), Rationalize(), Ignores(tc.ignored))
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, err := patch.apply([]byte(tc.before), true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !jsonBytesEqual(t, got, []byte(tc.want)) {
+				t.Errorf("applied patch = %s, want %s", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestDiffer_Reset(t *testing.T) {
 	d := &Differ{
 		ptr: pointer{
