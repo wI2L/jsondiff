@@ -91,3 +91,37 @@ func BenchmarkHashing(b *testing.B) {
 		}
 	})
 }
+
+// Values of different JSON types, or with different structure, must not
+// share a digest: the differ trusts digests when it factorizes operations
+// and when it compares arrays with the Equivalent option.
+func Test_digestValue_noStructuralCollisions(t *testing.T) {
+	pairs := [][2]string{
+		{`""`, `[]`},
+		{`[""]`, `[]`},
+		{`"0"`, `false`},
+		{`"0"`, `null`},
+		{`false`, `null`},
+		{`"1"`, `true`},
+		{`1`, `[1]`},
+		{`[[1]]`, `[1]`},
+		{`[]`, `{}`},
+		{`["a","b"]`, `["ab"]`},
+		{`{"x":"y"}`, `{"xy":""}`},
+		{`{"a":[]}`, `{"a":{}}`},
+		{`[[],[1]]`, `[[1],[]]`},
+	}
+	h := hasher{}
+	for _, p := range pairs {
+		var a, b interface{}
+		if err := json.Unmarshal([]byte(p[0]), &a); err != nil {
+			t.Fatal(err)
+		}
+		if err := json.Unmarshal([]byte(p[1]), &b); err != nil {
+			t.Fatal(err)
+		}
+		if h.digest(a, false) == h.digest(b, false) {
+			t.Errorf("%s and %s have the same digest", p[0], p[1])
+		}
+	}
+}

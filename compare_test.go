@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"reflect"
 	"testing"
 )
 
@@ -158,4 +159,51 @@ func TestCompareJSONEquivalentUseNumber(t *testing.T) {
 			t.Errorf("expected an empty patch for a pure reordering, got %v", patch)
 		}
 	})
+}
+
+// Factorize must only turn an add into a copy/move when the source value
+// really equals the added value; the internal apply helper copies op.Value
+// and cannot see this, so check the emitted patch.
+func TestCompareJSON_factorizeHashCollisions(t *testing.T) {
+	for _, tc := range []struct{ src, tgt, want string }{
+		{`{"a":[]}`, `{"a":[],"b":[""]}`, `{"value":[""],"op":"add","path":"/b"}`},
+		{`{"a":"0"}`, `{"a":"0","b":false}`, `{"value":false,"op":"add","path":"/b"}`},
+		{`{"a":{"x":"y"}}`, `{"a":{"x":"y"},"b":{"xy":""}}`, `{"value":{"xy":""},"op":"add","path":"/b"}`},
+		{`{"a":[[1]]}`, `{"a":[[1]],"b":[1]}`, `{"value":[1],"op":"add","path":"/b"}`},
+	} {
+		patch, err := CompareJSON([]byte(tc.src), []byte(tc.tgt), Factorize())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := patch.String(); got != tc.want {
+			t.Errorf("%s -> %s: got %s, want %s", tc.src, tc.tgt, got, tc.want)
+		}
+	}
+}
+
+func TestCompareJSON_equivalentHashCollisions(t *testing.T) {
+	for _, tc := range []struct{ src, tgt string }{
+		{`[[1]]`, `[1]`},
+		{`[["a","b"]]`, `[["ab"]]`},
+		{`{"a":[""]}`, `{"a":[[]]}`},
+	} {
+		patch, err := CompareJSON([]byte(tc.src), []byte(tc.tgt), Equivalent())
+		if err != nil {
+			t.Fatal(err)
+		}
+		b, err := patch.apply([]byte(tc.src), false)
+		if err != nil {
+			t.Fatalf("%s -> %s: apply %s: %v", tc.src, tc.tgt, patch, err)
+		}
+		var got, want interface{}
+		if err := json.Unmarshal(b, &got); err != nil {
+			t.Fatal(err)
+		}
+		if err := json.Unmarshal([]byte(tc.tgt), &want); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("%s -> %s: patch %s gives %s", tc.src, tc.tgt, patch, b)
+		}
+	}
 }
