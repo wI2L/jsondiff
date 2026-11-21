@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -219,4 +220,92 @@ func TestCompareJSONEquivalentUseNumber(t *testing.T) {
 			t.Errorf("expected an empty patch for a pure reordering, got %v", patch)
 		}
 	})
+}
+
+func TestCompareJSON_factorizeHashCollisions(t *testing.T) {
+	for _, tc := range []struct {
+		src  string
+		tgt  string
+		want string
+	}{
+		{
+			`{"a":[]}`,
+			`{"a":[],"b":[""]}`,
+			`{"value":[""],"op":"add","path":"/b"}`,
+		},
+		{
+			`{"a":"0"}`,
+			`{"a":"0","b":false}`,
+			`{"value":false,"op":"add","path":"/b"}`,
+		},
+		{
+			`{"a":{"x":"y"}}`,
+			`{"a":{"x":"y"},"b":{"xy":""}}`,
+			`{"value":{"xy":""},"op":"add","path":"/b"}`,
+		},
+		{
+			`{"a":[[1]]}`,
+			`{"a":[[1]],"b":[1]}`,
+			`{"value":[1],"op":"add","path":"/b"}`,
+		},
+		{
+			`{"a":false}`,
+			`{"a":false,"b":null}`,
+			`{"value":null,"op":"add","path":"/b"}`,
+		},
+		{
+			`{"a":[]}`,
+			`{"a":[],"b":{}}`,
+			`{"value":{},"op":"add","path":"/b"}`,
+		},
+		{
+			`{"a":["a","b"]}`,
+			`{"a":["a","b"],"b":["ab"]}`,
+			`{"value":["ab"],"op":"add","path":"/b"}`,
+		},
+	} {
+		patch, err := CompareJSON([]byte(tc.src), []byte(tc.tgt), Factorize())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := patch.String(); got != tc.want {
+			t.Errorf("compare returned %s instead of %s", got, tc.want)
+		}
+	}
+}
+
+func TestCompareJSON_equivalentHashCollisions(t *testing.T) {
+	for _, tc := range []struct{ src, tgt string }{
+		{
+			`[[1]]`,
+			`[1]`,
+		},
+		{
+			`[["a","b"]]`,
+			`[["ab"]]`,
+		},
+		{
+			`{"a":[""]}`,
+			`{"a":[[]]}`,
+		},
+	} {
+		patch, err := CompareJSON([]byte(tc.src), []byte(tc.tgt), Equivalent())
+		if err != nil {
+			t.Fatal(err)
+		}
+		b, err := patch.apply([]byte(tc.src), false)
+		if err != nil {
+			t.Fatalf("failed to apply patch: %v", err)
+		}
+		var got, want any
+		if err := json.Unmarshal(b, &got); err != nil {
+			t.Fatal(err)
+		}
+		if err := json.Unmarshal([]byte(tc.tgt), &want); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("apply produced %s instead of %s", b, tc.tgt)
+		}
+	}
 }

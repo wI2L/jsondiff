@@ -19,25 +19,35 @@ func (h *hasher) digest(val any, sort bool) uint64 {
 	return h.mh.Sum64()
 }
 
+// hash writes the value to the underlying hash in a canonical form so
+// that two different values never produce the same digest.
 func (h *hasher) hash(i any, sort bool) {
 	switch v := i.(type) {
 	case json.Number:
+		_ = h.mh.WriteByte('j')
+		h.writeLen(len(v))
 		_, _ = h.mh.WriteString(string(v))
 	case string:
+		_ = h.mh.WriteByte('s')
+		h.writeLen(len(v))
 		_, _ = h.mh.WriteString(v)
 	case bool:
+		_ = h.mh.WriteByte('b')
 		if v {
-			_ = h.mh.WriteByte('1')
+			_ = h.mh.WriteByte('t')
 		} else {
-			_ = h.mh.WriteByte('0')
+			_ = h.mh.WriteByte('f')
 		}
 	case float64:
 		var buf [8]byte
 		binary.BigEndian.PutUint64(buf[:], math.Float64bits(v))
+		_ = h.mh.WriteByte('f')
 		_, _ = h.mh.Write(buf[:])
 	case nil:
-		_ = h.mh.WriteByte('0')
+		_ = h.mh.WriteByte('n')
 	case []any:
+		_ = h.mh.WriteByte('a')
+		h.writeLen(len(v))
 		if sort {
 			// Sort the digests of the elements instead of the elements themselves.
 			// Sorting the slice in place would mutate the documents being compared
@@ -69,9 +79,18 @@ func (h *hasher) hash(i any, sort bool) {
 		}
 		sortStrings(keys)
 
+		_ = h.mh.WriteByte('o')
+		h.writeLen(len(v))
 		for _, k := range keys {
+			h.writeLen(len(k))
 			_, _ = h.mh.WriteString(k)
 			h.hash(v[k], sort)
 		}
 	}
+}
+
+func (h *hasher) writeLen(n int) {
+	var buf [8]byte
+	binary.BigEndian.PutUint64(buf[:], uint64(n))
+	_, _ = h.mh.Write(buf[:])
 }
