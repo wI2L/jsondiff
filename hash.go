@@ -39,7 +39,22 @@ func (h *hasher) hash(i any, sort bool) {
 		_ = h.mh.WriteByte('0')
 	case []any:
 		if sort {
-			h.sortArray(v)
+			// Sort the digests of the elements instead of the elements themselves.
+			// Sorting the slice in place would mutate the documents being compared
+			// and corrupt the indexes of the generated patch.
+			sub := hasher{}
+			sub.mh.SetSeed(h.mh.Seed())
+			digests := make([]uint64, len(v))
+			for i, e := range v {
+				digests[i] = sub.digest(e, true)
+			}
+			slices.Sort(digests)
+			for _, u := range digests {
+				var buf [8]byte
+				binary.BigEndian.PutUint64(buf[:], u)
+				_, _ = h.mh.Write(buf[:])
+			}
+			return
 		}
 		for _, e := range v {
 			h.hash(e, sort)
@@ -59,24 +74,4 @@ func (h *hasher) hash(i any, sort bool) {
 			h.hash(v[k], sort)
 		}
 	}
-}
-
-func (h *hasher) sortArray(a []any) {
-	h1 := hasher{}
-	h2 := hasher{}
-
-	h1.mh.SetSeed(h.mh.Seed())
-	h2.mh.SetSeed(h.mh.Seed())
-
-	slices.SortStableFunc(a, func(a1, a2 any) int {
-		d1 := h1.digest(a1, true)
-		d2 := h2.digest(a2, true)
-
-		if d1 > d2 {
-			return 1
-		} else if d1 < d2 {
-			return -1
-		}
-		return 0
-	})
 }

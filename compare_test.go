@@ -90,6 +90,40 @@ func Test_compareJSON_marshaling_error(t *testing.T) {
 	}
 }
 
+func TestCompareJSONEquivalentPatchRoundTrip(t *testing.T) {
+	// With Equivalent enabled, the hasher used to sort arrays in place to compute
+	// an order-independent digest, mutating the documents being compared.
+	// The differ then emitted operations with indexes valid for the shuffled arrays
+	// only, producing patches that randomly failed to apply because the hasher seed
+	// changes on every run. See issue #61.
+	src := []byte(`[["a","b","c"],0]`)
+	tgt := []byte(`[["a","b","d"],1]`)
+
+	for _, tc := range []struct {
+		name string
+		opts []Option
+	}{
+		{name: "equivalent", opts: []Option{Equivalent()}},
+		{name: "equivalent+rationalize", opts: []Option{Equivalent(), Rationalize()}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			for range 200 {
+				patch, err := CompareJSON(src, tgt, tc.opts...)
+				if err != nil {
+					t.Fatal(err)
+				}
+				got, err := patch.apply(src, true)
+				if err != nil {
+					t.Fatalf("failed to apply patch: %v", err)
+				}
+				if !bytes.Equal(got, tgt) {
+					t.Fatalf("patch produced %s instead of %s: %s", got, tgt, patch)
+				}
+			}
+		})
+	}
+}
+
 func TestCompareJSONEquivalentUseNumber(t *testing.T) {
 	unmarshalUseNumber := func(b []byte, v any) error {
 		dec := json.NewDecoder(bytes.NewReader(b))
