@@ -440,24 +440,19 @@ func (d *Differ) unorderedDeepEqualSlice(src, tgt []any) bool {
 	if len(src) != len(tgt) {
 		return false
 	}
-	diff := make(map[uint64]struct{}, len(src))
-	count := 0
-
+	counts := make(map[uint64]int, len(src))
 	for _, v := range src {
 		k := d.hasher.digest(v, d.opts.equivalent)
-		diff[k] = struct{}{}
-		count++
+		counts[k]++
 	}
 	for _, v := range tgt {
 		k := d.hasher.digest(v, d.opts.equivalent)
-		// If the digest hash is not in the comparison set,
-		// return early.
-		if _, ok := diff[k]; !ok {
+		if counts[k] == 0 {
 			return false
 		}
-		count--
+		counts[k]--
 	}
-	return count == 0
+	return true
 }
 
 func (d *Differ) replace(path string, src, tgt any, doc string) {

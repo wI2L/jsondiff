@@ -14,7 +14,9 @@ func Rationalize() Option {
 }
 
 // Equivalent disables the generation of operations for
-// arrays of equal length and unordered/equal elements.
+// arrays of equal length that contain the same elements
+// with the same number of occurrences, in any order,
+// including the elements of nested arrays.
 func Equivalent() Option {
 	return func(o *Differ) { o.opts.equivalent = true }
 }

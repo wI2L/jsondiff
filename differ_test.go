@@ -357,6 +357,22 @@ func Test_issue45(t *testing.T) {
 	}
 }
 
+func Test_issue58(t *testing.T) {
+	src := []byte(`[1,1,2]`)
+	tgt := []byte(`[1,2,2]`)
+
+	patch, err := CompareJSON(src, tgt, Equivalent())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(patch) != 1 {
+		t.Fatalf("expected 1 operation, got %d: %s", len(patch), patch)
+	}
+	if op := patch[0]; op.Type != OperationReplace || op.Path != "/1" {
+		t.Errorf("expected replace operation at path /1, got %s at %s", op.Type, op.Path)
+	}
+}
+
 func TestHasProperPathPrefix(t *testing.T) {
 	t.Parallel()
 
