@@ -36,9 +36,9 @@ jobs:
       fail-fast: false
       matrix:
         go:
-          - "1.24.x"
           - "1.25.x"
           - "1.26.x"
+          - "1.27.x"
         os:
           - ubuntu-latest
           - macos-latest
