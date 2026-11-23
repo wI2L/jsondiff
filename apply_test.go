@@ -91,3 +91,18 @@ func TestPatch_apply_invalidJSON(t *testing.T) {
 		t.Errorf("expected non-nil error")
 	}
 }
+
+func TestPatch_apply_moveError(t *testing.T) {
+	src := []byte(`[1,2,3]`)
+
+	// sjson refuses to pad an array past 100000 elements,
+	// so the add operation of the moved value fails.
+	// The error used to be swallowed, leaving the source deleted
+	// and the destination never added.
+	p := Patch{
+		{Type: OperationMove, From: "/0", Path: "/200000"},
+	}
+	if _, err := p.apply(src, true); err == nil {
+		t.Error("expected non-nil error")
+	}
+}

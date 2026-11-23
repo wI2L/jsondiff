@@ -43,7 +43,8 @@ func (p Patch) apply(src []byte, valid bool) ([]byte, error) {
 		case OperationMove, OperationCopy:
 			// First fetch the value from the source path,
 			// and then add it to the destination path.
-			fp, err := toDotPath(op.From, src)
+			var fp string
+			fp, err = toDotPath(op.From, src)
 			if err != nil {
 				return nil, err
 			}
@@ -65,9 +66,6 @@ func (p Patch) apply(src []byte, valid bool) ([]byte, error) {
 				}
 			}
 			tgt, err = add(tgt, dp, toAddVal)
-			if err != nil {
-				break // bail out to interpret error
-			}
 		case OperationTest:
 			if before, ok := strings.CutSuffix(dp, "-1"); ok {
 				// Special case when the path inserts an
