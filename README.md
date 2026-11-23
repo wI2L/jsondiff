@@ -1,6 +1,6 @@
 <h1 align="center">jsondiff</h1>
 <br>
-<p align="center"><strong>jsondiff</strong> is a Go package for computing the <i>diff</i> between two JSON documents as a series of <a href="https://tools.ietf.org/html/rfc6902">RFC6902</a> (JSON Patch) operations, which is particularly suitable to create the patch response of a Kubernetes Mutating Webhook for example.</p>
+<p align="center"><strong>jsondiff</strong> is a Go package for computing the <i>diff</i> between two JSON documents as a series of <a href="https://datatracker.ietf.org/doc/html/rfc6902">RFC 6902</a> (JSON Patch) operations, which is particularly suitable for creating the patch response of a Kubernetes mutating webhook for example.</p>
 <p align="center">
     <a href="https://pkg.go.dev/github.com/wI2L/jsondiff"><img src="https://img.shields.io/static/v1?label=godev&message=reference&color=00add8&logo=go"></a>
     <a href="https://jsondiff-play-wi2l.vercel.app/"><img src="https://img.shields.io/badge/%E2%9A%BE-playground-orange.svg?style=flat"></a>
@@ -19,16 +19,16 @@
 First, get the latest version of the library using the following command:
 
 ```shell
-$ go get github.com/wI2L/jsondiff@latest
+go get github.com/wI2L/jsondiff@latest
 ```
 
-### Example use cases
+### Example use case
 
 #### Kubernetes Dynamic Admission Controller
 
-The typical use case within an application is to compare two values of the same type that represents the source and desired target of a JSON document. A concrete application of that would be to generate the patch returned by a Kubernetes [dynamic admission controller](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/) to mutate a resource. Thereby, instead of generating the operations, just copy the source in order to apply the required changes and delegate the patch generation to the library.
+The typical use case within an application is to compare two values of the same type that represent the source and desired target of a JSON document. A concrete application of that would be to generate the patch returned by a Kubernetes [dynamic admission controller](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/) to mutate a resource. So instead of generating the operations, just copy the source to apply the required changes and delegate the patch generation to the library.
 
-For example, given the following `corev1.Pod` value that represents a Kubernetes [demo pod](https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/application/shell-demo.yaml) containing a single container:
+For example, given the following `corev1.Pod` value that represents a Kubernetes [demo pod](https://raw.githubusercontent.com/kubernetes/website/main/content/en/examples/application/shell-demo.yaml) containing a single container:
 
 ```go
 import corev1 "k8s.io/api/core/v1"
@@ -55,7 +55,7 @@ pod := corev1.Pod{
 }
 ```
 
-The first step is to copy the original pod value. The `corev1.Pod` type defines a `DeepCopy` method, which is handy, but for other types, a [shallow copy is discouraged](https://medium.com/@alenkacz/shallow-copy-of-a-go-struct-in-golang-is-never-a-good-idea-83be60106af8), instead use a specific library, such as [ulule/deepcopier](https://github.com/ulule/deepcopier). Alternatively, if you don't require to keep the original value, you can marshal it to JSON using `json.Marshal` to store a pre-encoded copy of the document, and mutate the value.
+First, copy the original pod value. The `corev1.Pod` type defines a `DeepCopy` method, which is handy, but for other types, a [shallow copy is discouraged](https://medium.com/@alenkacz/shallow-copy-of-a-go-struct-in-golang-is-never-a-good-idea-83be60106af8); use a dedicated library, such as [ulule/deepcopier](https://github.com/ulule/deepcopier). Alternatively, if you don't need to keep the original value, you can marshal it to JSON using `json.Marshal` to store a pre-encoded copy of the document, and mutate the value.
 
 ```go
 newPod := pod.DeepCopy()
@@ -66,7 +66,7 @@ if err != nil {
 }
 ```
 
-Secondly, make some changes to the pod spec. Here we modify the image and the *storage medium* used by the pod's volume `shared-data`.
+Secondly, make some changes to the pod spec. Here we modify the image and the _storage medium_ used by the pod's volume `shared-data`.
 
 ```go
 // Update the image of the webserver container.
@@ -76,11 +76,9 @@ newPod.Spec.Containers[0].Image = "nginx:1.19.5-alpine"
 newPod.Spec.Volumes[0].EmptyDir.Medium = corev1.StorageMediumDefault
 ```
 
-Finally, generate the patch that represents the changes relative to the original value. Note that when the `Compare` function is called, the `source` and `target` parameters are first marshaled using the `encoding/json` package (or a custom func) in order to obtain their final JSON representation, prior to comparing them.
+Finally, generate the patch that represents the changes relative to the original value. Note that when the `Compare` function is called, the `source` and `target` parameters are first marshaled using the `encoding/json` package (or a custom func) to obtain their final JSON representation, prior to comparing them.
 
 ```go
-import "github.com/wI2L/jsondiff"
-
 patch, err := jsondiff.Compare(pod, newPod)
 if err != nil {
     // handle error
@@ -95,21 +93,24 @@ os.Stdout.Write(b)
 The output is similar to the following:
 
 ```json
-[{
+[
+  {
     "op": "replace",
     "path": "/spec/containers/0/image",
     "value": "nginx:1.19.5-alpine"
-}, {
+  },
+  {
     "op": "remove",
     "path": "/spec/volumes/0/emptyDir/medium"
-}]
+  }
+]
 ```
 
-The JSON patch can then be used in the response payload of you Kubernetes [webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#response).
+The JSON patch can then be used in the response payload of your Kubernetes [webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#response).
 
 ##### Optional fields gotcha
 
-Note that the above example is used for simplicity, but in a real-world admission controller, you should create the diff from the raw bytes of the `AdmissionReview.AdmissionRequest.Object.Raw` field. As pointed out by user [/u/terinjokes](https://www.reddit.com/user/terinjokes/) on Reddit, due to the nature of Go structs, the "hydrated" `corev1.Pod` object may contain "optional fields", resulting in a patch that state added/changed values that the Kubernetes API server doesn't know about. Below is a quote of the original comment:
+Note that the above example is used for simplicity, but in a real-world admission controller, you should create the diff from the raw bytes of the `AdmissionReview.AdmissionRequest.Object.Raw` field. As pointed out by user [/u/terinjokes](https://www.reddit.com/user/terinjokes/) on Reddit, due to the nature of Go structs, the "hydrated" `corev1.Pod` object may contain "optional fields", resulting in a patch that reports added/changed values that the Kubernetes API server doesn't know about. Below is a quote of the original comment:
 
 > Optional fields being ones that are a struct type, but are not pointers to those structs. These will exist when you unmarshal from JSON, because of how Go structs work, but are not in the original JSON. Comparing between the unmarshaled and copied versions can generate add and change patches below a path not in the original JSON, and the API server will reject your patch.
 
@@ -120,25 +121,25 @@ podBytes, err := json.Marshal(pod)
 if err != nil {
     // handle error
 }
-// req is a k8s.io/api/admission/v1.AdmissionRequest object
-jsondiff.CompareJSON(req.AdmissionRequest.Object.Raw, podBytes)
+// review is a k8s.io/api/admission/v1.AdmissionReview object
+jsondiff.CompareJSON(review.Request.Object.Raw, podBytes)
 ```
 
-Mutating the original pod object or a copy is up to you, as long as you use the raw bytes of the `AdmissionReview` object to generate the patch.
+Mutating the original pod object or a copy is up to you, as long as you use the raw bytes of the `AdmissionRequest` object to generate the patch.
 
 You can find a detailed description of that problem and its resolution in this GitHub [issue](https://github.com/kubernetes-sigs/kubebuilder/issues/510).
 
 ##### Outdated package version
 
-There's also one other downside to the above example. If your webhook does not have the latest version of the `client-go` package, or whatever package that contains the types for the resource you're manipulating, all fields not known in that version will be deleted.
+There's also one other downside to the above example. If your webhook does not have the latest version of the `client-go` package, or whatever package contains the types for the resource you're manipulating, all fields not known in that version will be deleted.
 
-For example, if your webhook mutate `Service` resources, a user could set the field `.spec.allocateLoadBalancerNodePort` in Kubernetes 1.20 to disable allocating a node port for services with `Type=LoadBalancer`. However, if the webhook is still using the v1.19.x version of the `k8s.io/api/core/v1` package that define the `Service` type, instead of simply ignoring this field, a `remove` operation will be generated for it.
+For example, if your webhook mutates `Service` resources, a user could set the field `.spec.allocateLoadBalancerNodePort` in Kubernetes 1.20 to disable allocating a node port for services with `Type=LoadBalancer`. However, if the webhook is still using the v1.19.x version of the `k8s.io/api/core/v1` package that defines the `Service` type, instead of simply ignoring this field, a `remove` operation will be generated for it.
 
 ### Options
 
-If more control over the diff behavior is required, you can pass a variadic list of functional options as the third argument of the `Compare` and `CompareJSON` functions.
+If more control over the diff behavior is required, you can pass a variadic list of functional options as the third argument of the `Compare` and `CompareJSON` functions. A third function, `CompareWithoutMarshal`, skips the JSON marshaling/unmarshaling of its arguments and expects them to be composed of Go types that `json.Unmarshal` produces.
 
-Note that any combination of options can be used without issues, ***unless specified***.
+Note that any combination of options can be used without issues, _**except where noted**_.
 
 **Table of contents**
 
@@ -146,20 +147,20 @@ Note that any combination of options can be used without issues, ***unless speci
 - [Rationalization](#operations-rationalization)
 - [Invertible patch](#invertible-patch)
 - [Equivalence](#equivalence)
-- [LCS (array comparison)](#lcs-longest-common-subsequence)
+- [LCS (Longest Common Subsequence) array comparison](#lcs-longest-common-subsequence-array-comparison)
 - [Ignores](#ignores)
 - [Marshal/Unmarshal functions](#marshalfunc--unmarshalfunc)
 
 #### Operations factorization
 
-By default, when computing the difference between two JSON documents, the package does not produce `move` or `copy` operations. To enable the factorization of value removals and additions as moves and copies, you should use the functional option `Factorize()`. Factorization reduces the number of operations generated, which inevitably reduce the size of the patch once it is marshaled as JSON.
+By default, when computing the difference between two JSON documents, the package does not produce `move` or `copy` operations. To enable the factorization of value removals and additions as moves and copies, you should use the functional option `Factorize()`. Factorization reduces the number of operations generated, which inevitably reduces the size of the patch once it is marshaled as JSON.
 
 For instance, given the following document:
 
 ```json
 {
-    "a": [ 1, 2, 3 ],
-    "b": { "foo": "bar" }
+  "a": [1, 2, 3],
+  "b": { "foo": "bar" }
 }
 ```
 
@@ -167,9 +168,9 @@ In order to obtain this updated version:
 
 ```json
 {
-    "a": [ 1, 2, 3 ],
-    "c": [ 1, 2, 3 ],
-    "d": { "foo": "bar" }
+  "a": [1, 2, 3],
+  "c": [1, 2, 3],
+  "d": { "foo": "bar" }
 }
 ```
 
@@ -177,24 +178,24 @@ The package generates the following patch:
 
 ```json
 [
-    { "op": "remove", "path": "/b" },
-    { "op": "add", "path": "/c", "value": [ 1, 2, 3 ] },
-    { "op": "add", "path": "/d", "value": { "foo": "bar" } }
+  { "op": "remove", "path": "/b" },
+  { "op": "add", "path": "/c", "value": [1, 2, 3] },
+  { "op": "add", "path": "/d", "value": { "foo": "bar" } }
 ]
 ```
 
-If we take the previous example and generate the patch with factorization enabled, we then get a different patch,  containing `copy` and `move` operations instead:
+If we take the previous example and generate the patch with factorization enabled, we then get a different patch, containing `copy` and `move` operations instead:
 
 ```json
 [
-    { "op": "copy", "from": "/a", "path": "/c" },
-    { "op": "move", "from": "/b", "path": "/d" }
+  { "op": "copy", "from": "/a", "path": "/c" },
+  { "op": "move", "from": "/b", "path": "/d" }
 ]
 ```
 
 #### Operations rationalization
 
-The default method used to compare two JSON documents is a recursive comparison. This produce one or more operations for each difference found. On the other hand, in certain situations, it might be beneficial to replace a set of operations representing several changes inside a JSON node by a single replace operation targeting the parent node, in order to reduce the "size" of the patch (the length in bytes of the JSON representation of the patch).
+The default method used to compare two JSON documents is a recursive comparison. This produces one or more operations for each difference found. On the other hand, in certain situations, it might be beneficial to replace a set of operations representing several changes inside a JSON node by a single replace operation targeting the parent node, to reduce the "size" of the patch (the length in bytes of the JSON representation of the patch).
 
 For that purpose, you can use the `Rationalize()` option. It uses a simple weight function to decide which patch is best (it marshals both sets of operations to JSON and looks at the length of bytes to keep the smaller footprint).
 
@@ -202,7 +203,7 @@ Let's illustrate that with the following document:
 
 ```json
 {
-    "a": { "b": { "c": { "1": 1, "2": 2, "3": 3 } } }
+  "a": { "b": { "c": { "1": 1, "2": 2, "3": 3 } } }
 }
 ```
 
@@ -210,20 +211,20 @@ In order to obtain this updated version:
 
 ```json
 {
-    "a": { "b": { "c": { "x": 1, "y": 2, "z": 3 } } }
+  "a": { "b": { "c": { "x": 1, "y": 2, "z": 3 } } }
 }
 ```
 
-The expected output is one remove/add operation combo for each children field of the object located at path `a.b.c`:
+The expected output is one remove/add operation combo for each child field of the object located at path `a.b.c`:
 
 ```json
 [
-    { "op": "remove", "path": "/a/b/c/1" },
-    { "op": "remove", "path": "/a/b/c/2" },
-    { "op": "remove", "path": "/a/b/c/3" },
-    { "op": "add", "path": "/a/b/c/x", "value": 1 },
-    { "op": "add", "path": "/a/b/c/y", "value": 2 },
-    { "op": "add", "path": "/a/b/c/z", "value": 3 }
+  { "op": "remove", "path": "/a/b/c/1" },
+  { "op": "remove", "path": "/a/b/c/2" },
+  { "op": "remove", "path": "/a/b/c/3" },
+  { "op": "add", "path": "/a/b/c/x", "value": 1 },
+  { "op": "add", "path": "/a/b/c/y", "value": 2 },
+  { "op": "add", "path": "/a/b/c/z", "value": 3 }
 ]
 ```
 
@@ -231,9 +232,9 @@ If we also enable factorization, as seen above, we can reduce the number of oper
 
 ```json
 [
-    { "op": "move", "from": "/a/b/c/1", "path": "/a/b/c/x" },
-    { "op": "move", "from": "/a/b/c/2", "path": "/a/b/c/y" },
-    { "op": "move", "from": "/a/b/c/3", "path": "/a/b/c/z" }
+  { "op": "move", "from": "/a/b/c/1", "path": "/a/b/c/x" },
+  { "op": "move", "from": "/a/b/c/2", "path": "/a/b/c/y" },
+  { "op": "move", "from": "/a/b/c/3", "path": "/a/b/c/z" }
 ]
 ```
 
@@ -241,7 +242,7 @@ And finally, with rationalization enabled, those operations are replaced with a 
 
 ```json
 [
-    { "op": "replace", "path": "/a/b/c", "value": { "x": 1, "y": 2, "z": 3 } }
+  { "op": "replace", "path": "/a/b/c", "value": { "x": 1, "y": 2, "z": 3 } }
 ]
 ```
 
@@ -249,32 +250,33 @@ And finally, with rationalization enabled, those operations are replaced with a 
 
 Reducing the size of a JSON Patch is usually beneficial when it needs to be sent on the wire (HTTP request with the `application/json-patch+json` media type for example). As such, the package assumes that the desired JSON representation of a patch is a compact ("minified") JSON document.
 
-When the `Rationalize()` option is enabled, the package pre-process the JSON input given to the `CompareJSON*` functions. If your inputs are already compact JSON documents, you **should** also use the `SkipCompact()` option to instruct the package to skip the compaction step, resulting in a *nice and free* performance improvement.
+When the `Rationalize()` option is enabled, the package pre-processes the JSON target given to the `CompareJSON*` functions. If you know that your inputs are already compact JSON documents, you can use the `SkipCompact()` option to instruct the package to skip the compaction step, resulting in a _nice and free_ performance improvement.
 
 ##### In-place compaction
 
-By default, the package will not modify the JSON documents given to the `CompareJSON*` function. Instead, a copy of the `target` byte slice argument is created and then compacted to remove insignificant spaces.
+By default, the package will not modify the JSON documents given to the `CompareJSON*` functions. When compaction is required, the result is written to a newly allocated buffer, leaving the original `target` byte slice untouched.
 
-To avoid an extra allocation, you can use the `InPlaceCompaction()` option to allow the package to *take ownership* of the `target` byte slice and modify it directly. **Note that you should not update it concurrently with a call to the `CompareJSON*` functions.**
+To avoid this extra allocation, you can use the `InPlaceCompaction()` option to allow the package to _take ownership_ of the `target` byte slice and compact it in place. **Note that you should not update it concurrently with a call to the `CompareJSON*` functions.**
 
 #### Invertible patch
 
 Using the functional option `Invertible()`, it is possible to instruct the diff generator to precede each `remove` and `replace` operation with a `test` operation. Such patches can be inverted to return a patched document to its original form.
 
-However, note that it comes with one limitation. `copy` operations cannot be inverted, as they are ambiguous (the reverse of a `copy` is a `remove`, which could then become either an `add` or a `copy`). As such, using this option disable the generation of `copy` operations (if option `Factorize()` is used) and replace them with `add` operations, albeit potentially at the cost of increased patch size.
+However, note that it comes with one limitation. `copy` operations cannot be inverted, as they are ambiguous (the reverse of a `copy` is a `remove`, which could then become either an `add` or a `copy`). As such, using this option disables the generation of `copy` operations (if the `Factorize()` option is used) and replaces them with `add` operations, albeit potentially at the cost of increased patch size.
 
 For example, let's generate the diff between those two JSON documents:
 
 ```json
 {
-    "a": "1",
-    "b": "2"
+  "a": "1",
+  "b": "2"
 }
 ```
+
 ```json
 {
-    "a": "3",
-    "c": "4"
+  "a": "3",
+  "c": "4"
 }
 ```
 
@@ -282,24 +284,24 @@ The patch is similar to the following:
 
 ```json
 [
-    { "op": "test", "path": "/a", "value": "1" },
-    { "op": "replace", "path": "/a", "value": "3" },
-    { "op": "test", "path": "/b", "value": "2" },
-    { "op": "remove", "path": "/b" },
-    { "op": "add", "path": "/c", "value": "4" }
+  { "op": "test", "path": "/a", "value": "1" },
+  { "op": "replace", "path": "/a", "value": "3" },
+  { "op": "test", "path": "/b", "value": "2" },
+  { "op": "remove", "path": "/b" },
+  { "op": "add", "path": "/c", "value": "4" }
 ]
 ```
 
-As you can see, the `remove` and `replace` operations are preceded with a `test` operation which assert/verify the `value` of the previous `path`. On the other hand, the `add` operation can be reverted to a remove operation directly and doesn't need to be preceded by a `test`.
+The `remove` and `replace` operations are preceded by a `test` operation which asserts the `value` of the previous `path`. On the other hand, the `add` operation can be reverted to a remove operation directly and doesn't need to be preceded by a `test`.
 
 [Run this example](https://pkg.go.dev/github.com/wI2L/jsondiff#example-Invertible).
 
-Finally, as a side example, if we were to use the `Rationalize()` option in the context of the previous example, the output would be shorter, but the generated patch would still remain invertible:
+Finally, as a side example, if we were to use the `Rationalize()` option in the context of the previous example, the patch would be shorter, but would still remain invertible:
 
 ```json
 [
-    { "op": "test", "path": "", "value": { "a": "1", "b": "2" } },
-    { "op": "replace", "path": "", "value": { "a": "3", "c": "4" } }
+  { "op": "test", "path": "", "value": { "a": "1", "b": "2" } },
+  { "op": "replace", "path": "", "value": { "a": "3", "c": "4" } }
 ]
 ```
 
@@ -308,31 +310,30 @@ Finally, as a side example, if we were to use the `Rationalize()` option in the 
 Some data types, such as arrays, can be deeply unequal and equivalent at the same time.
 
 Take the following JSON documents:
+
 ```json
-[
-    "a", "b", "c", "d"
-]
+["a", "b", "c", "d"]
 ```
+
 ```json
-[
-    "d", "c", "b", "a"
-]
+["d", "c", "b", "a"]
 ```
 
 The root arrays of each document are not equal because the values differ at each index. However, they are equivalent in terms of content:
+
 - they have the same length
 - the elements of the first can be found in the second, the same number of times for each
 
 For such situations, you can use the `Equivalent()` option to instruct the diff generator to skip the generation of operations that would otherwise be added to the patch to represent the differences between the two arrays.
 
-#### LCS (Longest Common Subsequence)
+#### LCS (Longest Common Subsequence) array comparison
 
 > [!WARNING]
 > This is a new/experimental option, which might be promoted as the default behavior in the future.
 
-The default algorithm used to compare arrays is naive and can generate a lot of operations. For example, if a single element located *in the middle* of the array is deleted, all items to its right will be shifted one position to the left, generating one `replace` operation per item.
+The default algorithm used to compare arrays is naive and can generate a lot of operations. For example, if a single element located _in the middle_ of the array is deleted, all items to its right will be shifted one position to the left, generating one `replace` operation per item.
 
-The `LCS()` option instruct the diff generator to compute the [Longest common subsequence](https://en.wikipedia.org/wiki/Longest_common_subsequence) of the source and target arrays, and use it to generate a list of operations that is more succinct and more faithfully represents the differences.
+The `LCS()` option instructs the diff generator to compute the [Longest common subsequence](https://en.wikipedia.org/wiki/Longest_common_subsequence) of the source and target arrays, and use it to generate a list of operations that is more succinct and more faithfully represents the differences.
 
 #### Ignores
 
@@ -345,25 +346,25 @@ The `LCS()` option instruct the diff generator to compute the [Longest common su
 > shift the position of subsequent elements. An ignored array index may
 > therefore hold a different value after the patch is applied.
 
-The `Ignores()` option allows to exclude one or more JSON fields/values from the *generated diff*. The fields must be identified using the JSON Pointer (RFC6901) string syntax.
+The `Ignores()` option excludes one or more JSON fields/values from the _generated diff_. The fields must be identified using the JSON Pointer (RFC 6901) string syntax.
 
-The option accepts a variadic list of JSON Pointers, which all individually represent a value in the source document. However, if the value does not exist in the source document, the value will be considered to be in the target document, which allows to *ignore* `add` operations.
+The option accepts a variadic list of JSON Pointers, which all individually represent a value in the source document. However, if the value does not exist in the source document, the value will be considered to be in the target document, which makes it possible to _ignore_ `add` operations.
 
 For example, let's generate the diff between those two JSON documents:
 
 ```json
 {
-    "A": "bar",
-    "B": "baz",
-    "C": "foo"
+  "A": "bar",
+  "B": "baz",
+  "C": "foo"
 }
 ```
 
 ```json
 {
-    "A": "rab",
-    "B": "baz",
-    "D": "foo"
+  "A": "rab",
+  "B": "baz",
+  "D": "foo"
 }
 ```
 
@@ -371,19 +372,19 @@ Without the `Ignores()` option, the output patch is the following:
 
 ```json
 [
-    { "op": "replace", "path": "/A", "value": "rab" },
-    { "op": "remove", "path": "/C" },
-    { "op": "add", "path": "/D", "value": "foo" }
+  { "op": "replace", "path": "/A", "value": "rab" },
+  { "op": "remove", "path": "/C" },
+  { "op": "add", "path": "/D", "value": "foo" }
 ]
 ```
 
-Using the option with the following pointers list, we can ignore some of the fields that were updated, added or removed:
+Using the option with the following pointers list, we can ignore the updated field `/A` and the removed field `/C`:
 
 ```go
-jsondiff.Ignores("/A", "/B", "/C")
+jsondiff.Ignores("/A", "/C")
 ```
 
-The resulting patch is empty, because all changes are ignored.
+The resulting patch only contains the `add` operation for `/D`, which is not part of the ignored paths.
 
 [Run this example](https://pkg.go.dev/github.com/wI2L/jsondiff#example-Ignores).
 
@@ -391,13 +392,13 @@ The resulting patch is empty, because all changes are ignored.
 
 #### MarshalFunc / UnmarshalFunc
 
-By default, the package uses the `json.Marshal` and `json.Unmarshal` functions from the standard library's `encoding` package, to marshal and unmarshal objects to/from JSON.  If you wish to use another package for performance reasons, or simply to customize the encoding/decoding behavior, you can use the `MarshalFunc` and `UnmarshalFunc` options to configure it.
+By default, the package uses the `json.Marshal` and `json.Unmarshal` functions from the standard library's `encoding/json` package, to marshal and unmarshal objects to/from JSON. If you wish to use another package for performance reasons, or simply to customize the encoding/decoding behavior, you can use the `MarshalFunc` and `UnmarshalFunc` options to configure it.
 
 The prototype of the function argument accepted by these options is the same as the official `json.Marshal` and `json.Unmarshal` functions.
 
 ##### Custom decoder
 
-In the following example, the `UnmarshalFunc` option is used to set up a custom JSON [`Decoder`](https://pkg.go.dev/encoding/json#Decoder) with the [`UserNumber`](https://pkg.go.dev/encoding/json#Decoder.UseNumber) flag enabled, to decode JSON numbers as [`json.Number`](https://pkg.go.dev/encoding/json#Decoder.UseNumber) instead of `float64`:
+In the following example, the `UnmarshalFunc` option is used to set up a custom JSON [`Decoder`](https://pkg.go.dev/encoding/json#Decoder) with the [`UseNumber`](https://pkg.go.dev/encoding/json#Decoder.UseNumber) method enabled, to decode JSON numbers as [`json.Number`](https://pkg.go.dev/encoding/json#Number) instead of `float64`:
 
 ```go
 patch, err := jsondiff.CompareJSON(
