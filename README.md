@@ -338,6 +338,12 @@ The `LCS()` option instruct the diff generator to compute the [Longest common su
 
 > [!WARNING]
 > This option is experimental and might be revised in the future.
+>
+> **Do not use this in conjunction with the `LCS()` option.**
+>
+> `LCS()` represents array changes with `add` and `remove` operations that
+> shift the position of subsequent elements. An ignored array index may
+> therefore hold a different value after the patch is applied.
 
 The `Ignores()` option allows to exclude one or more JSON fields/values from the *generated diff*. The fields must be identified using the JSON Pointer (RFC6901) string syntax.
 
