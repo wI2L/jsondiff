@@ -43,12 +43,12 @@ jobs:
           - ubuntu-latest
           - macos-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
       - name: Install Go
         uses: actions/setup-go@v7
         with:
           go-version: ${{ matrix.go }}
-      - name: Checkout repository
-        uses: actions/checkout@v7
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Upload coverage
