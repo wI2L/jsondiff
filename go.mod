@@ -1,6 +1,6 @@
 module github.com/wI2L/jsondiff
 
-go 1.24
+go 1.25
 
 require (
 	github.com/tidwall/gjson v1.20.6

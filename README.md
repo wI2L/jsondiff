@@ -22,9 +22,6 @@ First, get the latest version of the library using the following command:
 $ go get github.com/wI2L/jsondiff@latest
 ```
 
-> [!IMPORTANT]
-> Requires Go1.21+, due to the usage of the [`hash/maphash`](https://golang.org/pkg/hash/maphash/) package, and the `any/min/max` keyword/builtins.
-
 ### Example use cases
 
 #### Kubernetes Dynamic Admission Controller
