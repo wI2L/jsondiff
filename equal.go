@@ -27,7 +27,7 @@ const (
 
 // jsonTypeSwitch returns the JSON type of the value
 // held by the interface using a type switch statement.
-func jsonTypeSwitch(i interface{}) jsonValueType {
+func jsonTypeSwitch(i any) jsonValueType {
 	switch i.(type) {
 	case nil:
 		return jsonNull
@@ -39,9 +39,9 @@ func jsonTypeSwitch(i interface{}) jsonValueType {
 		return jsonNumberFloat
 	case json.Number:
 		return jsonNumberString
-	case []interface{}:
+	case []any:
 		return jsonArray
-	case map[string]interface{}:
+	case map[string]any:
 		return jsonObject
 	default:
 		return jsonInvalid
@@ -51,11 +51,11 @@ func jsonTypeSwitch(i interface{}) jsonValueType {
 // areComparable returns whether the interface values
 // i1 and i2 can be compared. The values are comparable
 // only if they are both non-nil and share the same kind.
-func areComparable(i1, i2 interface{}) bool {
+func areComparable(i1, i2 any) bool {
 	return jsonTypeSwitch(i1) == jsonTypeSwitch(i2)
 }
 
-func deepEqual(src, tgt interface{}) bool {
+func deepEqual(src, tgt any) bool {
 	if src == nil && tgt == nil {
 		// Fast path.
 		return true
@@ -63,7 +63,7 @@ func deepEqual(src, tgt interface{}) bool {
 	return deepEqualValue(src, tgt)
 }
 
-func deepEqualValue(src, tgt interface{}) bool {
+func deepEqualValue(src, tgt any) bool {
 	st := jsonTypeSwitch(src)
 	if st == jsonInvalid {
 		panic(invalidJSONTypeError{t: src})
@@ -87,21 +87,21 @@ func deepEqualValue(src, tgt interface{}) bool {
 	case jsonNumberString:
 		return src.(json.Number) == tgt.(json.Number)
 	case jsonArray:
-		oarr := src.([]interface{})
-		narr := tgt.([]interface{})
+		oarr := src.([]any)
+		narr := tgt.([]any)
 
 		if len(oarr) != len(narr) {
 			return false
 		}
-		for i := 0; i < len(oarr); i++ {
+		for i := range oarr {
 			if !deepEqual(oarr[i], narr[i]) {
 				return false
 			}
 		}
 		return true
 	case jsonObject:
-		oobj := src.(map[string]interface{})
-		nobj := tgt.(map[string]interface{})
+		oobj := src.(map[string]any)
+		nobj := tgt.(map[string]any)
 
 		if len(oobj) != len(nobj) {
 			return false

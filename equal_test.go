@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func reflectKind(i interface{}) reflect.Kind {
+func reflectKind(i any) reflect.Kind {
 	return reflect.TypeOf(i).Kind()
 }
 
@@ -14,7 +14,7 @@ func BenchmarkGetType(b *testing.B) {
 	if testing.Short() {
 		b.Skip("skipping benchmark in short mode")
 	}
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	b.Run("reflect", func(b *testing.B) {
 		for b.Loop() {
@@ -75,12 +75,12 @@ func Test_jsonTypeSwitch(t *testing.T) {
 			jsonInvalid,
 		},
 		{
-			[]interface{}{},
+			[]any{},
 			true,
 			jsonArray,
 		},
 		{
-			map[string]interface{}{},
+			map[string]any{},
 			true,
 			jsonObject,
 		},
@@ -94,7 +94,7 @@ func Test_jsonTypeSwitch(t *testing.T) {
 
 func Test_deepEqualValue(t *testing.T) {
 	for _, tc := range []struct {
-		src, tgt interface{}
+		src, tgt any
 		equal    bool
 	}{
 		{
@@ -144,7 +144,7 @@ func Test_deepEqual_invalid_type(t *testing.T) {
 }
 
 func Test_jsonValueType_String(t *testing.T) {
-	for typ := 0; typ < len(jsonTypeNames); typ++ {
+	for typ := range jsonTypeNames {
 		s := jsonValueType(typ).String()
 		if s != jsonTypeNames[typ] {
 			t.Errorf("got %q, want %q", s, jsonTypeNames[typ])

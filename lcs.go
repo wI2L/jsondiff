@@ -4,7 +4,7 @@ package jsondiff
 // slices and returns the index pairs of the LCS, that
 // is, the indices into the source and target slices
 // where the LCS items are located
-func lcs(src, tgt []interface{}) [][2]int {
+func lcs(src, tgt []any) [][2]int {
 	t := make([][]int, len(src)+1)
 
 	for i := 0; i <= len(src); i++ {

@@ -29,11 +29,11 @@ type null struct{}
 
 // Operation represents a single JSON Patch (RFC6902) operation.
 type Operation struct {
-	Value    interface{} `json:"value,omitempty"`
-	OldValue interface{} `json:"-"`
-	Type     string      `json:"op"`
-	From     string      `json:"from,omitempty"`
-	Path     string      `json:"path"`
+	Value    any    `json:"value,omitempty"`
+	OldValue any    `json:"-"`
+	Type     string `json:"op"`
+	From     string `json:"from,omitempty"`
+	Path     string `json:"path"`
 	valueLen int
 }
 
@@ -104,7 +104,7 @@ func (p *Patch) remove(idx int) Patch {
 	return (*p)[:idx+copy((*p)[idx:], (*p)[idx+1:])]
 }
 
-func (p *Patch) append(typ string, from, path string, src, tgt interface{}, vl int) Patch {
+func (p *Patch) append(typ string, from, path string, src, tgt any, vl int) Patch {
 	return append(*p, Operation{
 		Type:     typ,
 		From:     from,
@@ -115,7 +115,7 @@ func (p *Patch) append(typ string, from, path string, src, tgt interface{}, vl i
 	})
 }
 
-func (p *Patch) insert(pos int, typ string, from, path string, src, tgt interface{}, vl int) Patch {
+func (p *Patch) insert(pos int, typ string, from, path string, src, tgt any, vl int) Patch {
 	if pos > len(*p) {
 		return p.append(typ, from, path, src, tgt, vl)
 	}

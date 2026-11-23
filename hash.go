@@ -11,14 +11,14 @@ type hasher struct {
 	mh maphash.Hash
 }
 
-func (h *hasher) digest(val interface{}, sort bool) uint64 {
+func (h *hasher) digest(val any, sort bool) uint64 {
 	h.mh.Reset()
 	h.hash(val, sort)
 
 	return h.mh.Sum64()
 }
 
-func (h *hasher) hash(i interface{}, sort bool) {
+func (h *hasher) hash(i any, sort bool) {
 	switch v := i.(type) {
 	case string:
 		_, _ = h.mh.WriteString(v)
@@ -34,14 +34,14 @@ func (h *hasher) hash(i interface{}, sort bool) {
 		_, _ = h.mh.Write(buf[:])
 	case nil:
 		_ = h.mh.WriteByte('0')
-	case []interface{}:
+	case []any:
 		if sort {
 			h.sortArray(v)
 		}
 		for _, e := range v {
 			h.hash(e, sort)
 		}
-	case map[string]interface{}:
+	case map[string]any:
 		keys := make([]string, 0, len(v))
 
 		// Extract keys first, and sort them
@@ -58,14 +58,14 @@ func (h *hasher) hash(i interface{}, sort bool) {
 	}
 }
 
-func (h *hasher) sortArray(a []interface{}) {
+func (h *hasher) sortArray(a []any) {
 	h1 := hasher{}
 	h2 := hasher{}
 
 	h1.mh.SetSeed(h.mh.Seed())
 	h2.mh.SetSeed(h.mh.Seed())
 
-	slices.SortStableFunc(a, func(a1, a2 interface{}) int {
+	slices.SortStableFunc(a, func(a1, a2 any) int {
 		d1 := h1.digest(a1, true)
 		d2 := h2.digest(a2, true)
 

@@ -7,12 +7,12 @@ import (
 	"testing"
 )
 
-func readJSON(filename string) (interface{}, error) {
+func readJSON(filename string) (any, error) {
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
-	var i interface{}
+	var i any
 	if err := json.Unmarshal(b, &i); err != nil {
 		return nil, err
 	}

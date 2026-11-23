@@ -12,7 +12,7 @@ import (
 
 type (
 	Pod struct {
-		Spec PodSpec `json:"spec,omitempty"`
+		Spec PodSpec `json:"spec"`
 	}
 	PodSpec struct {
 		Containers []Container `json:"containers,omitempty"`
@@ -246,12 +246,12 @@ func ExampleUnmarshalFunc() {
 }
 
 func ExampleMergePatch() {
-	src := map[string]interface{}{
+	src := map[string]any{
 		"foo": "baz",
 		"bar": []string{"a", "b", "c"},
 		"baz": 3.14159,
 	}
-	tgt := map[string]interface{}{
+	tgt := map[string]any{
 		"foo": "bar",
 		"bar": []string{"y", "y", "z"},
 	}

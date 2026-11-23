@@ -10,10 +10,10 @@ import (
 
 func Test_mergePatch(t *testing.T) {
 	type testcase struct {
-		Name string      `json:"name"`
-		B    interface{} `json:"before"`
-		A    interface{} `json:"after"`
-		P    interface{} `json:"patch"`
+		Name string `json:"name"`
+		B    any    `json:"before"`
+		A    any    `json:"after"`
+		P    any    `json:"patch"`
 	}
 	for _, testFile := range []string{
 		"testdata/tests/mergepatch/rfc.json",

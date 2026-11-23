@@ -51,7 +51,7 @@ func subBenchmarks(b *testing.B, src, tgt, tgtUnordered []byte) {
 		{"all", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent()), tgt},
 		{"all-unordered", makeopts(Factorize(), Rationalize(), Invertible(), Equivalent()), tgtUnordered},
 	} {
-		var before, after interface{}
+		var before, after any
 
 		if err := json.Unmarshal(src, &before); err != nil {
 			b.Fatal(err)

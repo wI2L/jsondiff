@@ -15,13 +15,13 @@ import (
 var testNameReplacer = strings.NewReplacer(",", "", "(", "", ")", "")
 
 type testcase struct {
-	Name          string      `json:"name"`
-	Before        interface{} `json:"before"`
-	After         interface{} `json:"after"`
-	Patch         Patch       `json:"patch"`
-	PartialPatch  Patch       `json:"partial_patch"`
-	Ignores       []string    `json:"ignores"`
-	SkipApplyTest bool        `json:"skip_apply_test"`
+	Name          string   `json:"name"`
+	Before        any      `json:"before"`
+	After         any      `json:"after"`
+	Patch         Patch    `json:"patch"`
+	PartialPatch  Patch    `json:"partial_patch"`
+	Ignores       []string `json:"ignores"`
+	SkipApplyTest bool     `json:"skip_apply_test"`
 }
 
 type patchGetter func(tc *testcase) Patch
@@ -199,32 +199,32 @@ func runTestCase(t *testing.T, tc testcase, pc patchGetter, opts ...Option) {
 
 func TestDiffer_unorderedDeepEqualSlice(t *testing.T) {
 	for _, tc := range []struct {
-		src, tgt []interface{}
+		src, tgt []any
 		equal    bool
 	}{
 		{
-			src:   []interface{}{1, 2, 3},
-			tgt:   []interface{}{3, 2, 1},
+			src:   []any{1, 2, 3},
+			tgt:   []any{3, 2, 1},
 			equal: true,
 		},
 		{
-			src:   []interface{}{1, 2, 3},
-			tgt:   []interface{}{4, 3, 2, 1},
+			src:   []any{1, 2, 3},
+			tgt:   []any{4, 3, 2, 1},
 			equal: false,
 		},
 		{
-			src: []interface{}{
+			src: []any{
 				"foo",
-				map[string]interface{}{"A": "AAA"},
-				map[string]interface{}{"B": "BBB"},
+				map[string]any{"A": "AAA"},
+				map[string]any{"B": "BBB"},
 				"foo",
 				"bar",
 			},
-			tgt: []interface{}{
+			tgt: []any{
 				"foo",
 				"foo",
-				map[string]interface{}{"A": "AAA"},
-				map[string]interface{}{"B": "BBB"},
+				map[string]any{"A": "AAA"},
+				map[string]any{"B": "BBB"},
 				"bar",
 			},
 			equal: true,
@@ -600,7 +600,7 @@ func Benchmark_sortStrings(b *testing.B) {
 func unmarshalMarshal(t *testing.T, b []byte) []byte {
 	t.Helper()
 
-	var i interface{}
+	var i any
 	if err := json.Unmarshal(b, &i); err != nil {
 		t.Error(err)
 	}

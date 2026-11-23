@@ -69,11 +69,11 @@ func (p Patch) apply(src []byte, valid bool) ([]byte, error) {
 				break // bail out to interpret error
 			}
 		case OperationTest:
-			if strings.HasSuffix(dp, "-1") {
+			if before, ok := strings.CutSuffix(dp, "-1"); ok {
 				// Special case when the path inserts an
 				// element at the end of an array, we revert
 				// the array and test the first element.
-				dp = strings.TrimSuffix(dp, "-1") + "@reverse.0"
+				dp = before + "@reverse.0"
 			}
 			r := gjson.GetBytes(tgt, dp)
 			if !r.Exists() {
@@ -87,7 +87,7 @@ func (p Patch) apply(src []byte, valid bool) ([]byte, error) {
 	return tgt, nil
 }
 
-func replace(tgt []byte, path string, val interface{}) ([]byte, error) {
+func replace(tgt []byte, path string, val any) ([]byte, error) {
 	if path == "@this" {
 		return json.Marshal(val)
 	}
@@ -97,7 +97,7 @@ func replace(tgt []byte, path string, val interface{}) ([]byte, error) {
 	})
 }
 
-func add(tgt []byte, path string, val interface{}) ([]byte, error) {
+func add(tgt []byte, path string, val any) ([]byte, error) {
 	if path == "@this" {
 		// Unsupported by the sjson package.
 		// Since an empty path represent the root

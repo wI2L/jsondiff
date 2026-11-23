@@ -159,9 +159,9 @@ func Test_issue26(_ *testing.T) {
 	p.insert(6, OperationAdd, emptyPointer, "/a", nil, 42, 0)
 }
 
-func typeNilIface() interface{} {
+func typeNilIface() any {
 	var i *int
-	var p interface{} //nolint:staticcheck
+	var p any //nolint:staticcheck
 
 	p = i
 

@@ -8,7 +8,7 @@ import (
 // Compare compares the JSON representations of the
 // given values and returns the differences relative
 // to the former as a list of JSON Patch operations.
-func Compare(source, target interface{}, opts ...Option) (Patch, error) {
+func Compare(source, target any, opts ...Option) (Patch, error) {
 	var d Differ
 	d.applyOpts(opts...)
 
@@ -29,7 +29,7 @@ func CompareJSON(source, target []byte, opts ...Option) (Patch, error) {
 // that the given interface values consists only of primitives
 // Go types that are recognized by the json.Unmarshal function,
 // and therefore does not marshal/unmarshal before comparison.
-func CompareWithoutMarshal(source, target interface{}, opts ...Option) (patch Patch, err error) {
+func CompareWithoutMarshal(source, target any, opts ...Option) (patch Patch, err error) {
 	var d Differ
 
 	defer func() {
@@ -46,7 +46,7 @@ func CompareWithoutMarshal(source, target interface{}, opts ...Option) (patch Pa
 	return patch, err
 }
 
-func compare(d *Differ, src, tgt interface{}) (Patch, error) {
+func compare(d *Differ, src, tgt any) (Patch, error) {
 	if d.opts.marshal == nil {
 		d.opts.marshal = json.Marshal
 	}
@@ -71,7 +71,7 @@ func compareJSON(d *Differ, src, tgt []byte, unmarshal unmarshalFunc) (Patch, er
 	if unmarshal == nil {
 		unmarshal = json.Unmarshal
 	}
-	var si, ti interface{}
+	var si, ti any
 	if err := unmarshal(src, &si); err != nil {
 		return nil, err
 	}
@@ -86,12 +86,12 @@ func compareJSON(d *Differ, src, tgt []byte, unmarshal unmarshalFunc) (Patch, er
 
 // marshalUnmarshal returns the result of unmarshaling
 // the JSON representation of the given interface value.
-func marshalUnmarshal(v any, opts options) (interface{}, []byte, error) {
+func marshalUnmarshal(v any, opts options) (any, []byte, error) {
 	b, err := opts.marshal(v)
 	if err != nil {
 		return nil, nil, err
 	}
-	var i interface{}
+	var i any
 	if err := opts.unmarshal(b, &i); err != nil {
 		return nil, nil, err
 	}

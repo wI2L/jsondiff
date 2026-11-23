@@ -72,7 +72,7 @@ func (d *Differ) Patch() Patch {
 
 // Compare computes the differences between src and tgt
 // as a series of JSON Patch operations.
-func (d *Differ) Compare(src, tgt interface{}) {
+func (d *Differ) Compare(src, tgt any) {
 	if d.opts.factorize {
 		d.prepare(d.ptr, src, tgt)
 		d.ptr.reset()
@@ -104,7 +104,7 @@ func (d *Differ) findIgnored(ptr pointer) bool {
 	return found
 }
 
-func (d *Differ) diff(ptr pointer, src, tgt interface{}, doc string) {
+func (d *Differ) diff(ptr pointer, src, tgt any, doc string) {
 	if d.isIgnored(ptr) {
 		return
 	}
@@ -131,14 +131,14 @@ func (d *Differ) diff(ptr pointer, src, tgt interface{}, doc string) {
 	// Values are comparable, but are not
 	// equivalent.
 	switch val := src.(type) {
-	case []interface{}:
+	case []any:
 		if d.opts.lcs {
-			d.compareArraysLCS(ptr, val, tgt.([]interface{}), doc)
+			d.compareArraysLCS(ptr, val, tgt.([]any), doc)
 		} else {
-			d.compareArrays(ptr, val, tgt.([]interface{}), doc)
+			d.compareArrays(ptr, val, tgt.([]any), doc)
 		}
-	case map[string]interface{}:
-		d.compareObjects(ptr, val, tgt.(map[string]interface{}), doc)
+	case map[string]any:
+		d.compareObjects(ptr, val, tgt.(map[string]any), doc)
 	default:
 		// Generate a replace operation for
 		// scalar types.
@@ -153,7 +153,7 @@ func (d *Differ) diff(ptr pointer, src, tgt interface{}, doc string) {
 	}
 }
 
-func (d *Differ) prepare(ptr pointer, src, tgt interface{}) {
+func (d *Differ) prepare(ptr pointer, src, tgt any) {
 	// When both values are deeply equals, save
 	// the location indexed by the value hash.
 	if !areComparable(src, tgt) {
@@ -172,18 +172,18 @@ func (d *Differ) prepare(ptr pointer, src, tgt interface{}) {
 	// At this point, the source and target values
 	// are non-nil and have comparable types.
 	switch vsrc := src.(type) {
-	case []interface{}:
+	case []any:
 		oarr := vsrc
-		narr := tgt.([]interface{})
+		narr := tgt.([]any)
 
 		for i := 0; i < min(len(oarr), len(narr)); i++ {
 			p := ptr.clone()
 			p.appendIndex(i)
 			d.prepare(p, oarr[i], narr[i])
 		}
-	case map[string]interface{}:
+	case map[string]any:
 		oobj := vsrc
-		nobj := tgt.(map[string]interface{})
+		nobj := tgt.(map[string]any)
 
 		for k, v1 := range oobj {
 			if v2, ok := nobj[k]; ok {
@@ -197,7 +197,7 @@ func (d *Differ) prepare(ptr pointer, src, tgt interface{}) {
 	}
 }
 
-func (d *Differ) rationalize(ptr pointer, src, tgt interface{}, lastOpIdx int, doc string) {
+func (d *Differ) rationalize(ptr pointer, src, tgt any, lastOpIdx int, doc string) {
 	// replaceOp represents a single operation that
 	// replace the source document with the target.
 	replaceOp := Operation{
@@ -228,7 +228,7 @@ func (d *Differ) rationalize(ptr pointer, src, tgt interface{}, lastOpIdx int, d
 
 // compareObjects generates the patch operations that
 // represents the differences between two JSON objects.
-func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]interface{}, doc string) {
+func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]any, doc string) {
 	cmpSet := make(map[string]uint8, max(len(src), len(tgt)))
 
 	for k := range src {
@@ -273,7 +273,7 @@ func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]interface{}, do
 
 // compareArrays generates the patch operations that
 // represents the differences between two JSON arrays.
-func (d *Differ) compareArrays(ptr pointer, src, tgt []interface{}, doc string) {
+func (d *Differ) compareArrays(ptr pointer, src, tgt []any, doc string) {
 	ptr.snapshot()
 	sl, tl := len(src), len(tgt)
 	ml := min(sl, tl)
@@ -302,7 +302,7 @@ func (d *Differ) compareArrays(ptr pointer, src, tgt []interface{}, doc string) 
 comparisons:
 	// Compare the elements at each index present in
 	// both the source and destination arrays.
-	for i := 0; i < ml; i++ {
+	for i := range ml {
 		ptr.appendIndex(i)
 		if d.opts.rationalize {
 			d.diff(ptr, src[i], tgt[i], findIndex(doc, ptr.base.idx))
@@ -328,7 +328,7 @@ comparisons:
 	}
 }
 
-func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc string) {
+func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []any, doc string) {
 	if len(src) == len(tgt) {
 		if d.opts.equivalent && d.unorderedDeepEqualSlice(src, tgt) {
 			return
@@ -350,7 +350,7 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 	// Iterate over all the indexs of the LCS, which
 	// represent the position of items that are present
 	// in both the source and target slices.
-	for p := 0; p < len(pairs); p++ {
+	for p := range pairs {
 		ma, mb := pairs[p][0], pairs[p][1]
 
 		// Proceed with addition/deletion or change events
@@ -436,7 +436,7 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []interface{}, doc strin
 	}
 }
 
-func (d *Differ) unorderedDeepEqualSlice(src, tgt []interface{}) bool {
+func (d *Differ) unorderedDeepEqualSlice(src, tgt []any) bool {
 	if len(src) != len(tgt) {
 		return false
 	}
@@ -460,7 +460,7 @@ func (d *Differ) unorderedDeepEqualSlice(src, tgt []interface{}) bool {
 	return count == 0
 }
 
-func (d *Differ) replace(path string, src, tgt interface{}, doc string) {
+func (d *Differ) replace(path string, src, tgt any, doc string) {
 	vl := len(doc)
 
 	if d.opts.invertible {
@@ -469,7 +469,7 @@ func (d *Differ) replace(path string, src, tgt interface{}, doc string) {
 	d.patch = d.patch.append(OperationReplace, emptyPointer, path, src, tgt, vl)
 }
 
-func (d *Differ) add(path string, v interface{}, doc string, lcs bool) {
+func (d *Differ) add(path string, v any, doc string, lcs bool) {
 	if !d.opts.factorize {
 		d.patch = d.patch.append(OperationAdd, emptyPointer, path, nil, v, 0)
 		return
@@ -501,14 +501,14 @@ func (d *Differ) add(path string, v interface{}, doc string, lcs bool) {
 	}
 }
 
-func (d *Differ) remove(path string, v interface{}) {
+func (d *Differ) remove(path string, v any) {
 	if d.opts.invertible {
 		d.patch = d.patch.append(OperationTest, emptyPointer, path, nil, v, 0)
 	}
 	d.patch = d.patch.append(OperationRemove, emptyPointer, path, v, nil, 0)
 }
 
-func (d *Differ) findUnchanged(v interface{}) string {
+func (d *Differ) findUnchanged(v any) string {
 	if d.hashmap != nil {
 		k := d.hasher.digest(v, false)
 		node, ok := d.hashmap[k]
@@ -519,7 +519,7 @@ func (d *Differ) findUnchanged(v interface{}) string {
 	return emptyPointer
 }
 
-func (d *Differ) findRemoved(v interface{}) int {
+func (d *Differ) findRemoved(v any) int {
 	for i := 0; i < len(d.patch); i++ {
 		op := d.patch[i]
 		if op.Type == OperationRemove && deepEqual(op.OldValue, v) {
@@ -559,7 +559,7 @@ func sortStrings(v []string) {
 }
 
 func insertionSort(v []string) {
-	for i := 0; i < len(v); i++ {
+	for i := range v {
 		for j := i; j > 0 && v[j-1] > v[j]; j-- {
 			v[j], v[j-1] = v[j-1], v[j]
 		}
