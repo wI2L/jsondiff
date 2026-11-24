@@ -1,18 +1,34 @@
 package jsondiff
 
+import (
+	"encoding/json"
+	"strings"
+)
+
 // findKey finds and return the object value that match key.
 // It assumes to be on an opening curly bracket.
 // The function expects a compact JSON input.
-func findKey(json string, key string) string {
-	for i := 1; i < len(json); {
+func findKey(doc string, key string) string {
+	for i := 1; i < len(doc); {
 		ki := i
-		i = squashString(json, i)
-		k := json[ki+1 : i-1]
+		i = squashString(doc, i)
+		ke := i // end of the key, past the closing quote
+		k := doc[ki+1 : i-1]
 		i++ // skip semicolon
 		vi := i
-		i = squashValue(json, i)
+		i = squashValue(doc, i)
+
+		// The scanned key is the raw source text, while the
+		// lookup key comes from the decoded document. Decode
+		// the raw key when it may hold escape sequences.
+		if strings.Contains(k, "\\") {
+			var s string
+			if err := json.Unmarshal([]byte(doc[ki:ke]), &s); err == nil {
+				k = s
+			}
+		}
 		if key == k {
-			return json[vi:i]
+			return doc[vi:i]
 		}
 		i++ // skip comma
 	}

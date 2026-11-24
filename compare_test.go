@@ -69,6 +69,38 @@ func TestCompareJSON_rationalizeEscapedStrings(t *testing.T) {
 	}
 }
 
+func TestCompareJSON_rationalizeEscapedKey(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		src  string
+		tgt  string
+		want string
+	}{
+		{
+			"plain",
+			`{"ab":{"x":1}}`,
+			`{"ab":{"x":9}}`,
+			`{"value":9,"op":"replace","path":"/ab/x"}`,
+		},
+		{
+			"escaped",
+			`{"a\\b":{"x":1}}`,
+			`{"a\\b":{"x":9}}`,
+			`{"value":9,"op":"replace","path":"/a\\b/x"}`,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			patch, err := CompareJSON([]byte(tc.src), []byte(tc.tgt), Rationalize())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := patch.String(); got != tc.want {
+				t.Errorf("compare returned %s instead of %s", got, tc.want)
+			}
+		})
+	}
+}
+
 func Test_marshalUnmarshal_invalid_JSON(t *testing.T) {
 	t.Run("marshal", func(t *testing.T) {
 		e := errors.New("marshal")

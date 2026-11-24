@@ -85,8 +85,25 @@ func Test_findKey(t *testing.T) {
 			"",
 			`{"a":"b"}`,
 		},
+		{
+			`{"a\\b":{"x":1}}`,
+			"a\\b",
+			`{"x":1}`,
+		},
+		{
+			`{"a\\b":1}`,
+			"ab",
+			``,
+		},
+		{
+			// The scan must continue past a key that contains
+			// escape sequences but does not match.
+			`{"a\\b":1,"c":2}`,
+			"c",
+			`2`,
+		},
 	} {
-		// Valid JSON input and result.
+		// Validate JSON input and result.
 		if len(tc.json) != 0 && !json.Valid([]byte(tc.json)) {
 			t.Errorf("invalid JSON input: %q", tc.json)
 		}
