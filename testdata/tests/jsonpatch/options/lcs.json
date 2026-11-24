@@ -97,8 +97,9 @@
         "a"
     ],
     "patch": [
-        { "op": "move", "from": "/0", "path": "/2" },
-        { "op": "move", "from": "/0", "path": "/1" }
+        { "op": "remove", "path": "/0" },
+        { "op": "move", "from": "/0", "path": "/1" },
+        { "op": "add", "path": "/2", "value": "a" }
     ]
 }, {
     "name": "reorder top-down",
@@ -113,8 +114,9 @@
         "c"
     ],
     "patch": [
-        { "op": "move", "from": "/0", "path": "/2" },
-        { "op": "move", "from": "/0", "path": "/1" }
+        { "op": "remove", "path": "/0" },
+        { "op": "move", "from": "/0", "path": "/1" },
+        { "op": "add", "path": "/2", "value": "c" }
     ]
 }, {
     "name": "reorder middle",
@@ -135,9 +137,11 @@
         "f"
     ],
     "patch": [
-        { "op": "move", "from": "/1", "path": "/4" },
-        { "op": "move", "from": "/1", "path": "/3" },
-        { "op": "move", "from": "/1", "path": "/2" }
+        { "op": "remove", "path": "/1" },
+        { "op": "remove", "path": "/1" },
+        { "op": "move", "from": "/1", "path": "/2" },
+        { "op": "add", "path": "/3", "value": "c" },
+        { "op": "add", "path": "/4", "value": "b" }
     ]
 }, {
     "name": "reorder shuffle",

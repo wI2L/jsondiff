@@ -167,8 +167,8 @@ func ExampleFactorize() {
 		fmt.Printf("%s\n", op)
 	}
 	// Output:
-	// {"op":"copy","from":"/a","path":"/c"}
 	// {"op":"move","from":"/b","path":"/d"}
+	// {"op":"copy","from":"/a","path":"/c"}
 }
 
 func ExampleIgnores() {

@@ -84,8 +84,8 @@
         }
     },
     "patch": [
-        { "op": "copy", "from": "/a", "path": "/c" },
-        { "op": "move", "from": "/b", "path": "/d" }
+        { "op": "move", "from": "/b", "path": "/d" },
+        { "op": "copy", "from": "/a", "path": "/c" }
     ]
 }, {
     "name": "single move on duplicated values",

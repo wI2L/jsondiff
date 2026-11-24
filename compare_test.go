@@ -306,6 +306,79 @@ func TestCompareJSON_factorizeHashCollisions(t *testing.T) {
 	}
 }
 
+func TestCompareJSON_factorizeStaleMove(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		opts []Option
+	}{
+		{
+			"default",
+			[]Option{Factorize()},
+		},
+		{
+			"with invertible",
+			[]Option{Factorize(), Invertible()},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			src := []byte(`{"a":[1,2],"b":{}}`)
+			tgt := []byte(`{"a":[],"b":{"x":1}}`)
+
+			patch, err := CompareJSON(src, tgt, tc.opts...)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, err := patch.apply(src, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !jsonBytesEqual(t, got, tgt) {
+				t.Errorf("apply produced %s, want %s", got, tgt)
+			}
+		})
+	}
+}
+
+func TestCompareJSON_factorizeStaleCopy(t *testing.T) {
+	patch, err := CompareJSON(
+		[]byte(`{"a":[1,2,3]}`),
+		[]byte(`{"a":[2,3,3]}`),
+		Factorize(), LCS(),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(patch) != 2 {
+		t.Fatalf("expected 2 operations, got %d: %s", len(patch), patch)
+	}
+	if op := patch[0]; op.Type != OperationRemove || op.Path != "/a/0" {
+		t.Errorf("expected first operation to remove /a/0, got %q at %q", op.Type, op.Path)
+	}
+	if op := patch[1]; op.Type != OperationAdd || op.Path != "/a/1" {
+		t.Errorf("expected second operation to add /a/1, got %q at %q", op.Type, op.Path)
+	}
+}
+
+func TestCompareJSON_factorizeStaleTest(t *testing.T) {
+	patch, err := CompareJSON(
+		[]byte(`[1,2]`),
+		[]byte(`[2,1]`),
+		Factorize(), LCS(), Invertible(),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(patch) != 2 {
+		t.Fatalf("expected 2 operations, got %d: %s", len(patch), patch)
+	}
+	if op := patch[0]; op.Type != OperationTest || op.Path != "/0" {
+		t.Errorf("expected first operation to test /0, got %q at %q", op.Type, op.Path)
+	}
+	if op := patch[1]; op.Type != OperationMove || op.From != "/0" || op.Path != "/1" {
+		t.Errorf("expected second operation to move /0 to /1, got %q from %q to %q", op.Type, op.From, op.Path)
+	}
+}
+
 func TestCompareJSON_equivalentHashCollisions(t *testing.T) {
 	for _, tc := range []struct{ src, tgt string }{
 		{

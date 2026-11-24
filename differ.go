@@ -9,15 +9,14 @@ import (
 // A Differ generates JSON Patch (RFC 6902).
 // The zero value is an empty generator ready to use.
 type Differ struct {
-	hashmap          map[uint64]jsonNode
-	opts             options
-	patch            Patch
-	snapshotPatchLen int
-	targetBytes      []byte
-	ptr              pointer
-	hasher           hasher
-	isCompact        bool
-	compactInPlace   bool
+	hashmap        map[uint64]jsonNode
+	opts           options
+	patch          Patch
+	targetBytes    []byte
+	ptr            pointer
+	hasher         hasher
+	isCompact      bool
+	compactInPlace bool
 }
 
 type (
@@ -290,7 +289,7 @@ func (d *Differ) compareObjects(ptr pointer, src, tgt map[string]any, doc string
 			}
 		case inNew:
 			if !d.isIgnored(ptr) {
-				d.add(ptr.copy(), tgt[k], doc, false)
+				d.add(ptr.copy(), tgt[k], doc)
 			}
 		}
 		ptr.rewind()
@@ -347,7 +346,7 @@ comparisons:
 		for i := ml; i < tl; i++ {
 			ptr.appendIndex(i)
 			if !d.isIgnored(ptr) {
-				d.add(p, tgt[i], doc, false)
+				d.add(p, tgt[i], doc)
 			}
 			ptr.rewind()
 		}
@@ -362,7 +361,6 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []any, doc string) {
 	}
 	ptr.snapshot()
 	pairs := lcs(src, tgt)
-	d.snapshotPatchLen = len(d.patch)
 
 	var ai, bi int // src && tgt arrows
 	var adds, removes int
@@ -412,7 +410,7 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []any, doc string) {
 				// Opposite case of the previous condition.
 				ptr.appendIndex(bi)
 				if !d.isIgnored(ptr) {
-					d.add(ptr.copy(), tgt[bi], doc, true)
+					d.add(ptr.copy(), tgt[bi], doc)
 				}
 				ptr.rewind()
 				bi++
@@ -453,7 +451,7 @@ func (d *Differ) compareArraysLCS(ptr pointer, src, tgt []any, doc string) {
 		default: // bi < len(tgt)
 			ptr.appendIndex(bi)
 			if !d.isIgnored(ptr) {
-				d.add(ptr.copy(), tgt[bi], doc, true)
+				d.add(ptr.copy(), tgt[bi], doc)
 			}
 			ptr.rewind()
 			bi++
@@ -490,7 +488,7 @@ func (d *Differ) replace(path string, src, tgt any, doc string) {
 	d.patch = d.patch.append(OperationReplace, emptyPointer, path, src, tgt, vl)
 }
 
-func (d *Differ) add(path string, v any, doc string, lcs bool) {
+func (d *Differ) add(path string, v any, doc string) {
 	if !d.opts.factorize {
 		d.patch = d.patch.append(OperationAdd, emptyPointer, path, nil, v, 0)
 		return
@@ -500,26 +498,30 @@ func (d *Differ) add(path string, v any, doc string, lcs bool) {
 		op := d.patch[idx]
 
 		// https://tools.ietf.org/html/rfc6902#section-4.4f
-		// The "from" location MUST NOT be a proper prefix
-		// of the "path" location; i.e., a location cannot
-		// be moved into one of its children.
-		if !hasProperPathPrefix(op.Path, path) {
+		// The "from" location MUST NOT be a proper prefix of the "path"
+		// location; i.e., a location cannot be moved into one of its
+		// children.
+		//
+		// The move operation takes the place of a remove, so that the "from"
+		// location stays valid. If a remove is preceded by a test, so is the
+		// move. The move is only used when no operation that follows writes
+		// an element into one of the arrays that the destination points to.
+		// Such a write shifts the elements of the array, and would break the
+		// "to" destination path, which was computed as if those operations
+		// had already run.
+		if !hasProperPathPrefix(op.Path, path) && !shiftsPath(d.patch[idx+1:], path) {
 			d.patch = d.patch.remove(idx)
-			if !lcs {
-				d.patch = d.patch.append(OperationMove, op.Path, path, v, v, 0)
-			} else {
-				d.patch = d.patch.insert(d.snapshotPatchLen, OperationMove, op.Path, path, v, v, 0)
-			}
+			d.patch = d.patch.insert(idx, OperationMove, op.Path, path, v, v, 0)
+			return
 		}
-		return
 	}
 	uptr := d.findUnchanged(v)
 
-	if len(uptr) != 0 && !d.opts.invertible {
+	if len(uptr) != 0 && !d.opts.invertible && !shiftsPath(d.patch, uptr) {
 		d.patch = d.patch.append(OperationCopy, uptr, path, nil, v, 0)
-	} else {
-		d.patch = d.patch.append(OperationAdd, emptyPointer, path, nil, v, len(doc))
+		return
 	}
+	d.patch = d.patch.append(OperationAdd, emptyPointer, path, nil, v, len(doc))
 }
 
 func (d *Differ) remove(path string, v any) {
@@ -550,6 +552,14 @@ func (d *Differ) findRemoved(v any) int {
 	return -1
 }
 
+func (d *Differ) applyOpts(opts ...Option) {
+	for _, opt := range opts {
+		if opt != nil {
+			opt(d)
+		}
+	}
+}
+
 func hasProperPathPrefix(prefix, path string) bool {
 	if prefix == emptyPointer {
 		return path != emptyPointer
@@ -563,12 +573,74 @@ func hasProperPathPrefix(prefix, path string) bool {
 	return path[len(prefix)] == separator
 }
 
-func (d *Differ) applyOpts(opts ...Option) {
-	for _, opt := range opts {
-		if opt != nil {
-			opt(d)
+// shiftsPath reports whether one of the operations writes an element into
+// one of the arrays that the path addresses. Such a write shifts the elements
+// of the array, and invalidates the index that the path embeds for it.
+func shiftsPath(ops []Operation, path string) bool {
+	for _, base := range arrayBasePaths(path) {
+		for _, op := range ops {
+			if op.Type == OperationTest {
+				continue
+			}
+			if targetsArrayElem(op.Path, base) {
+				return true
+			}
+			if op.Type == OperationMove && targetsArrayElem(op.From, base) {
+				return true
+			}
 		}
 	}
+	return false
+}
+
+// arrayBasePaths returns the paths of the arrays that the path indexes
+// into. The path "/a/1/b/-" for example indexes into the arrays "/a"
+// and "/a/1/b".
+func arrayBasePaths(path string) []string {
+	var bases []string
+	for i := 1; i < len(path); i++ {
+		if path[i-1] != '/' {
+			continue
+		}
+		j := i
+		for j < len(path) && path[j] != '/' {
+			j++
+		}
+		if isIndexToken(path[i:j]) {
+			bases = append(bases, path[:i-1])
+		}
+		i = j
+	}
+	return bases
+}
+
+// targetsArrayElem reports whether the path targets an element of the
+// array at base, either directly or through one of its descendants.
+func targetsArrayElem(path, base string) bool {
+	n := len(base)
+
+	if len(path) <= n || path[:n] != base || path[n] != '/' {
+		return false
+	}
+	rest := path[n+1:]
+	if i := strings.IndexByte(rest, '/'); i != -1 {
+		rest = rest[:i]
+	}
+	return isIndexToken(rest)
+}
+
+// isIndexToken reports whether the given pointer fragment
+// represents an array index, or the append token.
+func isIndexToken(fragment string) bool {
+	if fragment == "-" {
+		return true
+	}
+	for i := 0; i < len(fragment); i++ {
+		if fragment[i] < '0' || fragment[i] > '9' {
+			return false
+		}
+	}
+	return len(fragment) > 0
 }
 
 func sortStrings(v []string) {
