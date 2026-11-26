@@ -211,7 +211,8 @@ func TestCompareJSONEquivalentPatchRoundTrip(t *testing.T) {
 					t.Fatalf("failed to apply patch: %v", err)
 				}
 				if !bytes.Equal(got, tgt) {
-					t.Fatalf("apply produced %s instead of %s: %s", got, tgt, patch)
+					t.Logf("\n%s", patch.String())
+					t.Fatalf("apply produced %s instead of %s", got, tgt)
 				}
 			}
 		})
@@ -249,7 +250,8 @@ func TestCompareJSONEquivalentUseNumber(t *testing.T) {
 			t.Fatal(err)
 		}
 		if len(patch) != 0 {
-			t.Errorf("expected an empty patch for a pure reordering, got %v", patch)
+			t.Logf("\n%s", patch.String())
+			t.Errorf("expected an empty patch for a pure reordering, got %d operations", len(patch))
 		}
 	})
 }
@@ -349,7 +351,8 @@ func TestCompareJSON_factorizeStaleCopy(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(patch) != 2 {
-		t.Fatalf("expected 2 operations, got %d: %s", len(patch), patch)
+		t.Logf("\n%s", patch.String())
+		t.Fatalf("expected 2 operations, got %d", len(patch))
 	}
 	if op := patch[0]; op.Type != OperationRemove || op.Path != "/a/0" {
 		t.Errorf("expected first operation to remove /a/0, got %q at %q", op.Type, op.Path)
@@ -369,13 +372,68 @@ func TestCompareJSON_factorizeStaleTest(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(patch) != 2 {
-		t.Fatalf("expected 2 operations, got %d: %s", len(patch), patch)
+		t.Logf("\n%s", patch.String())
+		t.Fatalf("expected 2 operations, got %d", len(patch))
 	}
 	if op := patch[0]; op.Type != OperationTest || op.Path != "/0" {
 		t.Errorf("expected first operation to test /0, got %q at %q", op.Type, op.Path)
 	}
 	if op := patch[1]; op.Type != OperationMove || op.From != "/0" || op.Path != "/1" {
 		t.Errorf("expected second operation to move /0 to /1, got %q from %q to %q", op.Type, op.From, op.Path)
+	}
+}
+
+func TestCompareJSON_factorizeSafeCopy(t *testing.T) {
+	src := []byte(`{"a":[[1,2,3],{"x":1}]}`)
+	tgt := []byte(`{"a":[[1,2,3],{"x":2}],"b":[1,2,3]}`)
+
+	patch, err := CompareJSON(src, tgt, Factorize())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(patch) != 2 {
+		t.Logf("\n%s", patch.String())
+		t.Fatalf("expected 2 operations, got %d", len(patch))
+	}
+	if op := patch[0]; op.Type != OperationReplace || op.Path != "/a/1/x" {
+		t.Errorf("expected first operation to replace /a/1/x, got %q at %q", op.Type, op.Path)
+	}
+	if op := patch[1]; op.Type != OperationCopy || op.From != "/a/0" || op.Path != "/b" {
+		t.Errorf("expected second operation to copy /a/0 to /b, got %q from %q to %q", op.Type, op.From, op.Path)
+	}
+	got, err := patch.apply(src, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !jsonBytesEqual(t, got, tgt) {
+		t.Errorf("apply produced %s, want %s", got, tgt)
+	}
+}
+
+func TestCompareJSON_factorizeSafeMove(t *testing.T) {
+	src := []byte(`[1,2,3]`)
+	tgt := []byte(`[2,9,1]`)
+
+	patch, err := CompareJSON(src, tgt, Factorize(), LCS())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(patch) != 2 {
+		t.Logf("\n%s", patch.String())
+		t.Fatalf("expected 2 operations, got %d", len(patch))
+	}
+	if op := patch[0]; op.Type != OperationMove || op.From != "/0" || op.Path != "/2" {
+		t.Errorf("expected first operation to move /0 to /2, got %q from %q to %q", op.Type, op.From, op.Path)
+	}
+	if op := patch[1]; op.Type != OperationReplace || op.Path != "/1" {
+		t.Errorf("expected second operation to replace /1, got %q at %q", op.Type, op.Path)
+	}
+	got, err := patch.apply(src, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !jsonBytesEqual(t, got, tgt) {
+		t.Errorf("apply produced %s, want %s", got, tgt)
 	}
 }
 

@@ -573,13 +573,15 @@ func hasProperPathPrefix(prefix, path string) bool {
 	return path[len(prefix)] == separator
 }
 
-// shiftsPath reports whether one of the operations writes an element into
-// one of the arrays that the path addresses. Such a write shifts the elements
-// of the array, and invalidates the index that the path embeds for it.
+// shiftsPath reports whether one of the operations adds or removes an
+// element in one of the arrays that the path addresses. Such an operation
+// shifts the elements of the array, and invalidates the index that the
+// path embeds for it. Testing or replacing a value, and writing inside
+// an element, do not shift an array.
 func shiftsPath(ops []Operation, path string) bool {
 	for _, base := range arrayBasePaths(path) {
 		for _, op := range ops {
-			if op.Type == OperationTest {
+			if op.Type == OperationTest || op.Type == OperationReplace {
 				continue
 			}
 			if targetsArrayElem(op.Path, base) {
@@ -615,18 +617,17 @@ func arrayBasePaths(path string) []string {
 }
 
 // targetsArrayElem reports whether the path targets an element of the
-// array at base, either directly or through one of its descendants.
+// array at base, that is, whether what follows the base in the path is
+// an array index. A path that points inside an element of the array,
+// such as "/a/1/b" for the array "/a", is not matched, because writing
+// inside an element does not shift the elements of the array.
 func targetsArrayElem(path, base string) bool {
 	n := len(base)
 
 	if len(path) <= n || path[:n] != base || path[n] != '/' {
 		return false
 	}
-	rest := path[n+1:]
-	if i := strings.IndexByte(rest, '/'); i != -1 {
-		rest = rest[:i]
-	}
-	return isIndexToken(rest)
+	return isIndexToken(path[n+1:])
 }
 
 // isIndexToken reports whether the given pointer fragment
